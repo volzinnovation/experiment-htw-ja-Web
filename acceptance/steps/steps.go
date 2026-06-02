@@ -764,9 +764,10 @@ func assertStringList(label string, got []string, wantValue string) error {
 
 func thenDisplayedLinesInclude(world *runtime.World, example map[string]string) error {
 	lines := world.State["displayed_lines"].([]string)
-	expected := stringList(firstPresent(example, "message", "messages", "warnings"))
-	if prompt, ok := example["prompt"]; ok {
-		expected = []string{prompt}
+	value := firstPresent(example, "message", "messages", "warnings", "prompt")
+	expected := stringList(value)
+	if strings.HasPrefix(value, "SHOOT") {
+		expected = []string{value}
 	}
 	for _, want := range expected {
 		if !slices.Contains(lines, want) {
