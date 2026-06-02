@@ -88,3 +88,13 @@ commit hash: 9aa042085072577f85d2e0b4c586d83735e7cbda
 Apply your own role rules to this state.
 
 Action taken: Processed queued specifier handoff after completing the movement-hazards refactorer handoff; prepared to merge the specified master commit into the coder branch and implement the crooked-arrow behavior slice.
+
+## 2026-06-02 07:49:43 CDT - Sent Handoff
+
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: crooked-arrow
+branch name: swarmforge-coder
+commit hash: bd7c6a2d0a0ae41768a2937247cbd2c6126d0712
+
+Summary: Crooked-arrow shooting behavior is ready for refactorer review.
