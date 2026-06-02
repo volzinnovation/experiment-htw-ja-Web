@@ -17,6 +17,52 @@ commit hash: 23ed8da4cf4c07a1aa78100617539b94d50049c7
 Apply your own role rules to this state.
 ```
 
+## 2026-06-02 11:03:25 CDT - Processing queued interactive-loop refactorer handoffs
+
+Now that the rest-command architect merge was committed and handoffs were sent, processing the queued interactive-loop refactorer handoffs together. The newer handoff supersedes the earlier one for merge purposes:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: 75b0a84ccc48f88e08b941d7215eca104e055680
+Apply your own role rules to this state.
+```
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: 55f3d45938f100757c796e87c2f20ea5ac3ea17a
+Apply your own role rules to this state.
+```
+
+Action taken: merged `55f3d45938f100757c796e87c2f20ea5ac3ea17a` into the architect branch. The merge introduced no code or feature changes in the architect worktree after preserving the architect-side logbook history, so there is no role handoff to send for this queued state.
+
+Removing the two processed interactive-loop queue files after processing and recording the complete messages:
+
+```text
+pending-messages/50-20260602-105620-refactorer.txt
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: 75b0a84ccc48f88e08b941d7215eca104e055680
+Apply your own role rules to this state.
+```
+
+```text
+pending-messages/50-20260602-110016-refactorer.txt
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: 55f3d45938f100757c796e87c2f20ea5ac3ea17a
+Apply your own role rules to this state.
+```
+
 Summary: Task 1 cave topology, placement, seeded setup, replay setup, and adjacent hazard query specifications are ready for coder review.
 
 ## 2026-06-02 07:24:59 CDT - Received Handoff
