@@ -26,17 +26,17 @@ def start_server(root: Path) -> tuple[socketserver.TCPServer, threading.Thread]:
 
 async def run_browser_test(base_url: str) -> None:
     async with async_playwright() as p:
-      browser = await p.chromium.launch()
-      page = await browser.new_page()
-      await page.goto(f"{base_url}/tests/harness.html", wait_until="networkidle")
-      await page.wait_for_selector("#summary[data-status='pass'], #summary[data-status='fail']", timeout=15000)
-      status = await page.get_attribute("#summary", "data-status")
-      summary = await page.text_content("#summary")
-      if status != "pass":
-          details = await page.locator("#results").all_inner_texts()
-          raise RuntimeError(f"Browser tests failed: {summary}\n" + "\n".join(details))
-      print(summary)
-      await browser.close()
+        browser = await p.chromium.launch()
+        page = await browser.new_page()
+        await page.goto(f"{base_url}/tests/harness.html", wait_until="networkidle")
+        await page.wait_for_selector("#summary[data-status='pass'], #summary[data-status='fail']", timeout=15000)
+        status = await page.get_attribute("#summary", "data-status")
+        summary = await page.text_content("#summary")
+        if status != "pass":
+            details = await page.locator("#results").all_inner_texts()
+            raise RuntimeError(f"Browser tests failed: {summary}\n" + "\n".join(details))
+        print(summary)
+        await browser.close()
 
 
 def main() -> int:

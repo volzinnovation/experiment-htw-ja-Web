@@ -6,7 +6,7 @@ A full client-side JavaScript port now lives in [`web/`](web). The game engine a
 
 ### Open The Frontend
 
-- Local file mode: open `/tmp/workspace/volzinnovation/experiment-htw-ja-Web/web/index.html` in a browser.
+- Local file mode: open `web/index.html` from your cloned repository in a browser.
 - Local static server (recommended for ES modules):
 
 ```sh
