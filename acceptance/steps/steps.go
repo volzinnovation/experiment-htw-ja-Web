@@ -277,13 +277,7 @@ func givenConfiguredSetup(world *runtime.World, example map[string]string) error
 	if err != nil {
 		return err
 	}
-	game, err := wumpus.NewGameWithSetup(setup)
-	if err != nil {
-		return err
-	}
-	world.State["setup"] = setup
-	world.State["game"] = &game
-	return nil
+	return setConfiguredSetup(world, setup)
 }
 
 func setupFromExample(example map[string]string) (wumpus.Setup, error) {
@@ -1040,20 +1034,11 @@ func commaSeparatedStrings(value string) []string {
 	return values
 }
 
-func firstUnoccupiedRoom(occupied ...any) int {
-	seen := map[int]bool{}
-	for _, value := range occupied {
-		switch rooms := value.(type) {
-		case int:
-			seen[rooms] = true
-		case []int:
-			for _, room := range rooms {
-				seen[room] = true
-			}
-		}
-	}
+func firstUnoccupiedRoom(wumpusRoom int, pits, bats []int) int {
+	occupied := append([]int{wumpusRoom}, pits...)
+	occupied = append(occupied, bats...)
 	for room := 1; room <= 20; room++ {
-		if !seen[room] {
+		if !slices.Contains(occupied, room) {
 			return room
 		}
 	}

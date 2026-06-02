@@ -50,6 +50,11 @@ func (g *Game) SetNextWumpusWakeChoice(choice WumpusWakeChoice) {
 }
 
 func (g Game) TurnWarnings() []string {
+	present := g.warningHazards()
+	return warningMessages(present, g.wumpusAsleep)
+}
+
+func (g Game) warningHazards() map[Hazard]bool {
 	hazards := NewCave().AdjacentHazards(g.setup.Player, g.setup)
 	present := map[Hazard]bool{}
 	for _, hazard := range hazards {
@@ -58,10 +63,14 @@ func (g Game) TurnWarnings() []string {
 	if !g.wumpusAsleep && g.batsNearbyForWarning() {
 		present[HazardBats] = true
 	}
+	return present
+}
+
+func warningMessages(present map[Hazard]bool, wumpusAsleep bool) []string {
 	var warnings []string
 	if present[HazardWumpus] {
 		warnings = append(warnings, "I SMELL A WUMPUS")
-		if g.wumpusAsleep {
+		if wumpusAsleep {
 			warnings = append(warnings, "YOU HEAR HORRIBLE SNORING")
 		}
 	}
@@ -155,14 +164,29 @@ func (g *Game) lose(reason string) []string {
 }
 
 func (g *Game) sleepWakeMessagesOnMove(from, to int) []string {
-	if g.wumpusAsleep && g.sawSleepingWumpus && from == g.setup.Wumpus && to != g.setup.Wumpus {
-		g.wumpusAsleep = false
-		g.sawSleepingWumpus = false
-		return []string{"YOU HEAR A PETULANT SCREAM!"}
+	if message, woke := g.wakeAfterLeavingSeenWumpus(from, to); woke {
+		return []string{message}
 	}
-	if g.wumpusAsleep && NewCave().HasTunnel(from, g.setup.Wumpus) && to != g.setup.Wumpus && !NewCave().HasTunnel(to, g.setup.Wumpus) {
-		g.wumpusAsleep = false
-		return []string{"YOU HEAR A SNORT AND \"HUH?\""}
+	if message, woke := g.wakeAfterLeavingWumpusAdjacency(from, to); woke {
+		return []string{message}
 	}
 	return nil
+}
+
+func (g *Game) wakeAfterLeavingSeenWumpus(from, to int) (string, bool) {
+	if !g.wumpusAsleep || !g.sawSleepingWumpus || from != g.setup.Wumpus || to == g.setup.Wumpus {
+		return "", false
+	}
+	g.wumpusAsleep = false
+	g.sawSleepingWumpus = false
+	return "YOU HEAR A PETULANT SCREAM!", true
+}
+
+func (g *Game) wakeAfterLeavingWumpusAdjacency(from, to int) (string, bool) {
+	cave := NewCave()
+	if !g.wumpusAsleep || !cave.HasTunnel(from, g.setup.Wumpus) || to == g.setup.Wumpus || cave.HasTunnel(to, g.setup.Wumpus) {
+		return "", false
+	}
+	g.wumpusAsleep = false
+	return "YOU HEAR A SNORT AND \"HUH?\"", true
 }

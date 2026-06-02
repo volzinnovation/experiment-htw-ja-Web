@@ -40,9 +40,7 @@ func TestMovingAwayFromSleepingWumpusAdjacencyAwakensIt(t *testing.T) {
 
 	result := game.Move(6)
 
-	if game.WumpusAsleep() {
-		t.Fatal("Wumpus should be awake")
-	}
+	requireWumpusAwake(t, game)
 	want := []string{"YOU HEAR A SNORT AND \"HUH?\""}
 	if !reflect.DeepEqual(result.Messages, want) {
 		t.Fatalf("messages = %v, want %v", result.Messages, want)
@@ -78,9 +76,7 @@ func TestEnteringSleepingWumpusRoomCanWakeAndLose(t *testing.T) {
 	if game.Status() != StatusLost {
 		t.Fatalf("status = %s, want %s", game.Status(), StatusLost)
 	}
-	if game.WumpusAsleep() {
-		t.Fatal("Wumpus should be awake")
-	}
+	requireWumpusAwake(t, game)
 	want := []string{"YOU HEAR THE WUMPUS SAY \"YUMMY BREAKFAST!\"", "HA HA HA - YOU LOSE!"}
 	if !reflect.DeepEqual(result.Messages, want) {
 		t.Fatalf("messages = %v, want %v", result.Messages, want)
@@ -95,9 +91,7 @@ func TestLeavingAfterSeeingSleepingWumpusAwakensIt(t *testing.T) {
 
 	result := game.Move(1)
 
-	if game.WumpusAsleep() {
-		t.Fatal("Wumpus should be awake")
-	}
+	requireWumpusAwake(t, game)
 	want := []string{"YOU HEAR A PETULANT SCREAM!"}
 	if !reflect.DeepEqual(result.Messages, want) {
 		t.Fatalf("messages = %v, want %v", result.Messages, want)
@@ -111,9 +105,7 @@ func TestMissedArrowWakesSleepingWumpus(t *testing.T) {
 
 	result := game.Shoot([]int{5})
 
-	if game.WumpusAsleep() {
-		t.Fatal("Wumpus should be awake")
-	}
+	requireWumpusAwake(t, game)
 	if game.Setup().Wumpus != 11 {
 		t.Fatalf("Wumpus room = %d, want 11", game.Setup().Wumpus)
 	}
@@ -122,5 +114,23 @@ func TestMissedArrowWakesSleepingWumpus(t *testing.T) {
 	}
 	if !reflect.DeepEqual(result.Messages, []string{"MISSED"}) {
 		t.Fatalf("messages = %v", result.Messages)
+	}
+}
+
+func TestObserveSleepyWumpusBehaviorIsDeterministic(t *testing.T) {
+	game := mustGame(t, Setup{Player: 1, Wumpus: 3, Pits: []int{13, 14}, Bats: []int{16, 17}})
+
+	got := game.ObserveSleepyWumpusBehavior(4)
+
+	want := []string{"asleep", "awake", "asleep", "awake"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("observations = %v, want %v", got, want)
+	}
+}
+
+func requireWumpusAwake(t *testing.T, game *Game) {
+	t.Helper()
+	if game.WumpusAsleep() {
+		t.Fatal("Wumpus should be awake")
 	}
 }

@@ -19,6 +19,7 @@ func TestHandlersSatisfyCurrentAcceptanceFeatures(t *testing.T) {
 		crookedArrowFeature(),
 		interactiveLoopFeature(),
 		holyHandGrenadeFeature(),
+		sleepyWumpusFeature(),
 	} {
 		t.Run(feature.Name, func(t *testing.T) {
 			path := writeFeature(t, feature)
@@ -503,6 +504,67 @@ func holyHandGrenadeFeature() runtime.Feature {
 					{Text: "the replay Holy Hand Grenade pending detonation room is <target_room>"},
 				},
 				Examples: []map[string]string{{"seed": "1973", "target_room": "10", "answer": "y"}},
+			},
+		},
+	}
+}
+
+func sleepyWumpusFeature() runtime.Feature {
+	return runtime.Feature{
+		Name: "Sleepy Wumpus",
+		Scenarios: []runtime.Scenario{
+			{
+				Name: "adjacent room can include snoring with normal smell",
+				Steps: []runtime.Step{
+					{Text: "a game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>"},
+					{Text: "the next sleepy Wumpus adjacent observation is <sleepy_observation>"},
+					{Text: "the player moves to room <to_room>"},
+					{Text: "the Wumpus sleep state is <sleep_state>"},
+					{Text: "the turn warnings are <warnings>"},
+				},
+				Examples: []map[string]string{
+					{"from_room": "6", "to_room": "5", "wumpus_room": "1", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "sleepy_observation": "asleep", "sleep_state": "asleep", "warnings": "I SMELL A WUMPUS, YOU HEAR HORRIBLE SNORING"},
+					{"from_room": "6", "to_room": "5", "wumpus_room": "1", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "sleepy_observation": "awake", "sleep_state": "awake", "warnings": "I SMELL A WUMPUS"},
+				},
+			},
+			{
+				Name: "entering sleeping Wumpus room can wake and kill",
+				Steps: []runtime.Step{
+					{Text: "a game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>"},
+					{Text: "the Wumpus is asleep"},
+					{Text: "the next sleeping Wumpus room entry outcome is <entry_outcome>"},
+					{Text: "the player moves to room <wumpus_room>"},
+					{Text: "the game is <game_status>"},
+					{Text: "the Wumpus sleep state is <sleep_state>"},
+					{Text: "the turn messages are <messages>"},
+				},
+				Examples: []map[string]string{
+					{"from_room": "1", "wumpus_room": "2", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "entry_outcome": "wakes", "game_status": "lost", "sleep_state": "awake", "messages": "YOU HEAR THE WUMPUS SAY \"YUMMY BREAKFAST!\", HA HA HA - YOU LOSE!"},
+					{"from_room": "1", "wumpus_room": "2", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "entry_outcome": "stays asleep", "game_status": "in progress", "sleep_state": "asleep", "messages": "YOU SEE THE HUDDLED HORRIBLE SHAPE OF THE SLEEPING WUMPUS"},
+				},
+			},
+			{
+				Name: "leaving after seeing sleeping Wumpus awakens it",
+				Steps: []runtime.Step{
+					{Text: "a game setup with the player in room <wumpus_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>"},
+					{Text: "the Wumpus is asleep"},
+					{Text: "the player has seen the sleeping Wumpus shape"},
+					{Text: "the player moves to room <to_room>"},
+					{Text: "the Wumpus sleep state is awake"},
+					{Text: "the player is in room <to_room>"},
+					{Text: "the turn messages are <messages>"},
+				},
+				Examples: []map[string]string{{"wumpus_room": "2", "to_room": "1", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "messages": "YOU HEAR A PETULANT SCREAM!"}},
+			},
+			{
+				Name: "seeded sleepy observations are reproducible",
+				Steps: []runtime.Step{
+					{Text: "a new game created with seed <seed>"},
+					{Text: "another new game created with seed <seed>"},
+					{Text: "both games observe sleepy Wumpus behavior for <turn_count> turns"},
+					{Text: "both games produce identical sleepy Wumpus observations"},
+				},
+				Examples: []map[string]string{{"seed": "1973", "turn_count": "10"}},
 			},
 		},
 	}
