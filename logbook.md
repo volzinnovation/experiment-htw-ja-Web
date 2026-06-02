@@ -30,6 +30,23 @@ Apply your own role rules to this state.
 
 Action taken: Re-read coder role and constitution, then prepared to merge the specified master commit into the coder branch and implement the accepted cave setup slice.
 
+## 2026-06-02 07:31:38 CDT
+
+Sent handoff to coder.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: specifier
+specifier handoff name: movement-hazards
+branch name: master
+commit hash: 45660982b68912fb1bc3e15fa6b7979959b2893a
+Apply your own role rules to this state.
+```
+
+Summary: Task 2 movement validation, warnings, hazard resolution, bat relocation, and Wumpus wake specifications are ready for coder review.
+
 ## 2026-06-02 07:33:07 CDT - Sent Handoff
 
 Re-read your role and constitution.
