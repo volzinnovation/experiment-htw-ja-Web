@@ -1,5 +1,57 @@
 # Hunt the Wumpus in Go
 
+## Browser-Only Static Frontend
+
+A full client-side JavaScript port now lives in [`web/`](web). The game engine and UI run entirely in the browser (no Node.js runtime required for gameplay).
+
+### Open The Frontend
+
+- Local file mode: open `/tmp/workspace/volzinnovation/experiment-htw-ja-Web/web/index.html` in a browser.
+- Local static server (recommended for ES modules):
+
+```sh
+cd web
+python -m http.server 8080
+```
+
+Then visit `http://localhost:8080`.
+
+### Browser Commands
+
+The browser port keeps the command interface:
+
+```text
+m <room>                 move to an adjacent room
+s <room1> ... <roomN>    shoot a crooked arrow through 1 to 5 rooms
+t <room>                 throw the Holy Hand Grenade when carrying it
+r                        rest for one turn
+```
+
+### Artwork and Animations
+
+The frontend includes handcrafted SVG artwork for each room type (safe room, player room, Wumpus lair, pit room, bat room, grenade room) and event animations for movement, misses, bat snatches, explosions, wins, and losses.
+
+### JavaScript Test Harness + Frontend E2E Validation
+
+A browser-native harness is available at [`web/tests/harness.html`](web/tests/harness.html). It validates:
+
+- core game logic (movement, hazards, shooting, grenade detonation, bat relocation)
+- frontend integration flow (command submission + UI/log updates)
+
+Run it locally with:
+
+```sh
+python scripts/run_browser_tests.py
+```
+
+### GitHub Actions + GitHub Pages
+
+Workflow: [`.github/workflows/frontend-pages.yml`](.github/workflows/frontend-pages.yml)
+
+- Runs browser harness tests on pull requests and pushes
+- Deploys the static frontend in `web/` to GitHub Pages on pushes to `main`/`master`
+
+
 This repository is a Go implementation of *Hunt the Wumpus*, the classic 1973 text adventure by Gregory Yob. The game is played entirely through the console. You move through a fixed 20-room dodecahedral cave, read sensory warnings, avoid hazards, and try to kill the Wumpus with crooked arrows.
 
 The implementation keeps the core historical mechanics: a fixed 20-room cave where each room has three tunnels, two bottomless pits, two super bats, one Wumpus, five crooked arrows, warning messages for adjacent hazards, Wumpus wake-and-move behavior, and same-setup replay after losing. It also includes deliberate extensions from the project tasks: the Holy Hand Grenade, Sleepy Wumpus behavior, Jumping Wumpus behavior, and a Rest command.
