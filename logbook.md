@@ -593,3 +593,14 @@ Apply your own role rules to this state.
 ```
 
 Summary: Task 7 Jumping Wumpus trigger, legal jumps, first-landing outcomes, second-landing sighting, turn timing, and integration specifications are ready for coder review.
+
+## 2026-06-02 09:06:50 CDT - Sent Handoff
+
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: rest-command
+branch name: swarmforge-refactorer
+commit hash: a0ac2e788e4524556d24d5765bbf207b3b09e2f8
+Apply your own role rules to this state.
+
+Summary: Rest command refactorer cleanup is complete with CRAP at 6 or below, command dispatch duplication reduced, rest step coverage added, empty turn-message assertions normalized, mutation scan counts within the split threshold, and verification passing.
