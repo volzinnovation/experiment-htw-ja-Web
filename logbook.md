@@ -52,3 +52,20 @@ Apply your own role rules to this state.
 ```
 
 Summary: Task 3 crooked arrow traversal, deviation, hit, self-hit, miss, Wumpus wake, and arrow exhaustion specifications are ready for coder review.
+
+## 2026-06-02 07:34:23 CDT
+
+Sent handoff to coder.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: specifier
+specifier handoff name: interactive-loop
+branch name: master
+commit hash: a140f247af90fbeff44264f1266fe6f70d366330
+Apply your own role rules to this state.
+```
+
+Summary: Task 4 interactive loop display, command parsing, invalid input, win/loss text, instructions, and same setup replay specifications are ready for coder review.
