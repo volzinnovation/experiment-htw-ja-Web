@@ -100,6 +100,7 @@ func NewHandlers() runtime.Handlers {
 		"the displayed lines are <lines>":                                                 thenDisplayedLinesAre,
 		"the displayed lines include <message>":                                           thenDisplayedLinesInclude,
 		"the displayed lines include <messages>":                                          thenDisplayedLinesInclude,
+		"the displayed lines include <warnings>":                                          thenDisplayedLinesInclude,
 		"the displayed lines include <prompt>":                                            thenDisplayedLinesInclude,
 		"the player has lost":                                                             givenPlayerHasLost,
 		"the player answers same setup prompt with <answer>":                              whenPlayerAnswersSameSetupPrompt,
@@ -145,6 +146,8 @@ func NewHandlers() runtime.Handlers {
 		"every Wumpus jump segment is a legal tunnel":                        thenEveryWumpusJumpSegmentLegal,
 		"both games evaluate jumping Wumpus behavior for <turn_count> turns": whenBothGamesEvaluateJumpingWumpus,
 		"both games produce identical jumping Wumpus events":                 thenBothJumpEventsIdentical,
+		"the turn count is <turn_count>":                                     givenOrThenTurnCount,
+		"the turn count is <expected_turn_count>":                            thenExpectedTurnCount,
 	}
 }
 
@@ -608,7 +611,10 @@ func assertGameStatus(world *runtime.World, want wumpus.Status) error {
 
 func thenTurnMessagesAre(world *runtime.World, example map[string]string) error {
 	want := stringList(example["messages"])
-	got := world.State["turn_messages"].([]string)
+	got, _ := world.State["turn_messages"].([]string)
+	if len(got) == 0 && len(want) == 0 {
+		return nil
+	}
 	if !reflect.DeepEqual(got, want) {
 		return fmt.Errorf("turn messages are %v, want %v", got, want)
 	}
@@ -809,6 +815,7 @@ func whenNextTurnDisplayed(world *runtime.World, _ map[string]string) error {
 func whenPlayerEntersCommand(world *runtime.World, example map[string]string) error {
 	lines := sessionFrom(world).EnterCommand(example["command"])
 	world.State["displayed_lines"] = lines
+	world.State["turn_messages"] = lines
 	world.State["game"] = sessionFrom(world).Game()
 	world.State["action_taken"] = true
 	return nil
@@ -825,7 +832,7 @@ func thenDisplayedLinesAre(world *runtime.World, example map[string]string) erro
 
 func thenDisplayedLinesInclude(world *runtime.World, example map[string]string) error {
 	lines := world.State["displayed_lines"].([]string)
-	expected := stringList(firstPresent(example, "message", "messages"))
+	expected := stringList(firstPresent(example, "message", "messages", "warnings"))
 	if prompt, ok := example["prompt"]; ok {
 		expected = []string{prompt}
 	}
@@ -1203,6 +1210,34 @@ func thenBothJumpEventsIdentical(world *runtime.World, _ map[string]string) erro
 	right := world.State["another_jump_events"].([]string)
 	if !reflect.DeepEqual(left, right) {
 		return fmt.Errorf("jump events differ: %v and %v", left, right)
+	}
+	return nil
+}
+
+func givenOrThenTurnCount(world *runtime.World, example map[string]string) error {
+	turnCount, err := intExample(example, "turn_count")
+	if err != nil {
+		return err
+	}
+	if _, actionTaken := world.State["action_taken"]; !actionTaken {
+		sessionFrom(world).SetTurnCount(turnCount)
+		return nil
+	}
+	return requireTurnCount(world, turnCount)
+}
+
+func thenExpectedTurnCount(world *runtime.World, example map[string]string) error {
+	turnCount, err := intExample(example, "expected_turn_count")
+	if err != nil {
+		return err
+	}
+	return requireTurnCount(world, turnCount)
+}
+
+func requireTurnCount(world *runtime.World, want int) error {
+	got := sessionFrom(world).TurnCount()
+	if got != want {
+		return fmt.Errorf("turn count = %d, want %d", got, want)
 	}
 	return nil
 }
