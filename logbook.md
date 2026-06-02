@@ -437,3 +437,41 @@ Apply your own role rules to this state.
 ```
 
 Action taken: re-read role and constitution, then merging the referenced refactorer state into the architect branch for architectural review.
+
+## 2026-06-02 08:21:14 CDT - Sent Handoff
+
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: cave-setup
+branch name: swarmforge-coder
+commit hash: 59ec281c069cea3d9a92e3018f7bcc7e7bc247d9
+
+Summary: Architect cave-setup guidance has been merged into the coder branch and normal acceptance and unit verification are green.
+
+## 2026-06-02 08:22:18 CDT - Received Queued Handoff
+
+Re-read your role and constitution.
+sender role: specifier
+specifier handoff name: sleepy-wumpus
+branch name: master
+commit hash: 0b1d9f534601eeadc91cf8c050d990331169a0e4
+Apply your own role rules to this state.
+
+Action taken: Processed queued specifier handoff after completing the architect cave-setup refactorer handoff; prepared to merge the specified master commit into the coder branch and implement the sleepy-wumpus behavior slice.
+
+## 2026-06-02 07:36:05 CDT - Specifier Branch Log Entry
+
+Sent handoff to coder.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: specifier
+specifier handoff name: holy-grenade
+branch name: master
+commit hash: e2cb740cb6be7d7c53b517c2368c04626d2b75fb
+Apply your own role rules to this state.
+```
+
+Summary: Task 5 Holy Hand Grenade placement, acquisition, throw, delayed detonation, blast effects, messages, and replay specifications are ready for coder review.

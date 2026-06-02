@@ -27,8 +27,14 @@ func (g *Game) Move(to int) MoveResult {
 	if !NewCave().HasTunnel(g.setup.Player, to) {
 		return MoveResult{RejectedMessage: "CAN'T MOVE THERE"}
 	}
+	from := g.setup.Player
 	g.setup.Player = to
-	return MoveResult{Messages: g.resolveArrival()}
+	messages := g.sleepWakeMessagesOnMove(from, to)
+	messages = append(messages, g.resolveArrival()...)
+	if g.status == StatusInProgress && g.setup.Player != g.setup.Wumpus {
+		g.observeAdjacentWumpus()
+	}
+	return MoveResult{Messages: messages}
 }
 
 func (g Game) Status() Status {
@@ -49,12 +55,15 @@ func (g Game) TurnWarnings() []string {
 	for _, hazard := range hazards {
 		present[hazard] = true
 	}
-	if g.batsNearbyForWarning() {
+	if !g.wumpusAsleep && g.batsNearbyForWarning() {
 		present[HazardBats] = true
 	}
 	var warnings []string
 	if present[HazardWumpus] {
 		warnings = append(warnings, "I SMELL A WUMPUS")
+		if g.wumpusAsleep {
+			warnings = append(warnings, "YOU HEAR HORRIBLE SNORING")
+		}
 	}
 	if present[HazardBats] {
 		warnings = append(warnings, "BATS NEARBY")
@@ -95,6 +104,9 @@ func (g *Game) resolveArrival() []string {
 	case slices.Contains(g.setup.Bats, g.setup.Player):
 		return g.resolveBatArrival()
 	case g.setup.Wumpus == g.setup.Player:
+		if g.wumpusAsleep {
+			return g.resolveSleepingWumpusEntry()
+		}
 		return g.wakeWumpus()
 	default:
 		return g.collectGrenadeIfPresent()
@@ -117,6 +129,7 @@ func (g *Game) nextBatRoom() int {
 }
 
 func (g *Game) wakeWumpus() []string {
+	g.wumpusAsleep = false
 	choice := g.nextWumpusChoice()
 	if !choice.Stay {
 		g.setup.Wumpus = choice.Destination
@@ -139,4 +152,17 @@ func (g *Game) nextWumpusChoice() WumpusWakeChoice {
 func (g *Game) lose(reason string) []string {
 	g.status = StatusLost
 	return []string{reason, "HA HA HA - YOU LOSE!"}
+}
+
+func (g *Game) sleepWakeMessagesOnMove(from, to int) []string {
+	if g.wumpusAsleep && g.sawSleepingWumpus && from == g.setup.Wumpus && to != g.setup.Wumpus {
+		g.wumpusAsleep = false
+		g.sawSleepingWumpus = false
+		return []string{"YOU HEAR A PETULANT SCREAM!"}
+	}
+	if g.wumpusAsleep && NewCave().HasTunnel(from, g.setup.Wumpus) && to != g.setup.Wumpus && !NewCave().HasTunnel(to, g.setup.Wumpus) {
+		g.wumpusAsleep = false
+		return []string{"YOU HEAR A SNORT AND \"HUH?\""}
+	}
+	return nil
 }

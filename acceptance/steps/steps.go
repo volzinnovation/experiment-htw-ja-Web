@@ -122,6 +122,18 @@ func NewHandlers() runtime.Handlers {
 		"the pit rooms are <pit_rooms>":                     thenPitRooms,
 		"the replay setup has identical player, Wumpus, pit, bat, and Holy Hand Grenade rooms": thenReplaySetupIncludingGrenadeIdentical,
 		"the replay Holy Hand Grenade pending detonation room is <target_room>":                thenReplayPendingGrenadeRoom,
+		"the next sleepy Wumpus adjacent observation is <sleepy_observation>":                  givenNextSleepyWumpusObservation,
+		"the Wumpus is asleep":                                           givenWumpusAsleep,
+		"the Wumpus is awake":                                            givenWumpusAwake,
+		"the Wumpus sleep state is <sleep_state>":                        thenWumpusSleepState,
+		"the Wumpus sleep state is asleep":                               thenWumpusSleepStateAsleep,
+		"the Wumpus sleep state is awake":                                thenWumpusSleepStateAwake,
+		"the turn warnings are <warnings>":                               thenTurnWarningsAre,
+		"the next sleeping Wumpus room entry outcome is <entry_outcome>": givenNextSleepingWumpusEntryOutcome,
+		"a game setup with the player in room <wumpus_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>": givenConfiguredSetupPlayerWithWumpus,
+		"the player has seen the sleeping Wumpus shape":                    givenPlayerHasSeenSleepingWumpus,
+		"both games observe sleepy Wumpus behavior for <turn_count> turns": whenBothGamesObserveSleepyWumpus,
+		"both games produce identical sleepy Wumpus observations":          thenBothSleepyObservationsIdentical,
 	}
 }
 
@@ -307,13 +319,31 @@ func givenSetupRoom6NoHazards(world *runtime.World, _ map[string]string) error {
 }
 
 func setConfiguredSetup(world *runtime.World, setup wumpus.Setup) error {
+	player := setup.Player
+	if setup.Player == setup.Wumpus {
+		setup.Player = firstUnoccupiedRoom(setup.Wumpus, setup.Pits, setup.Bats)
+	}
 	game, err := wumpus.NewGameWithSetup(setup)
 	if err != nil {
 		return err
 	}
+	game.SetPlayerRoom(player)
 	world.State["setup"] = setup
 	world.State["game"] = &game
 	return nil
+}
+
+func givenConfiguredSetupPlayerWithWumpus(world *runtime.World, example map[string]string) error {
+	setup, err := setupFromExample(map[string]string{
+		"player_room": example["wumpus_room"],
+		"wumpus_room": example["wumpus_room"],
+		"pit_rooms":   example["pit_rooms"],
+		"bat_rooms":   example["bat_rooms"],
+	})
+	if err != nil {
+		return err
+	}
+	return setConfiguredSetup(world, setup)
 }
 
 func whenAdjacentHazardsQueried(world *runtime.World, _ map[string]string) error {
@@ -798,6 +828,98 @@ func whenPlayerAnswersInstructionsPrompt(world *runtime.World, example map[strin
 	return nil
 }
 
+func givenNextSleepyWumpusObservation(world *runtime.World, example map[string]string) error {
+	switch example["sleepy_observation"] {
+	case "asleep":
+		gameFrom(world, "game").SetNextSleepyWumpusObservation(true)
+	case "awake":
+		gameFrom(world, "game").SetNextSleepyWumpusObservation(false)
+	default:
+		return fmt.Errorf("unsupported sleepy observation %q", example["sleepy_observation"])
+	}
+	return nil
+}
+
+func givenWumpusAsleep(world *runtime.World, _ map[string]string) error {
+	gameFrom(world, "game").SetWumpusAsleep(true)
+	return nil
+}
+
+func givenWumpusAwake(world *runtime.World, _ map[string]string) error {
+	gameFrom(world, "game").SetWumpusAsleep(false)
+	return nil
+}
+
+func thenWumpusSleepState(world *runtime.World, example map[string]string) error {
+	wantAsleep := example["sleep_state"] == "asleep"
+	if example["sleep_state"] != "asleep" && example["sleep_state"] != "awake" {
+		return fmt.Errorf("unsupported sleep state %q", example["sleep_state"])
+	}
+	if got := gameFrom(world, "game").WumpusAsleep(); got != wantAsleep {
+		return fmt.Errorf("Wumpus asleep = %v, want %v", got, wantAsleep)
+	}
+	return nil
+}
+
+func thenWumpusSleepStateAsleep(world *runtime.World, _ map[string]string) error {
+	return requireWumpusSleepState(world, true)
+}
+
+func thenWumpusSleepStateAwake(world *runtime.World, _ map[string]string) error {
+	return requireWumpusSleepState(world, false)
+}
+
+func requireWumpusSleepState(world *runtime.World, wantAsleep bool) error {
+	if got := gameFrom(world, "game").WumpusAsleep(); got != wantAsleep {
+		return fmt.Errorf("Wumpus asleep = %v, want %v", got, wantAsleep)
+	}
+	return nil
+}
+
+func thenTurnWarningsAre(world *runtime.World, example map[string]string) error {
+	want := stringList(example["warnings"])
+	got := gameFrom(world, "game").TurnWarnings()
+	if !reflect.DeepEqual(got, want) {
+		return fmt.Errorf("turn warnings = %v, want %v", got, want)
+	}
+	return nil
+}
+
+func givenNextSleepingWumpusEntryOutcome(world *runtime.World, example map[string]string) error {
+	outcome := wumpus.SleepingWumpusEntryOutcome(example["entry_outcome"])
+	switch outcome {
+	case wumpus.SleepingWumpusWakes, wumpus.SleepingWumpusStaysAsleep:
+		gameFrom(world, "game").SetNextSleepingWumpusEntryOutcome(outcome)
+		return nil
+	default:
+		return fmt.Errorf("unsupported sleeping Wumpus entry outcome %q", example["entry_outcome"])
+	}
+}
+
+func givenPlayerHasSeenSleepingWumpus(world *runtime.World, _ map[string]string) error {
+	gameFrom(world, "game").SetSawSleepingWumpus(true)
+	return nil
+}
+
+func whenBothGamesObserveSleepyWumpus(world *runtime.World, example map[string]string) error {
+	turnCount, err := intExample(example, "turn_count")
+	if err != nil {
+		return err
+	}
+	world.State["sleepy_observations"] = gameFrom(world, "game").ObserveSleepyWumpusBehavior(turnCount)
+	world.State["another_sleepy_observations"] = gameFrom(world, "another_game").ObserveSleepyWumpusBehavior(turnCount)
+	return nil
+}
+
+func thenBothSleepyObservationsIdentical(world *runtime.World, _ map[string]string) error {
+	left := world.State["sleepy_observations"].([]string)
+	right := world.State["another_sleepy_observations"].([]string)
+	if !reflect.DeepEqual(left, right) {
+		return fmt.Errorf("sleepy observations differ: %v and %v", left, right)
+	}
+	return nil
+}
+
 func setupSnapshot(setup wumpus.Setup) inspectedSetup {
 	pits := append([]int(nil), setup.Pits...)
 	bats := append([]int(nil), setup.Bats...)
@@ -916,4 +1038,24 @@ func commaSeparatedStrings(value string) []string {
 		values = append(values, strings.TrimSpace(part))
 	}
 	return values
+}
+
+func firstUnoccupiedRoom(occupied ...any) int {
+	seen := map[int]bool{}
+	for _, value := range occupied {
+		switch rooms := value.(type) {
+		case int:
+			seen[rooms] = true
+		case []int:
+			for _, room := range rooms {
+				seen[room] = true
+			}
+		}
+	}
+	for room := 1; room <= 20; room++ {
+		if !seen[room] {
+			return room
+		}
+	}
+	return 1
 }
