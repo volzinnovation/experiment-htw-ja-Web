@@ -160,13 +160,21 @@ func parseShotPath(values []string) ([]int, bool) {
 	}
 	path := make([]int, 0, len(values))
 	for _, value := range values {
-		room, err := strconv.Atoi(value)
-		if err != nil || room < 1 || room > 20 {
+		room, ok := parseRoom(value)
+		if !ok {
 			return nil, false
 		}
 		path = append(path, room)
 	}
 	return path, true
+}
+
+func parseRoom(value string) (int, bool) {
+	room, err := strconv.Atoi(value)
+	if err != nil || room < 1 || room > 20 {
+		return 0, false
+	}
+	return room, true
 }
 
 func (s *Session) finishCommand(messages []string, shouldDetonate bool) []string {

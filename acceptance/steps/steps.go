@@ -35,6 +35,7 @@ func NewHandlers() runtime.Handlers {
 		"room <room> is not one of the exits":                           thenRoomIsNotExit,
 		"a game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>": givenConfiguredSetup,
 		"a game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>":   givenConfiguredSetup,
+		"a shooting game setup with the player in room <player_room> and the Wumpus in room <wumpus_room>":                                               givenShootingSetup,
 		"a game setup with the player in room 1, the Wumpus in room 2, pits in rooms 3 and 4, and bats in rooms 5 and 6":                                 givenSetupRoom1WumpusBats,
 		"a game setup with the player in room 10, the Wumpus in room 2, pits in rooms 9 and 18, and bats in rooms 6 and 7":                               givenSetupRoom10WumpusPit,
 		"a game setup with the player in room 6, the Wumpus in room 20, pits in rooms 1 and 2, and bats in rooms 3 and 4":                                givenSetupRoom6NoHazards,
@@ -70,6 +71,7 @@ func NewHandlers() runtime.Handlers {
 		"the player is in room <to_room>":                                                            thenPlayerInToRoom,
 		"the player is in room <from_room>":                                                          thenPlayerInFromRoom,
 		"the player is in room <player_room>":                                                        thenPlayerInPlayerRoom,
+		"the player is in room <expected_player_room>":                                               thenPlayerInExpectedPlayerRoom,
 		"the player is in room <relocation_room>":                                                    thenPlayerInRelocationRoom,
 		"the game is still in progress":                                                              thenGameStillInProgress,
 		"the game is in progress":                                                                    thenGameStillInProgress,
@@ -85,10 +87,12 @@ func NewHandlers() runtime.Handlers {
 		"the turn warnings are requested":                                                            whenTurnWarningsRequested,
 		"the warning messages are <warnings>":                                                        thenWarningMessagesAre,
 		"the player has <arrows> arrows":                                                             givenOrThenPlayerHasArrows,
+		"the player starts with <initial_arrows> arrows":                                             givenPlayerStartsWithInitialArrows,
 		"the player has <remaining_arrows> arrows":                                                   thenPlayerHasRemainingArrows,
 		"the next arrow deviation room is <deviation_room>":                                          givenNextArrowDeviationRoom,
 		"the player shoots the path <path>":                                                          whenPlayerShootsPath,
 		"the player wins":                                                                            thenPlayerWins,
+		"the requested shot path is <expected_path>":                                                 thenRequestedShotPathIs,
 		"the arrow traversed rooms are <traversed_rooms>":                                            thenArrowTraversedRoomsAre,
 		"the shot is rejected with message <message>":                                                thenShotRejectedWithMessage,
 		"an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows": givenInteractiveSetup,
@@ -304,6 +308,33 @@ func givenConfiguredSetup(world *runtime.World, example map[string]string) error
 		return err
 	}
 	return setConfiguredSetup(world, wumpus.Setup{Player: player, Wumpus: wumpusRoom, Pits: pits, Bats: bats})
+}
+
+func givenShootingSetup(world *runtime.World, example map[string]string) error {
+	player, err := intExample(example, "player_room")
+	if err != nil {
+		return err
+	}
+	wumpusRoom, err := intExample(example, "wumpus_room")
+	if err != nil {
+		return err
+	}
+	pits, bats := defaultHazardRooms(player, wumpusRoom)
+	return setConfiguredSetup(world, wumpus.Setup{Player: player, Wumpus: wumpusRoom, Pits: pits, Bats: bats})
+}
+
+func defaultHazardRooms(occupied ...int) ([]int, []int) {
+	seen := map[int]bool{}
+	for _, room := range occupied {
+		seen[room] = true
+	}
+	var rooms []int
+	for room := 1; room <= 20 && len(rooms) < 4; room++ {
+		if !seen[room] {
+			rooms = append(rooms, room)
+		}
+	}
+	return rooms[:2], rooms[2:4]
 }
 
 func givenSetupRoom1WumpusBats(world *runtime.World, _ map[string]string) error {
@@ -573,6 +604,10 @@ func thenPlayerInPlayerRoom(world *runtime.World, example map[string]string) err
 	return thenPlayerInExampleRoom(world, example, "player_room")
 }
 
+func thenPlayerInExpectedPlayerRoom(world *runtime.World, example map[string]string) error {
+	return thenPlayerInExampleRoom(world, example, "expected_player_room")
+}
+
 func thenPlayerInRelocationRoom(world *runtime.World, example map[string]string) error {
 	return thenPlayerInExampleRoom(world, example, "relocation_room")
 }
@@ -693,6 +728,15 @@ func givenOrThenPlayerHasArrows(world *runtime.World, example map[string]string)
 	return assertArrows(world, arrows)
 }
 
+func givenPlayerStartsWithInitialArrows(world *runtime.World, example map[string]string) error {
+	arrows, err := intExample(example, "initial_arrows")
+	if err != nil {
+		return err
+	}
+	gameFrom(world, "game").SetArrows(arrows)
+	return nil
+}
+
 func thenPlayerHasRemainingArrows(world *runtime.World, example map[string]string) error {
 	arrows, err := intExample(example, "remaining_arrows")
 	if err != nil {
@@ -726,6 +770,7 @@ func whenPlayerShootsPath(world *runtime.World, example map[string]string) error
 	if err != nil {
 		return err
 	}
+	world.State["requested_path"] = append([]int(nil), path...)
 	result := gameFrom(world, "game").Shoot(path)
 	world.State["shoot_result"] = result
 	world.State["turn_messages"] = result.Messages
@@ -735,6 +780,18 @@ func whenPlayerShootsPath(world *runtime.World, example map[string]string) error
 
 func thenPlayerWins(world *runtime.World, _ map[string]string) error {
 	return assertGameStatus(world, wumpus.StatusWon)
+}
+
+func thenRequestedShotPathIs(world *runtime.World, example map[string]string) error {
+	want, err := optionalRoomList(example["expected_path"])
+	if err != nil {
+		return err
+	}
+	got := world.State["requested_path"].([]int)
+	if !reflect.DeepEqual(got, want) {
+		return fmt.Errorf("requested shot path %v, want %v", got, want)
+	}
+	return nil
 }
 
 func thenArrowTraversedRoomsAre(world *runtime.World, example map[string]string) error {

@@ -40,6 +40,21 @@ func TestInvalidArrowSegmentUsesNextDeviationRoom(t *testing.T) {
 	}
 }
 
+func TestInvalidArrowSegmentsConsumeQueuedDeviationRooms(t *testing.T) {
+	game := mustGame(t, Setup{Player: 1, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{16, 17}})
+	game.SetArrows(5)
+	game.SetNextArrowDeviation(5)
+	game.SetNextArrowDeviation(6)
+	game.SetNextWumpusWakeChoice(WumpusWakeChoice{Stay: true})
+
+	result := game.Shoot([]int{3, 12})
+
+	wantTraversed := []int{5, 6}
+	if !reflect.DeepEqual(result.TraversedRooms, wantTraversed) {
+		t.Fatalf("traversed rooms = %v, want %v", result.TraversedRooms, wantTraversed)
+	}
+}
+
 func TestInvalidArrowSegmentDefaultsToFirstExit(t *testing.T) {
 	game := mustGame(t, Setup{Player: 1, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{16, 17}})
 	game.SetArrows(5)
@@ -50,6 +65,14 @@ func TestInvalidArrowSegmentDefaultsToFirstExit(t *testing.T) {
 	wantTraversed := []int{2}
 	if !reflect.DeepEqual(result.TraversedRooms, wantTraversed) {
 		t.Fatalf("traversed rooms = %v, want %v", result.TraversedRooms, wantTraversed)
+	}
+}
+
+func TestArrowDeviationFromInvalidRoomStaysInPlace(t *testing.T) {
+	game := mustGame(t, Setup{Player: 1, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{16, 17}})
+
+	if room := game.nextArrowDeviationRoom(21); room != 21 {
+		t.Fatalf("deviation room = %d, want invalid source room 21", room)
 	}
 }
 

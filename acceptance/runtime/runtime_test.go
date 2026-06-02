@@ -65,6 +65,80 @@ func TestRunFeatureFileRunsScenarioWithoutExamples(t *testing.T) {
 	}
 }
 
+func TestRunFeatureFileMatchesConcreteStepToPlaceholderHandler(t *testing.T) {
+	dir := tempDirInPackage(t)
+	path := filepath.Join(dir, "feature.json")
+	writeFeature(t, path, Feature{
+		Name: "Concrete steps",
+		Scenarios: []Scenario{{
+			Name:  "extracts placeholder values",
+			Steps: []Step{{Text: "the player moves from room 1 to room 2"}},
+		}},
+	})
+
+	var gotFrom string
+	var gotTo string
+	RunFeatureFile(t, path, Handlers{
+		"the player moves from room <from_room> to room <to_room>": func(_ *World, example map[string]string) error {
+			gotFrom = example["from_room"]
+			gotTo = example["to_room"]
+			return nil
+		},
+	})
+
+	if gotFrom != "1" || gotTo != "2" {
+		t.Fatalf("extracted from=%q to=%q, want 1 and 2", gotFrom, gotTo)
+	}
+}
+
+func TestTemplateMatchRejectsInvalidText(t *testing.T) {
+	tests := []struct {
+		name     string
+		template string
+		text     string
+	}{
+		{"trailing text", "room <room> done", "room 1 now"},
+		{"malformed placeholder", "room <room", "room 1"},
+		{"adjacent placeholders", "rooms <first><second>", "rooms 12"},
+		{"repeated placeholder mismatch", "room <room> returns to <room>", "room 1 returns to 2"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if _, ok := matchTemplate(test.template, test.text); ok {
+				t.Fatalf("template %q matched %q", test.template, test.text)
+			}
+		})
+	}
+}
+
+func TestTemplateMatchAcceptsRepeatedPlaceholderMatch(t *testing.T) {
+	extracted, ok := matchTemplate("room <room> returns to <room>", "room 1 returns to 1")
+	if !ok {
+		t.Fatal("template did not match repeated placeholder with same value")
+	}
+	if extracted["room"] != "1" {
+		t.Fatalf("room = %q, want 1", extracted["room"])
+	}
+}
+
+func TestSplitPlaceholderValueRejectsInvalidText(t *testing.T) {
+	tests := []struct {
+		name        string
+		text        string
+		nextLiteral string
+	}{
+		{"missing following literal", "room 1", " done"},
+		{"empty value before literal", " done", " done"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if _, _, ok := splitPlaceholderValue(test.text, test.nextLiteral); ok {
+				t.Fatalf("split %q before %q", test.text, test.nextLiteral)
+			}
+		})
+	}
+}
+
 func TestRunFeatureFileUsesOneBasedExampleNames(t *testing.T) {
 	if got, want := executionName("uses examples", 0), "uses examples/example_1"; got != want {
 		t.Fatalf("execution name = %q, want %q", got, want)

@@ -349,3 +349,49 @@ commit hash: c14be638f4018c92ee6280e55848cb723d741b09
 Apply your own role rules to this state.
 
 Action taken: Re-read coder role and constitution, then prepared to merge the specified architect commit into the coder branch and apply coder responsibilities to the resulting state.
+
+## 2026-06-02 09:16:21 CDT - Architect Branch Log Entries
+
+Merged architect branch log history from `c14be638f4018c92ee6280e55848cb723d741b09`.
+
+Recorded entries included refactorer handoffs and architect processing for `cave-setup`, `movement-hazards`, `crooked-arrow`, and `interactive-loop`, including the architect handoff:
+
+```text
+Re-read your role and constitution.
+sender role: architect
+specifier handoff name: cave-setup
+branch name: swarmforge-architect
+commit hash: 5f63059c3bf5f00f05dc6fc3f3954b4bced4a7f8
+Apply your own role rules to this state.
+```
+
+The architect log also records processing of these refactorer handoffs:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: movement-hazards
+branch name: swarmforge-refactorer
+commit hash: 3c30b849ff11d2c938eb7d01def064185ae30960
+Apply your own role rules to this state.
+```
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: crooked-arrow
+branch name: swarmforge-refactorer
+commit hash: d19fd0253d8a2e91940436cc935fa084025054bd
+Apply your own role rules to this state.
+```
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: 1bfa26fadc19984ee1be85a1e8eb2618689a38a9
+Apply your own role rules to this state.
+```
+
+Action taken: Preserved current coder implementation history and retained architect branch handoff context while resolving the merge.
