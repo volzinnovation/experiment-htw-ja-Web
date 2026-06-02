@@ -41,9 +41,16 @@ func (s *Session) DisplayTurn() []string {
 		fmt.Sprintf("YOU ARE IN ROOM %d", setup.Player),
 		fmt.Sprintf("TUNNELS LEAD TO %d %d %d", exits[0], exits[1], exits[2]),
 		fmt.Sprintf("ARROWS LEFT: %d", s.game.Arrows()),
-		"SHOOT OR MOVE (S-M)?",
+		s.prompt(),
 	)
 	return lines
+}
+
+func (s *Session) prompt() string {
+	if s.game.CarriesGrenade() {
+		return "SHOOT, MOVE OR THROW (S-M-T)?"
+	}
+	return "SHOOT OR MOVE (S-M)?"
 }
 
 func (s *Session) EnterCommand(command string) []string {
@@ -57,12 +64,15 @@ func (s *Session) EnterCommand(command string) []string {
 		return s.moveCommand(fields)
 	case "s":
 		return s.shootCommand(fields)
+	case "t":
+		return s.throwCommand(fields)
 	default:
 		return []string{strings.ToUpper(fields[0]) + " IS NOT A COMMAND"}
 	}
 }
 
 func (s *Session) moveCommand(fields []string) []string {
+	shouldDetonate := s.hasPendingGrenade()
 	if len(fields) != 2 {
 		return []string{"CAN'T MOVE THERE"}
 	}
@@ -74,16 +84,32 @@ func (s *Session) moveCommand(fields []string) []string {
 	if result.RejectedMessage != "" {
 		return []string{result.RejectedMessage}
 	}
-	return s.finishCommand(result.Messages)
+	return s.finishCommand(result.Messages, shouldDetonate)
 }
 
 func (s *Session) shootCommand(fields []string) []string {
+	shouldDetonate := s.hasPendingGrenade()
 	path, ok := parseShotPath(fields[1:])
 	if !ok {
 		return []string{"CAN'T SHOOT THERE"}
 	}
 	result := s.game.Shoot(path)
-	return s.finishCommand(result.Messages)
+	return s.finishCommand(result.Messages, shouldDetonate)
+}
+
+func (s *Session) throwCommand(fields []string) []string {
+	if len(fields) != 2 {
+		return []string{"CAN'T THROW THERE"}
+	}
+	room, err := strconv.Atoi(fields[1])
+	if err != nil {
+		return []string{"CAN'T THROW THERE"}
+	}
+	result := s.game.ThrowGrenade(room)
+	if result.RejectedMessage != "" {
+		return []string{result.RejectedMessage}
+	}
+	return s.finishCommand(result.Messages, false)
 }
 
 func parseShotPath(values []string) ([]int, bool) {
@@ -113,12 +139,21 @@ func parseRoom(value string) (int, bool) {
 	return room, true
 }
 
-func (s *Session) finishCommand(messages []string) []string {
+func (s *Session) finishCommand(messages []string, shouldDetonate bool) []string {
+	lines := append([]string{}, messages...)
+	if shouldDetonate {
+		lines = append(lines, s.game.DetonateGrenade()...)
+	}
 	if s.game.Status() == wumpus.StatusLost {
 		s.lostGame = s.game
-		return append(append([]string{}, messages...), "SAME SET UP (Y-N)?")
+		return append(lines, "SAME SET UP (Y-N)?")
 	}
-	return append([]string{}, messages...)
+	return lines
+}
+
+func (s *Session) hasPendingGrenade() bool {
+	_, ok := s.game.PendingGrenadeRoom()
+	return ok
 }
 
 func (s *Session) AnswerSameSetup(answer string) {
