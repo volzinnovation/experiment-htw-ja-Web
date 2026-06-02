@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -64,6 +65,48 @@ func TestRunFeatureFileRunsScenarioWithoutExamples(t *testing.T) {
 	}
 }
 
+func TestRunFeatureFileUsesOneBasedExampleNames(t *testing.T) {
+	if got, want := executionName("uses examples", 0), "uses examples/example_1"; got != want {
+		t.Fatalf("execution name = %q, want %q", got, want)
+	}
+}
+
+func TestLoadGeneratedFeatureUsesMatchingOverride(t *testing.T) {
+	dir := tempDirInPackage(t)
+	basePath := filepath.Join(dir, "base.json")
+	overridePath := filepath.Join(dir, "override.json")
+	writeFeature(t, basePath, Feature{Name: "Generated feature", Scenarios: []Scenario{{Name: "base"}}})
+	writeFeature(t, overridePath, Feature{Name: "Generated feature", Scenarios: []Scenario{{Name: "override"}}})
+	t.Setenv("HTW_ACCEPTANCE_FEATURE_JSON", overridePath)
+
+	feature, err := loadGeneratedFeature(basePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if feature.Scenarios[0].Name != "override" {
+		t.Fatalf("scenario = %q, want override", feature.Scenarios[0].Name)
+	}
+}
+
+func TestLoadGeneratedFeatureIgnoresMismatchedOverride(t *testing.T) {
+	dir := tempDirInPackage(t)
+	basePath := filepath.Join(dir, "base.json")
+	overridePath := filepath.Join(dir, "override.json")
+	writeFeature(t, basePath, Feature{Name: "Base feature", Scenarios: []Scenario{{Name: "base"}}})
+	writeFeature(t, overridePath, Feature{Name: "Other feature", Scenarios: []Scenario{{Name: "override"}}})
+	t.Setenv("HTW_ACCEPTANCE_FEATURE_JSON", overridePath)
+
+	feature, err := loadGeneratedFeature(basePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if feature.Scenarios[0].Name != "base" {
+		t.Fatalf("scenario = %q, want base", feature.Scenarios[0].Name)
+	}
+}
+
 func TestLoadFeatureReportsInvalidJSON(t *testing.T) {
 	dir := tempDirInPackage(t)
 	path := filepath.Join(dir, "invalid.json")
@@ -79,6 +122,42 @@ func TestLoadFeatureReportsInvalidJSON(t *testing.T) {
 func TestResolvePathReportsMissingFile(t *testing.T) {
 	if _, err := resolvePath("missing-feature.json"); err == nil {
 		t.Fatal("expected missing feature error")
+	}
+}
+
+func TestResolvePathFindsFileFromGeneratedPackageDepth(t *testing.T) {
+	dir := tempDirInPackage(t)
+	path := filepath.Join(dir, "feature.json")
+	writeFeature(t, path, Feature{Name: "Deep feature"})
+	deepDir := filepath.Join("runtime-deep-test", "one", "two", "three", "four")
+	if err := os.MkdirAll(deepDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.RemoveAll("runtime-deep-test"); err != nil {
+			t.Fatal(err)
+		}
+	})
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Fatal(err)
+		}
+	})
+	if err := os.Chdir(deepDir); err != nil {
+		t.Fatal(err)
+	}
+
+	resolved, err := resolvePath(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.HasSuffix(filepath.ToSlash(resolved), filepath.ToSlash(path)) {
+		t.Fatalf("resolved path = %q, want suffix %q", resolved, path)
 	}
 }
 

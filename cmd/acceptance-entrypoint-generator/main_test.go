@@ -27,6 +27,9 @@ func TestGenerateWritesAcceptanceTestAndMetadata(t *testing.T) {
 	if !strings.Contains(string(source), "func TestCaveTopology(t *testing.T)") {
 		t.Fatalf("generated source missing exported test name:\n%s", source)
 	}
+	if !strings.Contains(string(source), "runtime.RunGeneratedFeatureFile") {
+		t.Fatalf("generated source missing generated runtime helper:\n%s", source)
+	}
 	if !strings.Contains(string(source), filepath.ToSlash(irPath)) {
 		t.Fatalf("generated source missing IR path:\n%s", source)
 	}
