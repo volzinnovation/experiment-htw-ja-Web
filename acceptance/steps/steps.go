@@ -68,6 +68,13 @@ func NewHandlers() runtime.Handlers {
 		"the Wumpus is in room <expected_wumpus_room>":                                               thenWumpusInRoom,
 		"the turn warnings are requested":                                                            whenTurnWarningsRequested,
 		"the warning messages are <warnings>":                                                        thenWarningMessagesAre,
+		"the player has <arrows> arrows":                                                             givenOrThenPlayerHasArrows,
+		"the player has <remaining_arrows> arrows":                                                   thenPlayerHasRemainingArrows,
+		"the next arrow deviation room is <deviation_room>":                                          givenNextArrowDeviationRoom,
+		"the player shoots the path <path>":                                                          whenPlayerShootsPath,
+		"the player wins":                                                                            thenPlayerWins,
+		"the arrow traversed rooms are <traversed_rooms>":                                            thenArrowTraversedRoomsAre,
+		"the shot is rejected with message <message>":                                                thenShotRejectedWithMessage,
 	}
 }
 
@@ -360,7 +367,10 @@ func whenPlayerMoves(world *runtime.World, example map[string]string) error {
 	if err != nil {
 		return err
 	}
-	world.State["move_result"] = gameFrom(world, "game").Move(room)
+	result := gameFrom(world, "game").Move(room)
+	world.State["move_result"] = result
+	world.State["turn_messages"] = result.Messages
+	world.State["action_taken"] = true
 	return nil
 }
 
@@ -409,10 +419,10 @@ func assertGameStatus(world *runtime.World, want wumpus.Status) error {
 }
 
 func thenTurnMessagesAre(world *runtime.World, example map[string]string) error {
-	result := world.State["move_result"].(wumpus.MoveResult)
 	want := stringList(example["messages"])
-	if !reflect.DeepEqual(result.Messages, want) {
-		return fmt.Errorf("turn messages are %v, want %v", result.Messages, want)
+	got := world.State["turn_messages"].([]string)
+	if !reflect.DeepEqual(got, want) {
+		return fmt.Errorf("turn messages are %v, want %v", got, want)
 	}
 	return nil
 }
@@ -465,6 +475,82 @@ func thenWarningMessagesAre(world *runtime.World, example map[string]string) err
 	want := stringList(example["warnings"])
 	if !reflect.DeepEqual(got, want) {
 		return fmt.Errorf("warning messages are %v, want %v", got, want)
+	}
+	return nil
+}
+
+func givenOrThenPlayerHasArrows(world *runtime.World, example map[string]string) error {
+	arrows, err := intExample(example, "arrows")
+	if err != nil {
+		return err
+	}
+	if _, actionTaken := world.State["action_taken"]; !actionTaken {
+		gameFrom(world, "game").SetArrows(arrows)
+		return nil
+	}
+	return assertArrows(world, arrows)
+}
+
+func thenPlayerHasRemainingArrows(world *runtime.World, example map[string]string) error {
+	arrows, err := intExample(example, "remaining_arrows")
+	if err != nil {
+		return err
+	}
+	return assertArrows(world, arrows)
+}
+
+func assertArrows(world *runtime.World, want int) error {
+	got := gameFrom(world, "game").Arrows()
+	if got != want {
+		return fmt.Errorf("player has %d arrows, want %d", got, want)
+	}
+	return nil
+}
+
+func givenNextArrowDeviationRoom(world *runtime.World, example map[string]string) error {
+	if example["deviation_room"] == "none" {
+		return nil
+	}
+	room, err := intExample(example, "deviation_room")
+	if err != nil {
+		return err
+	}
+	gameFrom(world, "game").SetNextArrowDeviation(room)
+	return nil
+}
+
+func whenPlayerShootsPath(world *runtime.World, example map[string]string) error {
+	path, err := optionalRoomList(example["path"])
+	if err != nil {
+		return err
+	}
+	result := gameFrom(world, "game").Shoot(path)
+	world.State["shoot_result"] = result
+	world.State["turn_messages"] = result.Messages
+	world.State["action_taken"] = true
+	return nil
+}
+
+func thenPlayerWins(world *runtime.World, _ map[string]string) error {
+	return assertGameStatus(world, wumpus.StatusWon)
+}
+
+func thenArrowTraversedRoomsAre(world *runtime.World, example map[string]string) error {
+	want, err := roomList(example["traversed_rooms"])
+	if err != nil {
+		return err
+	}
+	got := world.State["shoot_result"].(wumpus.ShootResult).TraversedRooms
+	if !reflect.DeepEqual(got, want) {
+		return fmt.Errorf("arrow traversed rooms %v, want %v", got, want)
+	}
+	return nil
+}
+
+func thenShotRejectedWithMessage(world *runtime.World, example map[string]string) error {
+	result := world.State["shoot_result"].(wumpus.ShootResult)
+	if result.RejectedMessage != example["message"] {
+		return fmt.Errorf("shot rejection message is %q, want %q", result.RejectedMessage, example["message"])
 	}
 	return nil
 }
@@ -539,6 +625,13 @@ func roomList(value string) ([]int, error) {
 		rooms = append(rooms, room)
 	}
 	return rooms, nil
+}
+
+func optionalRoomList(value string) ([]int, error) {
+	if value == "none" {
+		return nil, nil
+	}
+	return roomList(value)
 }
 
 func stringList(value string) []string {
