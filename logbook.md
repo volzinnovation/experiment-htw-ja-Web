@@ -290,3 +290,13 @@ Apply your own role rules to this state.
 ```
 
 Summary: Task 6 Sleepy Wumpus warning, wake, room-entry, observation, seeded probability, and integration specifications are ready for coder review.
+
+## 2026-06-02 08:37:47 CDT - Sent Handoff
+
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: jumping-wumpus
+branch name: swarmforge-coder
+commit hash: 5311ca0d06564974f646d1616d25376083f7aac3
+
+Summary: Jumping Wumpus turn events, two-room legal jumps, landing outcomes, command ordering, grenade interaction, and reproducible events are ready for refactorer review.
