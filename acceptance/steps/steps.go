@@ -307,10 +307,12 @@ func givenSetupRoom6NoHazards(world *runtime.World, _ map[string]string) error {
 }
 
 func setConfiguredSetup(world *runtime.World, setup wumpus.Setup) error {
-	if _, err := wumpus.NewGameWithSetup(setup); err != nil {
+	game, err := wumpus.NewGameWithSetup(setup)
+	if err != nil {
 		return err
 	}
 	world.State["setup"] = setup
+	world.State["game"] = &game
 	return nil
 }
 
