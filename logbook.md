@@ -17,6 +17,21 @@ commit hash: 23ed8da4cf4c07a1aa78100617539b94d50049c7
 Apply your own role rules to this state.
 ```
 
+## 2026-06-02 11:06:39 CDT - Received rest-command refactorer handoff
+
+Received the following handoff:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: rest-command
+branch name: swarmforge-refactorer
+commit hash: c220f3de149f6e3ea65a24a20c982857c4465f2e
+Apply your own role rules to this state.
+```
+
+Action taken: merging `c220f3de149f6e3ea65a24a20c982857c4465f2e` into the architect branch for architectural review and verification.
+
 ## 2026-06-02 11:03:25 CDT - Processing queued interactive-loop refactorer handoffs
 
 Now that the rest-command architect merge was committed and handoffs were sent, processing the queued interactive-loop refactorer handoffs together. The newer handoff supersedes the earlier one for merge purposes:
