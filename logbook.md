@@ -265,6 +265,60 @@ Action taken: Preserved architect branch history reporting the newer queued rest
 
 Summary: Architect verification covered targeted language mutation for `acceptance/steps/steps.go`, acceptance-step tests, `go test ./...`, property tests, acceptance tests, DRY analysis, and soft Gherkin acceptance mutation with zero survivors.
 
+## 2026-06-02 11:13:35 CDT
+
+Merged branch handoff history from `swarmforge-coder` while merging everyone into `master`.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: architect
+specifier handoff name: interactive-loop
+branch name: swarmforge-architect
+commit hash: 8c83e8c767983ba9f72a2369792e8c416d1f3518
+Apply your own role rules to this state.
+```
+
+Action taken: Preserved coder branch history noting the architect interactive-loop follow-up was received and merged into the coder branch.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: interactive-loop
+branch name: swarmforge-coder
+commit hash: b2720622b31cc54d1643956ee60192a1674a9570
+```
+
+Action taken: Preserved coder branch history reporting architect interactive-loop guidance was merged and normal acceptance and unit verification were green.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: architect
+specifier handoff name: rest-command
+branch name: swarmforge-architect
+commit hash: aff89c3b53bdc0601822225ea541c87eac3d23c3
+Apply your own role rules to this state.
+```
+
+Action taken: Preserved coder branch history noting the architect rest-command cleanup was received and merged into the coder branch.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: rest-command
+branch name: swarmforge-coder
+commit hash: dd5cf69aa989f0e13546a47407a24028db421c1f
+```
+
+Action taken: Preserved coder branch history reporting architect rest-command cleanup was merged and normal acceptance and unit verification were green.
+
 ## 2026-06-02 10:53:05 CDT
 
 Merged branch handoff history from `swarmforge-architect` while resolving the queued `interactive-loop` follow-up merge.
