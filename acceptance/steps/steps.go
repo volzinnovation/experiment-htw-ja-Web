@@ -53,45 +53,49 @@ func NewHandlers() runtime.Handlers {
 		"there are 2 bats":                                thenTwoBats,
 		"the occupied rooms are inspected":                whenOccupiedRoomsInspected,
 		"every occupied room number is from 1 through 20": thenOccupiedRoomsValid,
-		"exactly <occupied_count> distinct rooms are occupied by the player, Wumpus, pits, and bats": thenDistinctOccupiedCount,
-		"exactly 6 distinct rooms are occupied by the player, Wumpus, pits, and bats":                thenSixDistinctOccupiedRooms,
-		"another new game created with seed 1973":                                                    givenAnotherNewGameSeed1973,
-		"another new game created with seed <seed>":                                                  givenAnotherNewGameSeed,
-		"both setups are inspected":                                                                  whenBothSetupsInspected,
-		"both setups have identical player, Wumpus, pit, and bat rooms":                              thenBothSetupsIdentical,
-		"a completed game created with seed 1973":                                                    givenCompletedGameSeed1973,
-		"a completed game created with seed <seed>":                                                  givenCompletedGameSeed,
-		"a same setup replay is started":                                                             whenSameSetupReplayStarted,
-		"the replay setup has identical player, Wumpus, pit, and bat rooms":                          thenReplaySetupIdentical,
-		"the player moves to room <to_room>":                                                         whenPlayerMoves,
-		"the player moves to room <pit_room>":                                                        whenPlayerMoves,
-		"the player moves to room <bat_room>":                                                        whenPlayerMoves,
-		"the player moves to room <wumpus_room>":                                                     whenPlayerMoves,
-		"the player moves to room <grenade_room>":                                                    whenPlayerMovesToGrenadeRoom,
-		"the player is in room <to_room>":                                                            thenPlayerInToRoom,
-		"the player is in room <from_room>":                                                          thenPlayerInFromRoom,
-		"the player is in room <player_room>":                                                        thenPlayerInPlayerRoom,
-		"the player is in room <relocation_room>":                                                    thenPlayerInRelocationRoom,
-		"the game is still in progress":                                                              thenGameStillInProgress,
-		"the game is in progress":                                                                    thenGameStillInProgress,
-		"the game is <game_status>":                                                                  thenGameStatus,
-		"the player loses":                                                                           thenPlayerLoses,
-		"the turn messages are <messages>":                                                           thenTurnMessagesAre,
-		"the move is rejected with message <message>":                                                thenMoveRejectedWithMessage,
-		"the next bat relocation room is <relocation_room>":                                          givenNextBatRelocationRoom,
-		"the next bat relocation room is <wumpus_room>":                                              givenNextBatRelocationRoom,
-		"the next Wumpus wake choice is <wake_choice>":                                               givenNextWumpusWakeChoice,
-		"the Wumpus is in room <expected_wumpus_room>":                                               thenWumpusInRoom,
-		"the Wumpus is in room <wumpus_room>":                                                        thenWumpusInWumpusRoom,
-		"the turn warnings are requested":                                                            whenTurnWarningsRequested,
-		"the warning messages are <warnings>":                                                        thenWarningMessagesAre,
-		"the player has <arrows> arrows":                                                             givenOrThenPlayerHasArrows,
-		"the player has <remaining_arrows> arrows":                                                   thenPlayerHasRemainingArrows,
-		"the next arrow deviation room is <deviation_room>":                                          givenNextArrowDeviationRoom,
-		"the player shoots the path <path>":                                                          whenPlayerShootsPath,
-		"the player wins":                                                                            thenPlayerWins,
-		"the arrow traversed rooms are <traversed_rooms>":                                            thenArrowTraversedRoomsAre,
-		"the shot is rejected with message <message>":                                                thenShotRejectedWithMessage,
+		"exactly <occupied_count> distinct rooms are occupied by the player, Wumpus, pits, and bats":       thenDistinctOccupiedCount,
+		"exactly 6 distinct rooms are occupied by the player, Wumpus, pits, and bats":                      thenSixDistinctOccupiedRooms,
+		"another new game created with seed 1973":                                                          givenAnotherNewGameSeed1973,
+		"another new game created with seed <seed>":                                                        givenAnotherNewGameSeed,
+		"both setups are inspected":                                                                        whenBothSetupsInspected,
+		"both setups have identical player, Wumpus, pit, and bat rooms":                                    thenBothSetupsIdentical,
+		"a completed game created with seed 1973":                                                          givenCompletedGameSeed1973,
+		"a completed game created with seed <seed>":                                                        givenCompletedGameSeed,
+		"a same setup replay is started":                                                                   whenSameSetupReplayStarted,
+		"the replay setup has identical player, Wumpus, pit, and bat rooms":                                thenReplaySetupIdentical,
+		"the player moves to room <to_room>":                                                               whenPlayerMoves,
+		"the player moves to room <pit_room>":                                                              whenPlayerMoves,
+		"the player moves to room <bat_room>":                                                              whenPlayerMoves,
+		"the player moves to room <wumpus_room>":                                                           whenPlayerMoves,
+		"the player moves to room <grenade_room>":                                                          whenPlayerMovesToGrenadeRoom,
+		"the player is in room <to_room>":                                                                  thenPlayerInToRoom,
+		"the player is in room <from_room>":                                                                thenPlayerInFromRoom,
+		"the player is in room <player_room>":                                                              thenPlayerInPlayerRoom,
+		"the player is in room <expected_player_room>":                                                     thenPlayerInExpectedPlayerRoom,
+		"the player is in room <relocation_room>":                                                          thenPlayerInRelocationRoom,
+		"the game is still in progress":                                                                    thenGameStillInProgress,
+		"the game is in progress":                                                                          thenGameStillInProgress,
+		"the game is <game_status>":                                                                        thenGameStatus,
+		"the player loses":                                                                                 thenPlayerLoses,
+		"the turn messages are <messages>":                                                                 thenTurnMessagesAre,
+		"the move is rejected with message <message>":                                                      thenMoveRejectedWithMessage,
+		"the next bat relocation room is <relocation_room>":                                                givenNextBatRelocationRoom,
+		"the next bat relocation room is <wumpus_room>":                                                    givenNextBatRelocationRoom,
+		"the next Wumpus wake choice is <wake_choice>":                                                     givenNextWumpusWakeChoice,
+		"the Wumpus is in room <expected_wumpus_room>":                                                     thenWumpusInRoom,
+		"the Wumpus is in room <wumpus_room>":                                                              thenWumpusInWumpusRoom,
+		"the turn warnings are requested":                                                                  whenTurnWarningsRequested,
+		"the warning messages are <warnings>":                                                              thenWarningMessagesAre,
+		"a shooting game setup with the player in room <player_room> and the Wumpus in room <wumpus_room>": givenShootingSetup,
+		"the player starts with <initial_arrows> arrows":                                                   givenPlayerStartsWithArrows,
+		"the player has <arrows> arrows":                                                                   givenOrThenPlayerHasArrows,
+		"the player has <remaining_arrows> arrows":                                                         thenPlayerHasRemainingArrows,
+		"the next arrow deviation room is <deviation_room>":                                                givenNextArrowDeviationRoom,
+		"the player shoots the path <path>":                                                                whenPlayerShootsPath,
+		"the player wins":                                                                                  thenPlayerWins,
+		"the arrow traversed rooms are <traversed_rooms>":                                                  thenArrowTraversedRoomsAre,
+		"the requested shot path is <expected_path>":                                                       thenRequestedShotPathIs,
+		"the shot is rejected with message <message>":                                                      thenShotRejectedWithMessage,
 		"an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows": givenInteractiveSetup,
 		"an interactive game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows":   givenInteractiveSetup,
 		"an interactive game setup with seed <seed>":                                      givenInteractiveSetupSeed,
@@ -566,6 +570,10 @@ func thenPlayerInPlayerRoom(world *runtime.World, example map[string]string) err
 	return thenPlayerInExampleRoom(world, example, "player_room")
 }
 
+func thenPlayerInExpectedPlayerRoom(world *runtime.World, example map[string]string) error {
+	return thenPlayerInExampleRoom(world, example, "expected_player_room")
+}
+
 func thenPlayerInRelocationRoom(world *runtime.World, example map[string]string) error {
 	return thenPlayerInExampleRoom(world, example, "relocation_room")
 }
@@ -658,6 +666,19 @@ func thenWarningMessagesAre(world *runtime.World, example map[string]string) err
 	return assertStringState(world, "warnings", "warning messages", example["warnings"])
 }
 
+func givenShootingSetup(world *runtime.World, example map[string]string) error {
+	player, err := intExample(example, "player_room")
+	if err != nil {
+		return err
+	}
+	wumpusRoom, err := intExample(example, "wumpus_room")
+	if err != nil {
+		return err
+	}
+	setup := wumpus.Setup{Player: player, Wumpus: wumpusRoom, Pits: []int{13, 14}, Bats: []int{16, 17}}
+	return setConfiguredSetup(world, setup)
+}
+
 func givenOrThenPlayerHasArrows(world *runtime.World, example map[string]string) error {
 	arrows, err := intExample(example, "arrows")
 	if err != nil {
@@ -668,6 +689,15 @@ func givenOrThenPlayerHasArrows(world *runtime.World, example map[string]string)
 		return nil
 	}
 	return assertArrows(world, arrows)
+}
+
+func givenPlayerStartsWithArrows(world *runtime.World, example map[string]string) error {
+	arrows, err := intExample(example, "initial_arrows")
+	if err != nil {
+		return err
+	}
+	gameFrom(world, "game").SetArrows(arrows)
+	return nil
 }
 
 func thenPlayerHasRemainingArrows(world *runtime.World, example map[string]string) error {
@@ -703,6 +733,7 @@ func whenPlayerShootsPath(world *runtime.World, example map[string]string) error
 	if err != nil {
 		return err
 	}
+	world.State["requested_shot_path"] = path
 	result := gameFrom(world, "game").Shoot(path)
 	world.State["shoot_result"] = result
 	world.State["turn_messages"] = result.Messages
@@ -722,6 +753,18 @@ func thenArrowTraversedRoomsAre(world *runtime.World, example map[string]string)
 	got := world.State["shoot_result"].(wumpus.ShootResult).TraversedRooms
 	if !reflect.DeepEqual(got, want) {
 		return fmt.Errorf("arrow traversed rooms %v, want %v", got, want)
+	}
+	return nil
+}
+
+func thenRequestedShotPathIs(world *runtime.World, example map[string]string) error {
+	want, err := optionalRoomList(example["expected_path"])
+	if err != nil {
+		return err
+	}
+	got := world.State["requested_shot_path"].([]int)
+	if !reflect.DeepEqual(got, want) {
+		return fmt.Errorf("requested shot path %v, want %v", got, want)
 	}
 	return nil
 }

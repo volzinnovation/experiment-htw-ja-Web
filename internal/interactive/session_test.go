@@ -52,6 +52,20 @@ func TestShootCommandDisplaysVictory(t *testing.T) {
 	}
 }
 
+func TestFiveRoomShootCommandIsAccepted(t *testing.T) {
+	session := NewSessionWithGame(mustInteractiveGame(t, wumpus.Setup{Player: 1, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{16, 17}}, 5))
+	session.Game().SetNextWumpusWakeChoice(wumpus.WumpusWakeChoice{Stay: true})
+
+	lines := session.EnterCommand("s 2 3 4 5 6")
+
+	if !reflect.DeepEqual(lines, []string{"MISSED"}) {
+		t.Fatalf("lines = %v, want [MISSED]", lines)
+	}
+	if session.Game().Arrows() != 4 {
+		t.Fatalf("arrows = %d, want 4", session.Game().Arrows())
+	}
+}
+
 func TestInvalidCommandDoesNotAdvanceState(t *testing.T) {
 	session := NewSessionWithGame(mustInteractiveGame(t, wumpus.Setup{Player: 1, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{16, 17}}, 5))
 
@@ -134,8 +148,33 @@ func TestSameSetupReplayCanPreserveOrReplaceSetup(t *testing.T) {
 
 	session.MarkLostForTest()
 	session.AnswerSameSetup("n")
-	if reflect.DeepEqual(session.Game().Setup(), original) {
-		t.Fatalf("new setup replay should differ from %v", original)
+	expected, err := wumpus.NewGame(1974)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(session.Game().Setup(), expected.Setup()) {
+		t.Fatalf("new setup replay = %v, want seed 1974 setup %v", session.Game().Setup(), expected.Setup())
+	}
+}
+
+func TestParseRoomBoundaries(t *testing.T) {
+	tests := []struct {
+		value string
+		room  int
+		ok    bool
+	}{
+		{value: "0", room: 0, ok: false},
+		{value: "1", room: 1, ok: true},
+		{value: "20", room: 20, ok: true},
+		{value: "21", room: 0, ok: false},
+		{value: "two", room: 0, ok: false},
+	}
+
+	for _, test := range tests {
+		room, ok := parseRoom(test.value)
+		if room != test.room || ok != test.ok {
+			t.Fatalf("parseRoom(%q) = (%d, %t), want (%d, %t)", test.value, room, ok, test.room, test.ok)
+		}
 	}
 }
 

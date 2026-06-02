@@ -90,6 +90,23 @@ func TestMoveIntoBatsRelocatesAndResolvesDestinationHazards(t *testing.T) {
 	}
 }
 
+func TestBatRelocationConsumesQueuedRooms(t *testing.T) {
+	game := mustGame(t, Setup{Player: 1, Wumpus: 19, Pits: []int{13, 14}, Bats: []int{2, 4}})
+	game.SetNextBatRelocation(5)
+	game.SetNextBatRelocation(20)
+
+	game.Move(2)
+	result := game.Move(4)
+
+	want := []string{"ZAP -- SUPER BAT SNATCH! ELSEWHEREVILLE FOR YOU!"}
+	if !reflect.DeepEqual(result.Messages, want) {
+		t.Fatalf("messages = %v, want %v", result.Messages, want)
+	}
+	if game.Setup().Player != 20 {
+		t.Fatalf("player room = %d, want second queued bat relocation room 20", game.Setup().Player)
+	}
+}
+
 func TestBatRelocationDefaultsToRoomOne(t *testing.T) {
 	game := mustGame(t, Setup{Player: 3, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{2, 17}})
 
@@ -111,6 +128,25 @@ func TestMoveIntoWumpusRoomWakesWumpus(t *testing.T) {
 	}
 	if game.Setup().Wumpus != 3 {
 		t.Fatalf("Wumpus room = %d, want 3", game.Setup().Wumpus)
+	}
+	if game.Status() != StatusInProgress {
+		t.Fatalf("status = %s, want %s", game.Status(), StatusInProgress)
+	}
+}
+
+func TestWumpusWakeChoicesAreConsumed(t *testing.T) {
+	game := mustGame(t, Setup{Player: 1, Wumpus: 2, Pits: []int{13, 14}, Bats: []int{16, 17}})
+	game.SetNextWumpusWakeChoice(WumpusWakeChoice{Destination: 3})
+	game.SetNextWumpusWakeChoice(WumpusWakeChoice{Destination: 4})
+
+	game.Move(2)
+	result := game.Move(3)
+
+	if len(result.Messages) != 0 {
+		t.Fatalf("messages = %v, want none", result.Messages)
+	}
+	if game.Setup().Wumpus != 4 {
+		t.Fatalf("Wumpus room = %d, want second queued wake destination 4", game.Setup().Wumpus)
 	}
 	if game.Status() != StatusInProgress {
 		t.Fatalf("status = %s, want %s", game.Status(), StatusInProgress)
@@ -158,6 +194,14 @@ func TestTurnWarningsUseOriginalWarningOrder(t *testing.T) {
 
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("warnings = %v, want %v", got, want)
+	}
+}
+
+func TestBatsNearbyForWarningDetectsDirectBatRoom(t *testing.T) {
+	game := mustGame(t, Setup{Player: 1, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{2, 17}})
+
+	if !game.batsNearbyForWarning() {
+		t.Fatal("batsNearbyForWarning() = false, want true for directly adjacent bat")
 	}
 }
 
