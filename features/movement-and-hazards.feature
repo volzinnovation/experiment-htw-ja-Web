@@ -1,6 +1,6 @@
 # mutation-stamp: sha256=f854056a1a1eafc04c987fccfaf7a2a89abe91a408dc0d3085f6c98b199d2b3e
 # acceptance-mutation-manifest-begin
-# {"version":1,"tested_at":"2026-06-02T14:14:50Z","feature_name":"Movement and hazard resolution","feature_path":"features/movement-and-hazards.feature","background_hash":"74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b","implementation_hash":"sha256:f7b4a1e34ca682886d47a42f7705487d63c9191a01fef6729a523c1beb19850c","scenarios":[]}
+# {"version":1,"tested_at":"2026-06-02T15:23:48Z","feature_name":"Movement and hazard resolution","feature_path":"features/movement-and-hazards.feature","background_hash":"74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b","implementation_hash":"sha256:f7b4a1e34ca682886d47a42f7705487d63c9191a01fef6729a523c1beb19850c","scenarios":[]}
 # acceptance-mutation-manifest-end
 
 Feature: Movement and hazard resolution

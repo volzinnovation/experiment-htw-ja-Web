@@ -68,6 +68,17 @@ func TestMoveIntoPitLosesImmediately(t *testing.T) {
 	}
 }
 
+func TestLosingMoveDoesNotObserveAdjacentSleepyWumpus(t *testing.T) {
+	game := mustGame(t, Setup{Player: 1, Wumpus: 3, Pits: []int{2, 14}, Bats: []int{16, 17}})
+	game.SetNextSleepyWumpusObservation(true)
+
+	game.Move(2)
+
+	if game.WumpusAsleep() {
+		t.Fatal("lost move should not observe adjacent Wumpus")
+	}
+}
+
 func TestMoveIntoBatsRelocatesAndResolvesDestinationHazards(t *testing.T) {
 	game := mustGame(t, Setup{Player: 1, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{2, 17}})
 	game.SetNextBatRelocation(13)

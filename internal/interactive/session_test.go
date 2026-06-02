@@ -103,6 +103,14 @@ func TestMalformedMoveCommandsReportMoveError(t *testing.T) {
 	}
 }
 
+func TestParseCommandRoomRejectsWrongFieldCount(t *testing.T) {
+	for _, fields := range [][]string{{"m"}, {"m", "2", "3"}} {
+		if room, ok := parseCommandRoom(fields); ok || room != 0 {
+			t.Fatalf("parseCommandRoom(%v) = %d, %t; want 0, false", fields, room, ok)
+		}
+	}
+}
+
 func TestMalformedShootCommandsReportShootError(t *testing.T) {
 	session := NewSessionWithGame(mustInteractiveGame(t, wumpus.Setup{Player: 1, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{16, 17}}, 5))
 

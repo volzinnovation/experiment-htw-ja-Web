@@ -460,3 +460,55 @@ Apply your own role rules to this state.
 ```
 
 Reason: queued while the architect was completing the interactive-loop combined handoff; processing this latest combined refactorer state now.
+
+## 2026-06-02 10:24:18 CDT - Completed combined rest-command refactorer merge
+
+Merged and architect-verified the queued refactorer state through:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: rest-command
+branch name: swarmforge-refactorer
+commit hash: a0ac2e788e4524556d24d5765bbf207b3b09e2f8
+Apply your own role rules to this state.
+```
+
+Architect actions:
+- Resolved merge conflicts in acceptance steps, Wumpus movement, and logbook history without reverting incoming refactorer work.
+- Added mutation-hardening tests for queue consumption, grenade seeded placement, grenade room ten blast reach, jumping Wumpus queued paths, sleepy Wumpus wake transitions, movement wake guards, interactive command parsing, and cave adjacent hazards.
+- Simplified the cave reachability set representation to avoid equivalent boolean map mutants.
+- Extracted shared acceptance-step helpers for movement, set/assert integer steps, enum choices, no-room assertions, and paired seeded observation assertions.
+- Rewrote Holy Hand Grenade, Jumping Wumpus, Rest Command, and Sleepy Wumpus feature files from outline fixture tables to concrete scenarios so soft Gherkin mutation no longer reports survivors for irrelevant setup cells.
+
+Verification:
+- Language mutation was run one production file at a time for `internal/wumpus/queue.go`, `internal/wumpus/grenade.go`, `internal/wumpus/jumping.go`, `internal/wumpus/sleepy.go`, `internal/wumpus/movement.go`, `internal/interactive/session.go`, `internal/wumpus/cave.go`, and `internal/wumpus/setup.go`; targeted reruns killed all observed survivors.
+- `go test ./...` passed.
+- `go test -tags property ./internal/wumpus` passed.
+- `./scripts/acceptance.sh` passed.
+- `tmp/bin/dry4go acceptance cmd internal` completed successfully; remaining reports are small test/wrapper-pattern duplicates left as low-value to refactor further in this merge.
+- `./scripts/acceptance-mutate.sh soft` passed with zero survivors and zero errors.
+
+## 2026-06-02 10:24:18 CDT - Logged queued refactorer messages for later processing
+
+The following complete handoff was received while the architect was still completing and verifying the rest-command merge. It remains queued and unprocessed until the current job is committed and handoffs are sent.
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: 583faffd7b7d1ea620466bb39789f2e7d2927595
+Apply your own role rules to this state.
+```
+
+The following newer complete handoff was also received while the architect was still completing and verifying the rest-command merge. It remains queued and unprocessed until the current job is committed and handoffs are sent.
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: c30bf93defe56be59a86a9d14a17534225ef02d8
+Apply your own role rules to this state.
+```
