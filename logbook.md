@@ -120,3 +120,20 @@ Apply your own role rules to this state.
 ```
 
 Summary: Task 7 Jumping Wumpus trigger, legal jumps, first-landing outcomes, second-landing sighting, turn timing, and integration specifications are ready for coder review.
+
+## 2026-06-02 07:40:28 CDT
+
+Sent handoff to coder.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: specifier
+specifier handoff name: rest-command
+branch name: master
+commit hash: b740ca6dd61cdd48fb54a6daccbdb3562994b42e
+Apply your own role rules to this state.
+```
+
+Summary: Task 8 Rest command parsing, turn consumption, warning display, jumping Wumpus, grenade detonation, hazard non-resolution, and invalid syntax specifications are ready for coder review.
