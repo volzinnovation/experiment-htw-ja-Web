@@ -160,3 +160,18 @@ commit hash: bd7c6a2d0a0ae41768a2937247cbd2c6126d0712
 ```
 
 Reason: queued while the refactorer was completing the movement-hazards handoff; processing after the required architect notification was sent.
+
+## 2026-06-02 07:58:58 CDT
+
+Sent handoff:
+
+```
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: crooked-arrow
+branch name: swarmforge-refactorer
+commit hash: d19fd0253d8a2e91940436cc935fa084025054bd
+Apply your own role rules to this state.
+```
+
+Summary: reported the refactored crooked-arrow state for architect review.
