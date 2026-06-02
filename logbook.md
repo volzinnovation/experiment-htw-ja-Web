@@ -589,3 +589,69 @@ branch name: swarmforge-refactorer
 commit hash: c30bf93defe56be59a86a9d14a17534225ef02d8
 Apply your own role rules to this state.
 ```
+
+## 2026-06-02 10:54:27 CDT - Processing queued rest-command refactorer handoffs
+
+Now that the interactive-loop architect merge was committed and handoffs were sent, processing the queued rest-command refactorer handoffs together. The newer handoff supersedes the earlier one for merge purposes:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: rest-command
+branch name: swarmforge-refactorer
+commit hash: 3ff0a4fb3ee2a5de462b6b32f705e7b33139f924
+Apply your own role rules to this state.
+```
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: rest-command
+branch name: swarmforge-refactorer
+commit hash: d4f1692918ff5032f471dd82125742d41838cfe9
+Apply your own role rules to this state.
+```
+
+Action taken: merging `d4f1692918ff5032f471dd82125742d41838cfe9` into the architect branch for architectural review and verification.
+
+## 2026-06-02 11:00:51 CDT - Completed queued rest-command architect merge
+
+Processed the queued rest-command refactorer handoffs by merging the newer refactorer commit `d4f1692918ff5032f471dd82125742d41838cfe9`.
+
+Actions:
+- Resolved the logbook merge conflict by preserving the architect-side local handoff history and recording the queued rest-command handoffs explicitly.
+- Accepted the refactorer DRY extraction for player and Wumpus example-room assertions.
+- Removed a redundant empty-list branch in string-list assertions and switched the comparison to `slices.Equal` so generated acceptance tests treat nil and empty lists consistently for `none`.
+- Replaced duplicated inline setup room selectors with named helper functions.
+- Restored timestamp-only feature manifest edits left by soft acceptance mutation verification.
+
+Verification:
+- Language mutation was run one file at a time for `acceptance/steps/steps.go`; the first run killed 85 mutants and found 2 equivalent survivors in the removed empty-list branch, and final differential reruns reported zero selected survivors.
+- `go test ./acceptance/steps` passed.
+- `go test ./...` passed.
+- `go test -tags property ./internal/wumpus` passed.
+- `./scripts/acceptance.sh` passed.
+- `tmp/bin/dry4go acceptance cmd internal` completed successfully; remaining reports were known low-value test/wrapper-pattern duplicates.
+- `./scripts/acceptance-mutate.sh soft` passed with zero survivors and zero errors.
+
+Removing the two processed rest-command queue files after completing the merge and recording the complete messages:
+
+```text
+pending-messages/50-20260602-103114-refactorer.txt
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: rest-command
+branch name: swarmforge-refactorer
+commit hash: 3ff0a4fb3ee2a5de462b6b32f705e7b33139f924
+Apply your own role rules to this state.
+```
+
+```text
+pending-messages/50-20260602-103553-refactorer.txt
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: rest-command
+branch name: swarmforge-refactorer
+commit hash: d4f1692918ff5032f471dd82125742d41838cfe9
+Apply your own role rules to this state.
+```
