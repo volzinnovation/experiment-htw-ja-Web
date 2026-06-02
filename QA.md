@@ -245,6 +245,32 @@ qa set bats 14 15
 
 Expected warning: `I FEEL A DRAFT`.
 
+Verify non-adjacent hazards do not warn. This setup reproduces the class of defect where a hazard two tunnels away prints a warning: room 3 has exits 2, 4, and 12, while the Wumpus, pits, and bats below are all non-adjacent.
+
+```text
+qa set player 3
+qa set wumpus 13
+qa set pits 15 5
+qa set bats 1 18
+```
+
+Expected warnings: none. The transcript must not include:
+
+```text
+I SMELL A WUMPUS
+BATS NEARBY
+I FEEL A DRAFT
+```
+
+The turn display must go straight from `QA STATE: ...` to:
+
+```text
+YOU ARE IN ROOM 3
+TUNNELS LEAD TO 2 4 12
+ARROWS LEFT: 5
+SHOOT OR MOVE (S-M)?
+```
+
 With all hazards adjacent, verify warning order:
 
 ```text
