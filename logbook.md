@@ -50,3 +50,13 @@ commit hash: 45660982b68912fb1bc3e15fa6b7979959b2893a
 Apply your own role rules to this state.
 
 Action taken: Processed queued specifier handoff after completing the cave-setup refactorer handoff; prepared to merge the specified master commit into the coder branch and implement the movement and hazard behavior slice.
+
+## 2026-06-02 07:43:27 CDT - Sent Handoff
+
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: movement-hazards
+branch name: swarmforge-coder
+commit hash: 82be8849d2e97af3d94f020e98b66fe324a2f026
+
+Summary: Movement, hazard resolution, and turn warning behavior are ready for refactorer review.
