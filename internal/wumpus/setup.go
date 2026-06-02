@@ -26,6 +26,9 @@ type Game struct {
 	nextArrowDeviation []int
 	nextSleepyObserve  []bool
 	nextSleepingEntry  []SleepingWumpusEntryOutcome
+	nextJumpEvents     []bool
+	nextJumpPaths      [][]int
+	nextFirstJumpLand  []FirstJumpLandingOutcome
 }
 
 func NewGame(seed int64) (Game, error) {
