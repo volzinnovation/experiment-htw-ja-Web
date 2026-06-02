@@ -103,3 +103,20 @@ Apply your own role rules to this state.
 ```
 
 Summary: Task 6 Sleepy Wumpus warning, wake, room-entry, observation, seeded probability, and integration specifications are ready for coder review.
+
+## 2026-06-02 07:38:52 CDT
+
+Sent handoff to coder.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: specifier
+specifier handoff name: jumping-wumpus
+branch name: master
+commit hash: 5ed34fe55ebe11cf8390aa19db237a3e7349e355
+Apply your own role rules to this state.
+```
+
+Summary: Task 7 Jumping Wumpus trigger, legal jumps, first-landing outcomes, second-landing sighting, turn timing, and integration specifications are ready for coder review.
