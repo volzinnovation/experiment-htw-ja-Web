@@ -1,0 +1,138 @@
+package main
+
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"go/format"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+)
+
+type featureIR struct {
+	Name string `json:"name"`
+}
+
+type metadata struct {
+	SchemaVersion      int      `json:"schema_version"`
+	FeaturePath        string   `json:"feature_path"`
+	IRPath             string   `json:"ir_path"`
+	ImplementationHash string   `json:"implementation_hash"`
+	HashScope          string   `json:"hash_scope"`
+	GeneratedFiles     []string `json:"generated_files"`
+}
+
+func main() {
+	if len(os.Args) != 3 {
+		fmt.Fprintln(os.Stderr, "usage: acceptance-entrypoint-generator <json-ir> <generated-test-output>")
+		os.Exit(2)
+	}
+	if err := generate(os.Args[1], os.Args[2]); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+func generate(irPath, outputDir string) error {
+	contents, err := os.ReadFile(irPath)
+	if err != nil {
+		return err
+	}
+	var feature featureIR
+	if err := json.Unmarshal(contents, &feature); err != nil {
+		return err
+	}
+	if feature.Name == "" {
+		return fmt.Errorf("feature name missing in %s", irPath)
+	}
+
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+		return err
+	}
+	testPath := filepath.Join(outputDir, generatedFilename(irPath))
+	source, err := format.Source([]byte(testSource(feature.Name, irPath)))
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(testPath, source, 0o644); err != nil {
+		return err
+	}
+	return writeMetadata(outputDir, irPath, testPath, source)
+}
+
+func testSource(featureName, irPath string) string {
+	return fmt.Sprintf(`package generated_test
+
+import (
+	"testing"
+
+	"htwgo/acceptance/runtime"
+	"htwgo/acceptance/steps"
+)
+
+func Test%s(t *testing.T) {
+	runtime.RunFeatureFile(t, %q, steps.NewHandlers())
+}
+`, exportedName(featureName), filepath.ToSlash(irPath))
+}
+
+func writeMetadata(outputDir, irPath, testPath string, source []byte) error {
+	sum := sha256.Sum256(source)
+	generatedFile := filepath.ToSlash(testPath)
+	data := metadata{
+		SchemaVersion:      1,
+		FeaturePath:        featurePathForIR(irPath),
+		IRPath:             filepath.ToSlash(irPath),
+		ImplementationHash: "sha256:" + hex.EncodeToString(sum[:]),
+		HashScope:          "generated_files",
+		GeneratedFiles:     []string{generatedFile},
+	}
+	metadataDir := filepath.Join(outputDir, "metadata")
+	if err := os.MkdirAll(metadataDir, 0o755); err != nil {
+		return err
+	}
+	encoded, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(metadataDir, metadataFilename(data.FeaturePath)), append(encoded, '\n'), 0o644)
+}
+
+func generatedFilename(irPath string) string {
+	base := strings.TrimSuffix(filepath.Base(irPath), filepath.Ext(irPath))
+	return normalizeIdentifier(base) + "_acceptance_test.go"
+}
+
+func exportedName(name string) string {
+	parts := regexp.MustCompile(`[^A-Za-z0-9]+`).Split(name, -1)
+	var builder strings.Builder
+	for _, part := range parts {
+		if part == "" {
+			continue
+		}
+		builder.WriteString(strings.ToUpper(part[:1]))
+		if len(part) > 1 {
+			builder.WriteString(part[1:])
+		}
+	}
+	return builder.String()
+}
+
+func normalizeIdentifier(name string) string {
+	name = strings.ToLower(name)
+	return strings.Trim(regexp.MustCompile(`[^a-z0-9]+`).ReplaceAllString(name, "_"), "_")
+}
+
+func featurePathForIR(irPath string) string {
+	base := strings.TrimSuffix(filepath.Base(irPath), filepath.Ext(irPath))
+	return filepath.ToSlash(filepath.Join("features", base+".feature"))
+}
+
+func metadataFilename(featurePath string) string {
+	lower := strings.ToLower(featurePath)
+	slug := regexp.MustCompile(`[^a-z0-9]+`).ReplaceAllString(lower, "-")
+	return strings.Trim(slug, "-") + ".json"
+}
