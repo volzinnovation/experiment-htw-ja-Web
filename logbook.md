@@ -396,6 +396,16 @@ Apply your own role rules to this state.
 
 Action taken: Preserved current coder implementation history and retained architect branch handoff context while resolving the merge.
 
+## 2026-06-02 10:31:04 CDT - Sent Handoff
+
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: rest-command
+branch name: swarmforge-coder
+commit hash: 94d688abeae3bb1c9dcead57add036a33a48c85e
+
+Summary: Architect rest-command guidance has been merged into the coder branch, duplicate incoming step files were reconciled with the existing step adapter, and normal acceptance and unit verification are green.
+
 ## 2026-06-02 09:20:53 CDT - Sent Handoff
 
 Re-read your role and constitution.
