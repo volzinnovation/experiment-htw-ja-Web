@@ -88,6 +88,17 @@ Action taken: Processed queued specifier handoff after completing the cave-setup
 
 Received handoff:
 
+## 2026-06-02 08:37:55 CDT - Sent Handoff
+
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: cave-setup
+branch name: swarmforge-refactorer
+commit hash: 14161523f79591b2e8c9cc17bf4faef7b0b83163
+Apply your own role rules to this state.
+
+Summary: Merged the coder cave-setup state, removed stale cave cleanup code that exceeded the CRAP threshold, verified mutation scan counts and the required Go/property/acceptance checks.
+
 ```
 Re-read your role and constitution.
 sender role: coder
