@@ -46,6 +46,11 @@ func (s *Session) DisplayTurn() []string {
 	return lines
 }
 
+func (s *Session) BeginTurn() []string {
+	lines := append([]string{}, s.game.ResolveJumpingWumpusTurn().Messages...)
+	return append(lines, s.DisplayTurn()...)
+}
+
 func (s *Session) prompt() string {
 	if s.game.CarriesGrenade() {
 		return "SHOOT, MOVE OR THROW (S-M-T)?"
@@ -80,11 +85,15 @@ func (s *Session) moveCommand(fields []string) []string {
 	if err != nil {
 		return []string{"CAN'T MOVE THERE"}
 	}
+	prefix := s.commandTurnMessages()
+	if s.game.Status() != wumpus.StatusInProgress {
+		return s.finishCommand(prefix, false)
+	}
 	result := s.game.Move(room)
 	if result.RejectedMessage != "" {
 		return []string{result.RejectedMessage}
 	}
-	return s.finishCommand(result.Messages, shouldDetonate)
+	return s.finishCommand(append(prefix, result.Messages...), shouldDetonate)
 }
 
 func (s *Session) shootCommand(fields []string) []string {
@@ -93,8 +102,12 @@ func (s *Session) shootCommand(fields []string) []string {
 	if !ok {
 		return []string{"CAN'T SHOOT THERE"}
 	}
+	prefix := s.commandTurnMessages()
+	if s.game.Status() != wumpus.StatusInProgress {
+		return s.finishCommand(prefix, false)
+	}
 	result := s.game.Shoot(path)
-	return s.finishCommand(result.Messages, shouldDetonate)
+	return s.finishCommand(append(prefix, result.Messages...), shouldDetonate)
 }
 
 func (s *Session) throwCommand(fields []string) []string {
@@ -105,11 +118,19 @@ func (s *Session) throwCommand(fields []string) []string {
 	if err != nil {
 		return []string{"CAN'T THROW THERE"}
 	}
+	prefix := s.commandTurnMessages()
+	if s.game.Status() != wumpus.StatusInProgress {
+		return s.finishCommand(prefix, false)
+	}
 	result := s.game.ThrowGrenade(room)
 	if result.RejectedMessage != "" {
 		return []string{result.RejectedMessage}
 	}
-	return s.finishCommand(result.Messages, false)
+	return s.finishCommand(append(prefix, result.Messages...), false)
+}
+
+func (s *Session) commandTurnMessages() []string {
+	return s.game.ResolveJumpingWumpusTurn().Messages
 }
 
 func parseShotPath(values []string) ([]int, bool) {

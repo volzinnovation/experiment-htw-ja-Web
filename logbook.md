@@ -496,3 +496,41 @@ Apply your own role rules to this state.
 ```
 
 Summary: Task 5 Holy Hand Grenade placement, acquisition, throw, delayed detonation, blast effects, messages, and replay specifications are ready for coder review.
+
+## 2026-06-02 08:30:34 CDT - Sent Handoff
+
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: sleepy-wumpus
+branch name: swarmforge-coder
+commit hash: 7dc2fcfbeefa910823b4a48aadb5c8473c3e496d
+
+Summary: Sleepy Wumpus sleep state, snoring warnings, room-entry outcomes, wake transitions, and reproducible observations are ready for refactorer review.
+
+## 2026-06-02 08:31:34 CDT - Received Queued Handoff
+
+Re-read your role and constitution.
+sender role: specifier
+specifier handoff name: jumping-wumpus
+branch name: master
+commit hash: 5ed34fe55ebe11cf8390aa19db237a3e7349e355
+Apply your own role rules to this state.
+
+Action taken: Processed queued specifier handoff after completing the sleepy-wumpus refactorer handoff; prepared to merge the specified master commit into the coder branch and implement the jumping-wumpus behavior slice.
+
+## 2026-06-02 07:37:20 CDT - Specifier Branch Log Entry
+
+Sent handoff to coder.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: specifier
+specifier handoff name: sleepy-wumpus
+branch name: master
+commit hash: 0b1d9f534601eeadc91cf8c050d990331169a0e4
+Apply your own role rules to this state.
+```
+
+Summary: Task 6 Sleepy Wumpus warning, wake, room-entry, observation, seeded probability, and integration specifications are ready for coder review.
