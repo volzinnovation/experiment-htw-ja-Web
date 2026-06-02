@@ -646,15 +646,7 @@ func assertGameStatus(world *runtime.World, want wumpus.Status) error {
 }
 
 func thenTurnMessagesAre(world *runtime.World, example map[string]string) error {
-	want := stringList(example["messages"])
-	got, _ := world.State["turn_messages"].([]string)
-	if len(got) == 0 && len(want) == 0 {
-		return nil
-	}
-	if !reflect.DeepEqual(got, want) {
-		return fmt.Errorf("turn messages are %v, want %v", got, want)
-	}
-	return nil
+	return assertStringList("turn messages", world.State["turn_messages"].([]string), example["messages"])
 }
 
 func thenMoveRejectedWithMessage(world *runtime.World, example map[string]string) error {
@@ -880,10 +872,16 @@ func whenPlayerEntersCommand(world *runtime.World, example map[string]string) er
 }
 
 func thenDisplayedLinesAre(world *runtime.World, example map[string]string) error {
-	got := world.State["displayed_lines"].([]string)
-	want := stringList(example["lines"])
+	return assertStringList("displayed lines", world.State["displayed_lines"].([]string), example["lines"])
+}
+
+func assertStringList(label string, got []string, wantValue string) error {
+	want := stringList(wantValue)
+	if len(got) == 0 && len(want) == 0 {
+		return nil
+	}
 	if !reflect.DeepEqual(got, want) {
-		return fmt.Errorf("displayed lines are %v, want %v", got, want)
+		return fmt.Errorf("%s are %v, want %v", label, got, want)
 	}
 	return nil
 }
@@ -1310,6 +1308,10 @@ func setupSnapshot(setup wumpus.Setup) inspectedSetup {
 
 func gameFrom(world *runtime.World, key string) *wumpus.Game {
 	return world.State[key].(*wumpus.Game)
+}
+
+func storeSession(world *runtime.World, session *interactive.Session) {
+	world.State["session"] = session
 }
 
 func sessionFrom(world *runtime.World) *interactive.Session {
