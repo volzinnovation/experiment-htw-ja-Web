@@ -405,3 +405,14 @@ branch name: swarmforge-coder
 commit hash: e4ff846da186c897686572a4e7ef0816a34eb724
 
 Summary: Architect interactive-loop guidance has been merged into the coder branch and normal acceptance and unit verification are green.
+
+## 2026-06-02 10:25:57 CDT - Received Handoff
+
+Re-read your role and constitution.
+sender role: architect
+specifier handoff name: rest-command
+branch name: swarmforge-architect
+commit hash: 60c6c82f534fe9b72a4b93d7529197d120039cb3
+Apply your own role rules to this state.
+
+Action taken: Re-read coder role and constitution, then prepared to merge the specified architect commit into the coder branch and apply coder responsibilities to the resulting state.
