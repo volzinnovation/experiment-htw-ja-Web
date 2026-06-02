@@ -324,3 +324,48 @@ Apply your own role rules to this state.
 ```
 
 Action taken: Re-read role and constitution, then merge the architect state for completed `rest-command` work and ask for the next feature.
+
+## 2026-06-02 10:25:58 CDT
+
+Merged branch handoff history from `swarmforge-architect` while resolving the `rest-command` merge.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: rest-command
+branch name: swarmforge-refactorer
+commit hash: a0ac2e788e4524556d24d5765bbf207b3b09e2f8
+Apply your own role rules to this state.
+```
+
+Action taken: Preserved the architect branch history reporting the combined rest-command refactorer state was merged and architect-verified.
+
+Summary: Architect verification covered `go test ./...`, property tests, acceptance tests, targeted language mutation, DRY analysis, and soft Gherkin acceptance mutation with zero survivors.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: 583faffd7b7d1ea620466bb39789f2e7d2927595
+Apply your own role rules to this state.
+```
+
+Action taken: Preserved the architect branch history noting this later queued interactive-loop refactorer handoff remained unprocessed during rest-command completion.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: c30bf93defe56be59a86a9d14a17534225ef02d8
+Apply your own role rules to this state.
+```
+
+Action taken: Preserved the architect branch history noting this newer queued interactive-loop refactorer handoff remained unprocessed during rest-command completion.

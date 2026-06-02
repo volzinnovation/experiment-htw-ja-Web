@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestRunProcessesJSONRequests(t *testing.T) {
@@ -62,6 +63,30 @@ func TestDecodeRequestDefaultsGeneratedDir(t *testing.T) {
 	want := workerRequest{ID: "m1", FeatureJSON: "mutated.json", GeneratedDir: "acceptance/generated"}
 	if !reflect.DeepEqual(request, want) {
 		t.Fatalf("request = %#v, want %#v", request, want)
+	}
+}
+
+func TestContextForFallsBackToCancelableContext(t *testing.T) {
+	for _, timeout := range []string{"", "not-a-duration", "0s", "-1s"} {
+		ctx, cancel := contextFor(timeout)
+		cancel()
+		if err := ctx.Err(); err != context.Canceled {
+			t.Fatalf("contextFor(%q) err = %v, want canceled", timeout, err)
+		}
+	}
+}
+
+func TestContextForUsesPositiveTimeout(t *testing.T) {
+	ctx, cancel := contextFor("1ms")
+	defer cancel()
+
+	select {
+	case <-ctx.Done():
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("timed context did not expire")
+	}
+	if err := ctx.Err(); err != context.DeadlineExceeded {
+		t.Fatalf("context error = %v, want deadline exceeded", err)
 	}
 }
 
