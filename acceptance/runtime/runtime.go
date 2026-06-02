@@ -155,44 +155,69 @@ func matchHandler(handlers Handlers, text string, example map[string]string) (Ha
 func matchTemplate(template string, text string) (map[string]string, bool) {
 	extracted := map[string]string{}
 	remaining := text
-	for {
-		if !strings.Contains(template, "<") {
-			if template != remaining {
-				return nil, false
-			}
-			return extracted, true
-		}
-		start := strings.Index(template, "<")
-		end := strings.Index(template[start:], ">")
-		if end == -1 {
-			return nil, false
-		}
-		end += start
-		prefix := template[:start]
-		if !strings.HasPrefix(remaining, prefix) {
-			return nil, false
-		}
-		remaining = strings.TrimPrefix(remaining, prefix)
-		key := template[start+1 : end]
-		template = template[end+1:]
-		nextLiteral := template
-		if strings.HasPrefix(template, "<") {
-			return nil, false
-		}
-		if strings.Contains(template, "<") {
-			nextStart := strings.Index(template, "<")
-			nextLiteral = template[:nextStart]
-		}
-		value, rest, ok := splitPlaceholderValue(remaining, nextLiteral)
+	for strings.Contains(template, "<") {
+		key, value, nextTemplate, nextRemaining, ok := consumePlaceholder(template, remaining)
 		if !ok {
 			return nil, false
 		}
-		if previous, exists := extracted[key]; exists && previous != value {
+		if !recordPlaceholder(extracted, key, value) {
 			return nil, false
 		}
-		extracted[key] = value
-		remaining = rest
+		template = nextTemplate
+		remaining = nextRemaining
 	}
+	if template != remaining {
+		return nil, false
+	}
+	return extracted, true
+}
+
+func consumePlaceholder(template string, remaining string) (string, string, string, string, bool) {
+	start, end, ok := placeholderBounds(template)
+	if !ok {
+		return "", "", "", "", false
+	}
+	prefix := template[:start]
+	if !strings.HasPrefix(remaining, prefix) {
+		return "", "", "", "", false
+	}
+	key := template[start+1 : end]
+	nextTemplate := template[end+1:]
+	nextLiteral, ok := nextLiteral(nextTemplate)
+	if !ok {
+		return "", "", "", "", false
+	}
+	value, rest, ok := splitPlaceholderValue(strings.TrimPrefix(remaining, prefix), nextLiteral)
+	return key, value, nextTemplate, rest, ok
+}
+
+func placeholderBounds(template string) (int, int, bool) {
+	start := strings.Index(template, "<")
+	end := strings.Index(template[start:], ">")
+	if end == -1 {
+		return 0, 0, false
+	}
+	return start, start + end, true
+}
+
+func nextLiteral(template string) (string, bool) {
+	if strings.HasPrefix(template, "<") {
+		return "", false
+	}
+	nextLiteral := template
+	if strings.Contains(template, "<") {
+		nextLiteral = template[:strings.Index(template, "<")]
+	}
+	return nextLiteral, true
+}
+
+func recordPlaceholder(extracted map[string]string, key string, value string) bool {
+	previous, exists := extracted[key]
+	if exists && previous != value {
+		return false
+	}
+	extracted[key] = value
+	return true
 }
 
 func splitPlaceholderValue(text string, nextLiteral string) (string, string, bool) {

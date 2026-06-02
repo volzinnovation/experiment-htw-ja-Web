@@ -250,14 +250,15 @@ func crookedArrowFeature() runtime.Feature {
 			{
 				Name: "arrow path that reaches Wumpus wins",
 				Steps: []runtime.Step{
-					{Text: "a game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>"},
-					{Text: "the player has <arrows> arrows"},
+					{Text: "a shooting game setup with the player in room <player_room> and the Wumpus in room <wumpus_room>"},
+					{Text: "the player starts with <initial_arrows> arrows"},
 					{Text: "the player shoots the path <path>"},
+					{Text: "the requested shot path is <expected_path>"},
 					{Text: "the player wins"},
 					{Text: "the player has <remaining_arrows> arrows"},
 					{Text: "the turn messages are <messages>"},
 				},
-				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "10", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "path": "2, 10", "remaining_arrows": "4", "messages": "AHA! YOU GOT THE WUMPUS! HEE HEE HEE - THE WUMPUS'LL GETCHA NEXT TIME!!"}},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "10", "initial_arrows": "5", "path": "2, 10", "expected_path": "2, 10", "remaining_arrows": "4", "messages": "AHA! YOU GOT THE WUMPUS! HEE HEE HEE - THE WUMPUS'LL GETCHA NEXT TIME!!"}},
 			},
 			{
 				Name: "invalid arrow segment deviates",
@@ -303,14 +304,16 @@ func crookedArrowFeature() runtime.Feature {
 			{
 				Name: "shooting path must contain rooms",
 				Steps: []runtime.Step{
-					{Text: "a game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>"},
-					{Text: "the player has <arrows> arrows"},
+					{Text: "a shooting game setup with the player in room <player_room> and the Wumpus in room <wumpus_room>"},
+					{Text: "the player starts with <initial_arrows> arrows"},
 					{Text: "the player shoots the path <path>"},
+					{Text: "the requested shot path is <expected_path>"},
 					{Text: "the shot is rejected with message <message>"},
-					{Text: "the player has <arrows> arrows"},
+					{Text: "the player has <remaining_arrows> arrows"},
 					{Text: "the game is still in progress"},
+					{Text: "the player is in room <expected_player_room>"},
 				},
-				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "10", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "path": "none", "message": "CAN'T SHOOT THERE"}},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "10", "initial_arrows": "5", "path": "none", "expected_path": "none", "remaining_arrows": "5", "expected_player_room": "1", "message": "CAN'T SHOOT THERE"}},
 			},
 		},
 	}

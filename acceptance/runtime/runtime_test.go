@@ -97,6 +97,7 @@ func TestTemplateMatchRejectsInvalidText(t *testing.T) {
 		template string
 		text     string
 	}{
+		{"literal mismatch", "the player wins", "the player loses"},
 		{"trailing text", "room <room> done", "room 1 now"},
 		{"malformed placeholder", "room <room", "room 1"},
 		{"adjacent placeholders", "rooms <first><second>", "rooms 12"},
@@ -118,6 +119,36 @@ func TestTemplateMatchAcceptsRepeatedPlaceholderMatch(t *testing.T) {
 	}
 	if extracted["room"] != "1" {
 		t.Fatalf("room = %q, want 1", extracted["room"])
+	}
+}
+
+func TestTemplateMatchAcceptsExactAndPlaceholderText(t *testing.T) {
+	tests := []struct {
+		name     string
+		template string
+		text     string
+		want     map[string]string
+	}{
+		{"exact", "the player wins", "the player wins", map[string]string{}},
+		{"terminal placeholder", "room <room>", "room 12", map[string]string{"room": "12"}},
+		{"multiple placeholders", "from <from_room> to <to_room>", "from 1 to 2", map[string]string{"from_room": "1", "to_room": "2"}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			extracted, ok := matchTemplate(test.template, test.text)
+			if !ok {
+				t.Fatalf("template %q did not match %q", test.template, test.text)
+			}
+			if !reflect.DeepEqual(extracted, test.want) {
+				t.Fatalf("extracted = %v, want %v", extracted, test.want)
+			}
+		})
+	}
+}
+
+func TestTemplateMatchRejectsPrefixMismatch(t *testing.T) {
+	if _, ok := matchTemplate("room <room>", "cave 1"); ok {
+		t.Fatal("template matched text with a different prefix")
 	}
 }
 
