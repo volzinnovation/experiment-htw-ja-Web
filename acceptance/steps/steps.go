@@ -584,15 +584,9 @@ func thenPlayerInRelocationRoom(world *runtime.World, example map[string]string)
 }
 
 func thenPlayerInExampleRoom(world *runtime.World, example map[string]string, key string) error {
-	want, err := intExample(example, key)
-	if err != nil {
-		return err
-	}
-	got := gameFrom(world, "game").Setup().Player
-	if got != want {
-		return fmt.Errorf("player room is %d, want %d", got, want)
-	}
-	return nil
+	return thenSetupRoom(world, example, key, "player", func(setup wumpus.Setup) int {
+		return setup.Player
+	})
 }
 
 func thenGameStillInProgress(world *runtime.World, _ map[string]string) error {
@@ -651,13 +645,19 @@ func thenWumpusInWumpusRoom(world *runtime.World, example map[string]string) err
 }
 
 func thenWumpusInExampleRoom(world *runtime.World, example map[string]string, key string) error {
+	return thenSetupRoom(world, example, key, "Wumpus", func(setup wumpus.Setup) int {
+		return setup.Wumpus
+	})
+}
+
+func thenSetupRoom(world *runtime.World, example map[string]string, key, label string, roomOf func(wumpus.Setup) int) error {
 	want, err := intExample(example, key)
 	if err != nil {
 		return err
 	}
-	got := gameFrom(world, "game").Setup().Wumpus
+	got := roomOf(gameFrom(world, "game").Setup())
 	if got != want {
-		return fmt.Errorf("Wumpus room is %d, want %d", got, want)
+		return fmt.Errorf("%s room is %d, want %d", label, got, want)
 	}
 	return nil
 }
