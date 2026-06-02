@@ -307,3 +307,20 @@ Apply your own role rules to this state.
 ```
 
 Action taken: Preserved architect branch history reporting cave-setup architectural work complete.
+
+## 2026-06-02 10:25:58 CDT
+
+Received handoff from architect.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: architect
+specifier handoff name: rest-command
+branch name: swarmforge-architect
+commit hash: 60c6c82f534fe9b72a4b93d7529197d120039cb3
+Apply your own role rules to this state.
+```
+
+Action taken: Re-read role and constitution, then merge the architect state for completed `rest-command` work and ask for the next feature.
