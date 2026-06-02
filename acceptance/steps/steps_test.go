@@ -370,7 +370,7 @@ func turnWarningsFeature() runtime.Feature {
 				{Text: "the warning messages are <warnings>"},
 			},
 			Examples: []map[string]string{
-				{"player_room": "6", "wumpus_room": "5", "pit_rooms": "7, 15", "bat_rooms": "1, 2", "warnings": "I SMELL A WUMPUS, BATS NEARBY, I FEEL A DRAFT"},
+				{"player_room": "1", "wumpus_room": "2", "pit_rooms": "5, 14", "bat_rooms": "8, 17", "warnings": "I SMELL A WUMPUS, BATS NEARBY, I FEEL A DRAFT"},
 				{"player_room": "1", "wumpus_room": "20", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "warnings": "none"},
 			},
 		}},
@@ -522,15 +522,22 @@ func interactiveLoopFeature() runtime.Feature {
 				},
 			},
 			{
-				Name: "instruction prompt can show or skip instructions",
+				Name: "instruction prompt can show instructions",
 				Steps: []runtime.Step{
 					{Text: "a new interactive session"},
-					{Text: "the player answers instructions prompt with <answer>"},
-					{Text: "the displayed lines are <lines>"},
+					{Text: "the player answers instructions prompt with y"},
+					{Text: "the displayed lines include WELCOME TO 'HUNT THE WUMPUS'"},
+					{Text: "the displayed lines include THE WUMPUS LIVES IN A CAVE OF 20 ROOMS: EACH ROOM HAS 3 TUNNELS LEADING TO OTHER"},
+					{Text: "the displayed lines include HAZARDS:"},
+					{Text: "the displayed lines include WARNINGS:"},
 				},
-				Examples: []map[string]string{
-					{"answer": "y", "lines": "WELCOME TO 'HUNT THE WUMPUS'"},
-					{"answer": "n", "lines": "none"},
+			},
+			{
+				Name: "instruction prompt can skip instructions",
+				Steps: []runtime.Step{
+					{Text: "a new interactive session"},
+					{Text: "the player answers instructions prompt with n"},
+					{Text: "the displayed lines are none"},
 				},
 			},
 		},

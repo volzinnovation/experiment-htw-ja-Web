@@ -9,6 +9,12 @@ func (g *Game) SetGrenadeRoom(room int) {
 	g.setGrenadeState(&g.grenadeRoom, room)
 }
 
+func (g *Game) ClearGrenadeRoom() {
+	g.grenadeRoom = nil
+	g.carriesGrenade = false
+	g.pendingGrenadeRoom = nil
+}
+
 func (g Game) GrenadeRoom() (int, bool) {
 	return roomPtrValue(g.grenadeRoom)
 }
@@ -64,6 +70,9 @@ func (g *Game) DetonateGrenade() []string {
 	blast := NewCave().blastRooms(target)
 	messages := []string{"YOU HEAR A HORRENDOUS EXPLOSION!"}
 	g.destroyBatsIn(blast)
+	if g.inertHazards && (blast[g.setup.Wumpus] || blast[g.setup.Player]) {
+		return append(messages, "QA INERT: BLAST IGNORED")
+	}
 	if blast[g.setup.Wumpus] {
 		g.status = StatusWon
 		return append(messages, "AHA! YOU GOT THE WUMPUS! HEE HEE HEE - THE WUMPUS'LL GETCHA NEXT TIME!!")
@@ -104,12 +113,6 @@ func (c Cave) blastRooms(target int) map[int]bool {
 	}
 	for _, exit := range exits {
 		blast[exit] = true
-	}
-	if target == 10 {
-		blast[5] = true
-	}
-	if target == 13 {
-		delete(blast, 20)
 	}
 	return blast
 }

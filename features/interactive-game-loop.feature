@@ -78,7 +78,10 @@ Feature: Interactive game loop
   Scenario: Interactive Game Loop 010 instruction prompt can show instructions
     Given a new interactive session
     When the player answers instructions prompt with y
-    Then the displayed lines are WELCOME TO 'HUNT THE WUMPUS'
+    Then the displayed lines include WELCOME TO 'HUNT THE WUMPUS'
+    And the displayed lines include THE WUMPUS LIVES IN A CAVE OF 20 ROOMS: EACH ROOM HAS 3 TUNNELS LEADING TO OTHER
+    And the displayed lines include HAZARDS:
+    And the displayed lines include WARNINGS:
 
   Scenario: Interactive Game Loop 011 instruction prompt can skip instructions
     Given a new interactive session

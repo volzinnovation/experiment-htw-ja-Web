@@ -133,6 +133,17 @@ func TestLosingMovePromptsForSameSetup(t *testing.T) {
 	}
 }
 
+func TestSameSetupReplayRestoresStateBeforeLosingCommand(t *testing.T) {
+	session := NewSessionWithGame(mustInteractiveGame(t, wumpus.Setup{Player: 1, Wumpus: 20, Pits: []int{2, 14}, Bats: []int{16, 17}}, 5))
+
+	session.EnterCommand("m 2")
+	session.AnswerSameSetup("y")
+
+	if session.Game().Setup().Player != 1 {
+		t.Fatalf("replayed player room = %d, want 1", session.Game().Setup().Player)
+	}
+}
+
 func TestDifferentSetupAnswerWithoutSeedLeavesGameAlone(t *testing.T) {
 	session := NewSessionWithGame(mustInteractiveGame(t, wumpus.Setup{Player: 1, Wumpus: 20, Pits: []int{2, 14}, Bats: []int{16, 17}}, 5))
 	original := session.Game().Setup()
@@ -189,7 +200,23 @@ func TestParseRoomBoundaries(t *testing.T) {
 func TestInstructionPrompt(t *testing.T) {
 	session := NewSession()
 
-	if got := session.AnswerInstructions("y"); !reflect.DeepEqual(got, []string{"WELCOME TO 'HUNT THE WUMPUS'"}) {
+	got := session.AnswerInstructions("y")
+	for _, want := range []string{
+		"WELCOME TO 'HUNT THE WUMPUS'",
+		"THE WUMPUS LIVES IN A CAVE OF 20 ROOMS: EACH ROOM HAS 3 TUNNELS LEADING TO OTHER",
+		"HAZARDS:",
+		"BOTTOMLESS PITS - TWO ROOMS HAVE BOTTOMLESS PITS IN THEM",
+		"SUPER BATS  - TWO OTHER ROOMS HAVE SUPER BATS. IF YOU GO THERE, A BAT GRABS YOU",
+		"WUMPUS:",
+		"YOU:",
+		"WARNINGS:",
+		"PIT - 'I FEEL A DRAFT'",
+	} {
+		if !containsLine(got, want) {
+			t.Fatalf("yes instructions missing %q in %v", want, got)
+		}
+	}
+	if len(got) < 40 {
 		t.Fatalf("yes instructions = %v", got)
 	}
 	if got := session.AnswerInstructions("n"); len(got) != 0 {

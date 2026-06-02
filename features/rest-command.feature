@@ -79,7 +79,7 @@ Feature: Rest command
 
   # Rest Command 010
   Scenario: Rest Command 010 long rest outside grenade blast survives
-    Given an interactive game setup with the player in room 1, the Wumpus in room 20, pits in rooms 14, 15, bats in rooms 16, 17, and 5 arrows
+    Given an interactive game setup with the player in room 1, the Wumpus in room 11, pits in rooms 14, 15, bats in rooms 16, 17, and 5 arrows
     And the Holy Hand Grenade is pending detonation in room 13
     When the player enters command rest
     Then the game is still in progress

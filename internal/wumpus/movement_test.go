@@ -198,7 +198,7 @@ func TestTurnWarningsAreEmptyWhenNoHazardsNearby(t *testing.T) {
 }
 
 func TestTurnWarningsUseOriginalWarningOrder(t *testing.T) {
-	game := mustGame(t, Setup{Player: 6, Wumpus: 5, Pits: []int{7, 15}, Bats: []int{1, 2}})
+	game := mustGame(t, Setup{Player: 1, Wumpus: 2, Pits: []int{5, 14}, Bats: []int{8, 17}})
 
 	got := game.TurnWarnings()
 	want := []string{"I SMELL A WUMPUS", "BATS NEARBY", "I FEEL A DRAFT"}
@@ -211,8 +211,16 @@ func TestTurnWarningsUseOriginalWarningOrder(t *testing.T) {
 func TestBatsNearbyForWarningDetectsDirectBatRoom(t *testing.T) {
 	game := mustGame(t, Setup{Player: 1, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{2, 17}})
 
-	if !game.batsNearbyForWarning() {
-		t.Fatal("batsNearbyForWarning() = false, want true for directly adjacent bat")
+	if warnings := game.TurnWarnings(); !reflect.DeepEqual(warnings, []string{"BATS NEARBY"}) {
+		t.Fatalf("warnings = %v, want BATS NEARBY", warnings)
+	}
+}
+
+func TestTurnWarningsDoNotReportBatsTwoRoomsAway(t *testing.T) {
+	game := mustGame(t, Setup{Player: 3, Wumpus: 13, Pits: []int{15, 5}, Bats: []int{1, 18}})
+
+	if warnings := game.TurnWarnings(); len(warnings) != 0 {
+		t.Fatalf("warnings = %v, want none for two-hop bats", warnings)
 	}
 }
 

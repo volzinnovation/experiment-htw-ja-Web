@@ -22,7 +22,7 @@ Feature: Turn warnings
     Then the warning messages are BATS NEARBY, I FEEL A DRAFT
 
   Scenario: Turn Warnings 004 warnings appear for all adjacent hazard types
-    Given a game setup with the player in room 6, the Wumpus in room 5, pits in rooms 7, 15, and bats in rooms 1, 2
+    Given a game setup with the player in room 1, the Wumpus in room 2, pits in rooms 5, 14, and bats in rooms 8, 17
     When the turn warnings are requested
     Then the warning messages are I SMELL A WUMPUS, BATS NEARBY, I FEEL A DRAFT
 

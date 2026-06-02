@@ -16,6 +16,7 @@ type Game struct {
 	setup              Setup
 	status             Status
 	arrows             int
+	inertHazards       bool
 	grenadeRoom        *int
 	carriesGrenade     bool
 	pendingGrenadeRoom *int
@@ -58,11 +59,32 @@ func (g Game) Setup() Setup {
 	return copySetup(g.setup)
 }
 
+func (g *Game) SetWumpusRoom(room int) {
+	g.setup.Wumpus = room
+}
+
+func (g *Game) SetPitRooms(first, second int) {
+	g.setup.Pits = []int{first, second}
+}
+
+func (g *Game) SetBatRooms(first, second int) {
+	g.setup.Bats = []int{first, second}
+}
+
+func (g *Game) SetInertHazards(inert bool) {
+	g.inertHazards = inert
+}
+
+func (g Game) InertHazards() bool {
+	return g.inertHazards
+}
+
 func (g Game) ReplaySameSetup() Game {
 	replay := Game{
 		setup:              copySetup(g.setup),
 		status:             StatusInProgress,
 		arrows:             g.arrows,
+		inertHazards:       g.inertHazards,
 		carriesGrenade:     g.carriesGrenade,
 		pendingGrenadeRoom: copyRoomPtr(g.pendingGrenadeRoom),
 		grenadeRoom:        copyRoomPtr(g.grenadeRoom),

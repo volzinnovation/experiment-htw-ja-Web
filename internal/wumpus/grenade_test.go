@@ -109,34 +109,36 @@ func TestGrenadeDetonationCanBeHarmless(t *testing.T) {
 	}
 }
 
-func TestGrenadeDetonationAtRoomTenReachesRoomFive(t *testing.T) {
+func TestGrenadeDetonationAtRoomTenDoesNotReachRoomFive(t *testing.T) {
 	game := mustGame(t, Setup{Player: 1, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{16, 17}})
 	game.SetPlayerRoom(5)
 	game.SetPendingGrenade(10)
 
 	messages := game.DetonateGrenade()
 
+	if !reflect.DeepEqual(messages, []string{"YOU HEAR A HORRENDOUS EXPLOSION!"}) {
+		t.Fatalf("messages = %v, want harmless explosion", messages)
+	}
+	if game.Status() != StatusInProgress {
+		t.Fatalf("status = %s, want %s", game.Status(), StatusInProgress)
+	}
+}
+
+func TestGrenadeDetonationAtRoomThirteenReachesRoomTwenty(t *testing.T) {
+	game := mustGame(t, Setup{Player: 1, Wumpus: 20, Pits: []int{14, 15}, Bats: []int{16, 17}})
+	game.SetPendingGrenade(13)
+
+	messages := game.DetonateGrenade()
+
 	wantMessages := []string{
 		"YOU HEAR A HORRENDOUS EXPLOSION!",
-		"YOU ARE BLOWN UP BY YOUR OWN HOLY HAND GRENADE!",
-		"HA HA HA - YOU LOSE!",
+		"AHA! YOU GOT THE WUMPUS! HEE HEE HEE - THE WUMPUS'LL GETCHA NEXT TIME!!",
 	}
 	if !reflect.DeepEqual(messages, wantMessages) {
 		t.Fatalf("messages = %v, want %v", messages, wantMessages)
 	}
-	if game.Status() != StatusLost {
-		t.Fatalf("status = %s, want %s", game.Status(), StatusLost)
-	}
-}
-
-func TestGrenadeDetonationAtRoomThirteenDoesNotReachRoomTwenty(t *testing.T) {
-	game := mustGame(t, Setup{Player: 1, Wumpus: 20, Pits: []int{14, 15}, Bats: []int{16, 17}})
-	game.SetPendingGrenade(13)
-
-	game.DetonateGrenade()
-
-	if game.Status() != StatusInProgress {
-		t.Fatalf("status = %s, want %s", game.Status(), StatusInProgress)
+	if game.Status() != StatusWon {
+		t.Fatalf("status = %s, want %s", game.Status(), StatusWon)
 	}
 }
 

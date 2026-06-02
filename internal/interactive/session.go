@@ -68,11 +68,16 @@ func (s *Session) prompt() string {
 }
 
 func (s *Session) EnterCommand(command string) []string {
+	beforeCommand := s.game
 	fields := strings.Fields(command)
 	if len(fields) == 0 {
 		return []string{" IS NOT A COMMAND"}
 	}
-	return s.dispatchCommand(fields)
+	lines := s.dispatchCommand(fields)
+	if s.game.Status() == wumpus.StatusLost {
+		s.lostGame = beforeCommand
+	}
+	return lines
 }
 
 func (s *Session) dispatchCommand(fields []string) []string {
@@ -194,7 +199,6 @@ func (s *Session) finishCommand(messages []string, shouldDetonate bool) []string
 		lines = append(lines, s.game.DetonateGrenade()...)
 	}
 	if s.game.Status() == wumpus.StatusLost {
-		s.lostGame = s.game
 		return append(lines, "SAME SET UP (Y-N)?")
 	}
 	return lines
@@ -221,13 +225,65 @@ func (s *Session) AnswerSameSetup(answer string) {
 
 func (s *Session) AnswerInstructions(answer string) []string {
 	if strings.EqualFold(answer, "y") {
-		return []string{"WELCOME TO 'HUNT THE WUMPUS'"}
+		return instructions()
 	}
 	return nil
 }
 
 func (s *Session) MarkLostForTest() {
 	s.lostGame = s.game
+}
+
+func instructions() []string {
+	return []string{
+		"WELCOME TO 'HUNT THE WUMPUS'",
+		"",
+		"THE WUMPUS LIVES IN A CAVE OF 20 ROOMS: EACH ROOM HAS 3 TUNNELS LEADING TO OTHER",
+		"ROOMS. (LOOK AT A DODECAHEDRON TO SEE HOW THIS WORKS. IF YOU DON'T KNOW WHAT A",
+		"DODECAHEDRON IS, ASK SOMEONE)",
+		"",
+		"***",
+		"HAZARDS:",
+		"",
+		"BOTTOMLESS PITS - TWO ROOMS HAVE BOTTOMLESS PITS IN THEM",
+		"IF YOU GO THERE: YOU FALL INTO THE PIT (& LOSE!)",
+		"",
+		"SUPER BATS  - TWO OTHER ROOMS HAVE SUPER BATS. IF YOU GO THERE, A BAT GRABS YOU",
+		"AND TAKES YOU TO SOME OTHER ROOM AT RANDOM. (WHICH MIGHT BE TROUBLESOME)",
+		"",
+		"WUMPUS:",
+		"",
+		"THE WUMPUS IS NOT BOTHERED BY THE HAZARDS (HE HAS SUCKER FEET AND IS TOO BIG FOR",
+		"A BAT TO LIFT). USUALLY HE IS ASLEEP. TWO THINGS WAKE HIM UP: YOUR ENTERING HIS",
+		"ROOM OR YOUR SHOOTING AN ARROW.",
+		"",
+		"IF THE WUMPUS WAKES, HE MOVES (P=0.75) ONE ROOM OR STAYS STILL (P=0.25). AFTER",
+		"THAT, IF HE IS WHERE YOU ARE, HE EATS YOU UP (& YOU LOSE!)",
+		"",
+		"YOU:",
+		"",
+		"EACH TURN YOU MAY MOVE OR SHOOT A CROOKED ARROW",
+		"MOVING: YOU CAN GO ONE ROOM (THRU ONE TUNNEL)",
+		"ARROWS: YOU HAVE 5 ARROWS. YOU LOSE WHEN YOU RUN OUT.",
+		"",
+		"EACH ARROW CAN GO FROM 1 TO 5 ROOMS: YOU AIM BY TELLING THE COMPUTER THE ROOMS",
+		"YOU WANT THE ARROW TO GO TO. IF THE ARROW CAN'T GO THAT WAY (IE NO TUNNEL) IT",
+		"MOVES AT RANDOM TO THE NEXT ROOM.",
+		"",
+		"IF THE ARROW HITS THE WUMPUS: YOU WIN.",
+		"",
+		"IF THE ARROW HITS YOU: YOU LOSE.",
+		"",
+		"WARNINGS:",
+		"",
+		"WHEN YOU ARE ONE ROOM AWAY FROM WUMPUS OR HAZARD, THE COMPUTER SAYS:",
+		"",
+		"WUMPUS - 'I SMELL A WUMPUS'",
+		"",
+		"BAT - 'BATS NEARBY'",
+		"",
+		"PIT - 'I FEEL A DRAFT'",
+	}
 }
 
 // mutate4go-manifest-begin

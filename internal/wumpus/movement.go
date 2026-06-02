@@ -60,9 +60,6 @@ func (g Game) warningHazards() map[Hazard]bool {
 	for _, hazard := range hazards {
 		present[hazard] = true
 	}
-	if !g.wumpusAsleep && g.batsNearbyForWarning() {
-		present[HazardBats] = true
-	}
 	return present
 }
 
@@ -83,36 +80,22 @@ func warningMessages(present map[Hazard]bool, wumpusAsleep bool) []string {
 	return warnings
 }
 
-func (g Game) batsNearbyForWarning() bool {
-	cave := NewCave()
-	for _, batRoom := range g.setup.Bats {
-		if cave.HasTunnel(g.setup.Player, batRoom) {
-			return true
-		}
-		for _, exit := range g.mustExits(g.setup.Player) {
-			if cave.HasTunnel(exit, batRoom) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func (g Game) mustExits(room int) []int {
-	exits, err := NewCave().Exits(room)
-	if err != nil {
-		return nil
-	}
-	return exits
-}
-
 func (g *Game) resolveArrival() []string {
 	switch {
 	case slices.Contains(g.setup.Pits, g.setup.Player):
+		if g.inertHazards {
+			return []string{"QA INERT: PIT IGNORED"}
+		}
 		return g.lose("YYYIIIIEEEE . . . FELL IN PIT")
 	case slices.Contains(g.setup.Bats, g.setup.Player):
+		if g.inertHazards {
+			return []string{"QA INERT: BATS IGNORED"}
+		}
 		return g.resolveBatArrival()
 	case g.setup.Wumpus == g.setup.Player:
+		if g.inertHazards {
+			return []string{"QA INERT: WUMPUS IGNORED"}
+		}
 		if g.wumpusAsleep {
 			return g.resolveSleepingWumpusEntry()
 		}

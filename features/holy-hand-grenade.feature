@@ -140,7 +140,7 @@ Feature: Holy Hand Grenade
   Scenario: Holy Hand Grenade 017 blast destroys bats but leaves pits
     Given an interactive game setup with the player in room 1, the Wumpus in room 20, pits in rooms 9, 14, bats in rooms 2, 16, and 5 arrows
     And the Holy Hand Grenade is pending detonation in room 10
-    When the player enters command m 5
+    When the player enters command m 8
     Then the remaining bat rooms are 16
     And the pit rooms are 9, 14
     And the displayed lines include YOU HEAR A HORRENDOUS EXPLOSION!
@@ -158,8 +158,8 @@ Feature: Holy Hand Grenade
   # Holy Hand Grenade 019
   Scenario: Holy Hand Grenade 019 player already in blast radius loses
     Given an interactive game setup with the player in room 1, the Wumpus in room 20, pits in rooms 13, 14, bats in rooms 16, 17, and 5 arrows
-    And the Holy Hand Grenade is pending detonation in room 10
-    When the player enters command m 5
+    And the Holy Hand Grenade is pending detonation in room 2
+    When the player enters command r
     Then the player loses
     And the displayed lines include YOU HEAR A HORRENDOUS EXPLOSION!
     And the displayed lines include YOU ARE BLOWN UP BY YOUR OWN HOLY HAND GRENADE!
