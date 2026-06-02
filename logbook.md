@@ -512,3 +512,80 @@ branch name: swarmforge-refactorer
 commit hash: c30bf93defe56be59a86a9d14a17534225ef02d8
 Apply your own role rules to this state.
 ```
+
+## 2026-06-02 10:24:18 CDT - Processing queued interactive-loop refactorer handoffs
+
+Now that the rest-command architect merge was committed and handoffs were sent, processing the queued interactive-loop refactorer handoffs together. The newer handoff supersedes the earlier one for merge purposes:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: 583faffd7b7d1ea620466bb39789f2e7d2927595
+Apply your own role rules to this state.
+```
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: c30bf93defe56be59a86a9d14a17534225ef02d8
+Apply your own role rules to this state.
+```
+
+Action taken: merging `c30bf93defe56be59a86a9d14a17534225ef02d8` into the architect branch for architectural review and verification.
+
+The previously queued rest-command-related handoff files are already represented by the completed rest-command merge and are being removed from the local untracked queue after the required architect handoffs were sent:
+
+```text
+pending-messages/50-20260602-082022-refactorer.txt
+pending-messages/50-20260602-083236-refactorer.txt
+pending-messages/50-20260602-083858-refactorer.txt
+pending-messages/50-20260602-084847-refactorer.txt
+pending-messages/50-20260602-085758-refactorer.txt
+pending-messages/50-20260602-090805-refactorer.txt
+```
+
+## 2026-06-02 10:51:18 CDT - Completed queued interactive-loop architect merge
+
+Processed the queued interactive-loop refactorer handoffs together by merging the newer refactorer commit `c30bf93defe56be59a86a9d14a17534225ef02d8`.
+
+Actions:
+- Resolved merge conflicts in acceptance runtime/steps and preserved the architect-side mutation manifest history.
+- Hardened malformed runtime placeholder parsing so helper bounds are returned consistently.
+- Added focused runtime and acceptance-step tests for parse failures, cave inspection, room occupancy, action tracking, shooting traversal, and requested path mismatch behavior.
+- Extracted shared room-list assertion helpers to reduce acceptance-step duplication.
+- Restored timestamp-only feature manifest edits left by soft acceptance mutation verification.
+
+Verification:
+- `go test ./acceptance/runtime ./acceptance/steps` passed.
+- Language mutation was run one file at a time for `acceptance/runtime/runtime.go`, `acceptance/steps/steps.go`, and `acceptance/steps/shooting_steps.go`; targeted reruns killed all observed survivors.
+- `go test ./...` passed.
+- `go test -tags property ./internal/wumpus` passed.
+- `./scripts/acceptance.sh` passed.
+- `tmp/bin/dry4go acceptance cmd internal` completed successfully; remaining reports were known low-value test/wrapper-pattern duplicates.
+- `./scripts/acceptance-mutate.sh soft` passed with zero survivors and zero errors.
+
+Removing the two processed interactive-loop queue files after completing the merge and recording the complete messages:
+
+```text
+pending-messages/50-20260602-092629-refactorer.txt
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: 583faffd7b7d1ea620466bb39789f2e7d2927595
+Apply your own role rules to this state.
+```
+
+```text
+pending-messages/50-20260602-093350-refactorer.txt
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: c30bf93defe56be59a86a9d14a17534225ef02d8
+Apply your own role rules to this state.
+```

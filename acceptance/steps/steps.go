@@ -177,15 +177,7 @@ func whenExitsQueried(world *runtime.World, example map[string]string) error {
 }
 
 func thenExitsAre(world *runtime.World, example map[string]string) error {
-	want, err := roomList(example["exits"])
-	if err != nil {
-		return err
-	}
-	got := world.State["exits"].([]int)
-	if !reflect.DeepEqual(got, want) {
-		return fmt.Errorf("got exits %v, want %v", got, want)
-	}
-	return nil
+	return assertRoomList("exits", world.State["exits"].([]int), example["exits"])
 }
 
 func thenExitCountIs(world *runtime.World, example map[string]string) error {
@@ -503,9 +495,9 @@ func thenSixDistinctOccupiedRooms(world *runtime.World, _ map[string]string) err
 
 func requireDistinctOccupiedCount(world *runtime.World, want int) error {
 	rooms := world.State["occupied_rooms"].([]int)
-	distinct := map[int]bool{}
+	distinct := map[int]struct{}{}
 	for _, room := range rooms {
-		distinct[room] = true
+		distinct[room] = struct{}{}
 	}
 	if len(distinct) != want {
 		return fmt.Errorf("got %d distinct occupied rooms from %v, want %d", len(distinct), rooms, want)
@@ -671,19 +663,6 @@ func thenWarningMessagesAre(world *runtime.World, example map[string]string) err
 	return assertStringState(world, "warnings", "warning messages", example["warnings"])
 }
 
-func givenShootingSetup(world *runtime.World, example map[string]string) error {
-	player, err := intExample(example, "player_room")
-	if err != nil {
-		return err
-	}
-	wumpusRoom, err := intExample(example, "wumpus_room")
-	if err != nil {
-		return err
-	}
-	setup := wumpus.Setup{Player: player, Wumpus: wumpusRoom, Pits: []int{13, 14}, Bats: []int{16, 17}}
-	return setConfiguredSetup(world, setup)
-}
-
 func givenOrThenPlayerHasArrows(world *runtime.World, example map[string]string) error {
 	return setOrAssertParsedInt(world, example, "arrows", func(arrows int) {
 		gameFrom(world, "game").SetArrows(arrows)
@@ -712,15 +691,6 @@ func setStringChoice(value, label string, allowed []string, set func(string)) er
 	return fmt.Errorf("unsupported %s %q", label, value)
 }
 
-func givenPlayerStartsWithArrows(world *runtime.World, example map[string]string) error {
-	arrows, err := intExample(example, "initial_arrows")
-	if err != nil {
-		return err
-	}
-	gameFrom(world, "game").SetArrows(arrows)
-	return nil
-}
-
 func thenPlayerHasRemainingArrows(world *runtime.World, example map[string]string) error {
 	arrows, err := intExample(example, "remaining_arrows")
 	if err != nil {
@@ -737,67 +707,32 @@ func assertArrows(world *runtime.World, want int) error {
 	return nil
 }
 
-func givenNextArrowDeviationRoom(world *runtime.World, example map[string]string) error {
-	if example["deviation_room"] == "none" {
-		return nil
-	}
-	room, err := intExample(example, "deviation_room")
-	if err != nil {
-		return err
-	}
-	gameFrom(world, "game").SetNextArrowDeviation(room)
-	return nil
-}
-
-func whenPlayerShootsPath(world *runtime.World, example map[string]string) error {
-	path, err := optionalRoomList(example["path"])
-	if err != nil {
-		return err
-	}
-	world.State["requested_shot_path"] = path
-	result := gameFrom(world, "game").Shoot(path)
-	world.State["shoot_result"] = result
-	world.State["turn_messages"] = result.Messages
-	world.State["action_taken"] = true
-	return nil
-}
-
-func thenPlayerWins(world *runtime.World, _ map[string]string) error {
-	return assertGameStatus(world, wumpus.StatusWon)
-}
-
-func thenArrowTraversedRoomsAre(world *runtime.World, example map[string]string) error {
-	want, err := roomList(example["traversed_rooms"])
-	if err != nil {
-		return err
-	}
-	got := world.State["shoot_result"].(wumpus.ShootResult).TraversedRooms
-	if !reflect.DeepEqual(got, want) {
-		return fmt.Errorf("arrow traversed rooms %v, want %v", got, want)
-	}
-	return nil
-}
-
-func thenRequestedShotPathIs(world *runtime.World, example map[string]string) error {
-	want, err := optionalRoomList(example["expected_path"])
-	if err != nil {
-		return err
-	}
-	got := world.State["requested_shot_path"].([]int)
-	if !reflect.DeepEqual(got, want) {
-		return fmt.Errorf("requested shot path %v, want %v", got, want)
-	}
-	return nil
-}
-
-func thenShotRejectedWithMessage(world *runtime.World, example map[string]string) error {
-	result := world.State["shoot_result"].(wumpus.ShootResult)
-	return assertRejectedMessage("shot rejection", result.RejectedMessage, example["message"])
-}
-
 func assertRejectedMessage(label, got, want string) error {
 	if got != want {
 		return fmt.Errorf("%s message is %q, want %q", label, got, want)
+	}
+	return nil
+}
+
+func assertRoomList(label string, got []int, wantValue string) error {
+	return assertParsedRoomListValue(label, got, wantValue, roomList)
+}
+
+func assertOptionalRoomList(label string, got []int, wantValue string) error {
+	return assertParsedRoomListValue(label, got, wantValue, optionalRoomList)
+}
+
+func assertParsedRoomListValue(label string, got []int, wantValue string, parse func(string) ([]int, error)) error {
+	want, err := parse(wantValue)
+	if err != nil {
+		return err
+	}
+	return assertParsedRoomList(label, got, want)
+}
+
+func assertParsedRoomList(label string, got, want []int) error {
+	if !reflect.DeepEqual(got, want) {
+		return fmt.Errorf("%s %v, want %v", label, got, want)
 	}
 	return nil
 }
@@ -865,9 +800,10 @@ func assertStringList(label string, got []string, wantValue string) error {
 
 func thenDisplayedLinesInclude(world *runtime.World, example map[string]string) error {
 	lines := world.State["displayed_lines"].([]string)
-	expected := stringList(firstPresent(example, "message", "messages", "warnings"))
-	if prompt, ok := example["prompt"]; ok {
-		expected = []string{prompt}
+	value := firstPresent(example, "message", "messages", "warnings", "prompt")
+	expected := stringList(value)
+	if strings.HasPrefix(value, "SHOOT") {
+		expected = []string{value}
 	}
 	for _, want := range expected {
 		if !slices.Contains(lines, want) {
@@ -1152,3 +1088,7 @@ func firstUnoccupiedRoom(wumpusRoom int, pits, bats []int) int {
 	}
 	return 1
 }
+
+// mutate4go-manifest-begin
+// {"version":1,"tested_at":"2026-06-02T10:48:26-05:00","module_hash":"779b5cb34105b5ee8744fd67ab85ad0518e58c9f56eb89dc9c48b09985d43f6e","functions":[{"id":"func/NewHandlers","name":"NewHandlers","line":23,"end_line":158,"hash":"de654007bb7cfeafb2f1943b0dcda70c9cea0dd6b86fd50e46ae309bb04f67de"},{"id":"func/givenNewCave","name":"givenNewCave","line":160,"end_line":163,"hash":"b303885e9253964f1c89c93d452cf776e8e66c22e02159b1600d3b23d5355e19"},{"id":"func/whenExitsQueried","name":"whenExitsQueried","line":165,"end_line":177,"hash":"72829feb5fdf15929cf91dab92e9b7205ab21e530269d7a28d37bd58c4e48cc6"},{"id":"func/thenExitsAre","name":"thenExitsAre","line":179,"end_line":181,"hash":"54a51c9280ca1917c76b6b50556422bb3d4b1237a6efaee38d59370bec41326e"},{"id":"func/thenExitCountIs","name":"thenExitCountIs","line":183,"end_line":193,"hash":"1e85d5799c79c7af3efa7ee78bf2dc5b093c508518041a1d5a6ebfa830409f7f"},{"id":"func/whenCaveTraversed","name":"whenCaveTraversed","line":195,"end_line":198,"hash":"1da77aa27b97820fcb189f839fa21cf56d27a57be8eea178352c500a81aa1dc9"},{"id":"func/thenEveryRoomReachable","name":"thenEveryRoomReachable","line":200,"end_line":211,"hash":"0b3d230a1f7911643c77062ade9af8d7ae4806d6a12d96831b4bc46bf3d07995"},{"id":"func/whenCaveInvariantsInspected","name":"whenCaveInvariantsInspected","line":213,"end_line":225,"hash":"56b296da689d0bbaaf3c4a7d32548d9e8a86036c140ce528d098cbc50651c253"},{"id":"func/thenEveryRoomHasThreeExits","name":"thenEveryRoomHasThreeExits","line":227,"end_line":234,"hash":"0a9569a5a84bd8663f7331f7503ca19ba137b2eaf0419af9eacc1a15d7d673d8"},{"id":"func/thenNoRoomIsItsOwnExit","name":"thenNoRoomIsItsOwnExit","line":236,"end_line":243,"hash":"b34289e335d77d52f30c512171e3b2009f38560eff0951581cf84770c8e89392"},{"id":"func/whenTunnelQueried","name":"whenTunnelQueried","line":245,"end_line":259,"hash":"5b59358ccb11b0ebe29e77e8923cd0963253509107025c89218d4b411cbf872e"},{"id":"func/thenReverseTunnelExists","name":"thenReverseTunnelExists","line":261,"end_line":272,"hash":"f5f67c27db51fc2cd84c2bb11b78c328558e1edf568faf33411addfdeebe8967"},{"id":"func/thenRoomIsNotExit","name":"thenRoomIsNotExit","line":274,"end_line":285,"hash":"e9544d7b105d91000287651b70364b8245909ae0f27c7ce74fb0107e61c6bf5b"},{"id":"func/givenConfiguredSetup","name":"givenConfiguredSetup","line":287,"end_line":293,"hash":"b365e6aaeef6081cc1b6514314ae24974b1a533ee09db54499ca05fb3854b685"},{"id":"func/setupFromExample","name":"setupFromExample","line":295,"end_line":313,"hash":"d020a420000e0e55d93ce75381d92f6faabb81e8e103469be447180650f48749"},{"id":"func/givenSetupRoom1WumpusBats","name":"givenSetupRoom1WumpusBats","line":315,"end_line":317,"hash":"48947502a897bcc1f6b0a59903efa01e0ed9b9474dfc5bd7d962ca60d94eb06c"},{"id":"func/givenSetupRoom10WumpusPit","name":"givenSetupRoom10WumpusPit","line":319,"end_line":321,"hash":"553d1e6c8444552ee0975195ed8019f91a7ff7e923308ab726a12174032b0031"},{"id":"func/givenSetupRoom6NoHazards","name":"givenSetupRoom6NoHazards","line":323,"end_line":325,"hash":"efc60680c5f79c09354efb2436a2b43564879bfbec94b88c045c58814cc43eca"},{"id":"func/setConfiguredSetup","name":"setConfiguredSetup","line":327,"end_line":340,"hash":"b7bb005b5fa16382036aac5238cd696cedf84d7e5ef5061baedf6e9625ef6a25"},{"id":"func/givenConfiguredSetupPlayerWithWumpus","name":"givenConfiguredSetupPlayerWithWumpus","line":342,"end_line":353,"hash":"bd505da8e6a4c9e5d112c7f76cfe693f3fcd1f167995f5b34733a0c5f47ccc9b"},{"id":"func/whenAdjacentHazardsQueried","name":"whenAdjacentHazardsQueried","line":355,"end_line":359,"hash":"ad8ebc9034df26f198e45997834455f89c9b859850758a4782e2d67e503175bb"},{"id":"func/thenAdjacentHazardsAre","name":"thenAdjacentHazardsAre","line":361,"end_line":363,"hash":"82f0d8fe6f49bca84b58910f49f4108676c4d95ece6c11ba5d06d1355a459077"},{"id":"func/thenAdjacentHazardsWumpusBats","name":"thenAdjacentHazardsWumpusBats","line":365,"end_line":367,"hash":"252f9b4cb039c099264b57fd0c645069edeb8faf113d189fedfa75a44cf38f87"},{"id":"func/thenAdjacentHazardsWumpusPit","name":"thenAdjacentHazardsWumpusPit","line":369,"end_line":371,"hash":"7c93f88965ba15dc3e90b05ef059c57dcdfd704e2789ba6cbe9866981cf1a510"},{"id":"func/thenNoAdjacentHazards","name":"thenNoAdjacentHazards","line":373,"end_line":375,"hash":"4a2373582f346e206232f7b489beb792647c840aee2c01cbf935f713bfe797dd"},{"id":"func/requireHazards","name":"requireHazards","line":377,"end_line":387,"hash":"ad745660fd99798be8c557c0f58a151dc26df92f0d2b445dccf5c38a13b8a26d"},{"id":"func/givenNewGameSeed1973","name":"givenNewGameSeed1973","line":389,"end_line":391,"hash":"697a8abcf485d2adc597262328e2c4ffdf487d0176f24ff3d9d977bea0be314f"},{"id":"func/givenNewGameSeed","name":"givenNewGameSeed","line":393,"end_line":395,"hash":"1e85dd442f94cb2f603fad5c66c32cfb37babf4cb66180d8f754d76cf0df0f4e"},{"id":"func/givenAnotherNewGameSeed","name":"givenAnotherNewGameSeed","line":397,"end_line":399,"hash":"b67ad35f9532f1d2f16e417075a93381fc8e9b833a14ca4afc26227ec0b289e4"},{"id":"func/givenAnotherNewGameSeed1973","name":"givenAnotherNewGameSeed1973","line":401,"end_line":403,"hash":"28ef48e76e29f95355dc54de7114d6901ede30c3a58d4c0a846c0accd06bee99"},{"id":"func/givenCompletedGameSeed","name":"givenCompletedGameSeed","line":405,"end_line":407,"hash":"d2d983b667fa0ea6c2963f0b09df0044a1788009d635a47678e0026abe4ec338"},{"id":"func/givenCompletedGameSeed1973","name":"givenCompletedGameSeed1973","line":409,"end_line":411,"hash":"77a7b094d27dca37636f518b8334fd12e9f66a0039b045662629d686d5852085"},{"id":"func/setGameFromExample","name":"setGameFromExample","line":413,"end_line":419,"hash":"11194e6924ff1701273368a8a677c9605beab8f5005bd4dca265ca7b55d698ab"},{"id":"func/setGame","name":"setGame","line":421,"end_line":428,"hash":"bfea1554f7c90fb5d262dff95ffb51daffd63fdd49a94738145e7eced8fa9d40"},{"id":"func/whenSetupInspected","name":"whenSetupInspected","line":430,"end_line":433,"hash":"57cf8cda29c8633354437e09b8c34030b60ec408b7df97cd97b8c5c3d39e2377"},{"id":"func/thenOnePlayer","name":"thenOnePlayer","line":435,"end_line":437,"hash":"0109f2fb9e21b7264aeb2f9349c5a14cbca3fe17019b3cda58af3f4b879d7901"},{"id":"func/thenOneWumpus","name":"thenOneWumpus","line":439,"end_line":441,"hash":"4fbcd442325d17c16906bedc17c638b7870dd4209a4848f27262aa213e89efbf"},{"id":"func/thenTwoPits","name":"thenTwoPits","line":443,"end_line":445,"hash":"8123a9d5ac9b139683838d3a146d487a5dd2a702abb5669df66a9dca4f0ffdc7"},{"id":"func/thenTwoBats","name":"thenTwoBats","line":447,"end_line":449,"hash":"81bff643b7f216de15a07681ac1ee51d587c25f1437ab824b68f9943e1b406a8"},{"id":"func/inspected","name":"inspected","line":451,"end_line":453,"hash":"1c34327b0fec611fdbf723d8fb4d2b129b02d577c466fb1bb5affd23316435be"},{"id":"func/requirePlaced","name":"requirePlaced","line":455,"end_line":460,"hash":"6e17aa67b6a61da1599cc1e174aaf9c9da4c6dbb1699ab1b1d6dc0529d61ed32"},{"id":"func/requireCount","name":"requireCount","line":462,"end_line":467,"hash":"6d517c6577380a1185f0b32a3b65cc4c38a699cbe8449f1f6b8bdf8c02b7e68d"},{"id":"func/whenOccupiedRoomsInspected","name":"whenOccupiedRoomsInspected","line":469,"end_line":473,"hash":"dde907045be9e972d3c00d8a23dd70ebfb4ccdddc7cc107af584334a72c1aff4"},{"id":"func/thenOccupiedRoomsValid","name":"thenOccupiedRoomsValid","line":475,"end_line":482,"hash":"435e2417a03f5478138803a4f67dac7639e11164e388b01d0b170ea076cf7c31"},{"id":"func/thenDistinctOccupiedCount","name":"thenDistinctOccupiedCount","line":484,"end_line":490,"hash":"98e95d667992aa5d7a3b966b3f60ad09baea33903f8178fb9cf9c914a4c88eeb"},{"id":"func/thenSixDistinctOccupiedRooms","name":"thenSixDistinctOccupiedRooms","line":492,"end_line":494,"hash":"e112385db267657bdeffe80bd15a608ef044015013a53631c2dfd651b288317f"},{"id":"func/requireDistinctOccupiedCount","name":"requireDistinctOccupiedCount","line":496,"end_line":506,"hash":"6dc23f0ef66feff258042cb7443f8fa7d13ad6c71f03dd09ef4843880800eaa0"},{"id":"func/whenBothSetupsInspected","name":"whenBothSetupsInspected","line":508,"end_line":512,"hash":"bf52f279b8e8976e51a9c7d694bb9004bf8aaaaa78b077a26ee16f054aebff26"},{"id":"func/thenBothSetupsIdentical","name":"thenBothSetupsIdentical","line":514,"end_line":521,"hash":"ae04a139983d0e373b057cd30959090aeb807983cb60b983b40350583f17eeed"},{"id":"func/whenSameSetupReplayStarted","name":"whenSameSetupReplayStarted","line":523,"end_line":527,"hash":"ad655d7c84d7eaa890c24817e1fea0743c2c1e54f1a38e213570c3964738d414"},{"id":"func/thenReplaySetupIdentical","name":"thenReplaySetupIdentical","line":529,"end_line":536,"hash":"4d9a144a7e315ecaabf64071c508b392e9d8c90aa44506d42b9374b52a473db6"},{"id":"func/whenPlayerMoves","name":"whenPlayerMoves","line":538,"end_line":540,"hash":"deb4e2c298d1bf38833abd6c76c6641e82149efbf996a1dac1d01fafcc0bf393"},{"id":"func/movePlayerToAnyExampleRoom","name":"movePlayerToAnyExampleRoom","line":542,"end_line":548,"hash":"33bb63c049b93be3a6dfdf05e4afd2b1f390d2c3fafa2310f484e2ab176f3f6e"},{"id":"func/movePlayerToRoom","name":"movePlayerToRoom","line":550,"end_line":556,"hash":"bf6b63b29408981629d90bd225638917becc17416d36808d39f05fb5133cf7d2"},{"id":"func/thenPlayerInToRoom","name":"thenPlayerInToRoom","line":558,"end_line":560,"hash":"c2200eda6575e1a42ff7aae8db34a4da933e6cfceeac6769a83245617b86d59b"},{"id":"func/thenPlayerInFromRoom","name":"thenPlayerInFromRoom","line":562,"end_line":564,"hash":"a39df878629abd764e5bf2e5251bc9674b051ecde23a4da04745eaa3ec39af55"},{"id":"func/thenPlayerInPlayerRoom","name":"thenPlayerInPlayerRoom","line":566,"end_line":568,"hash":"c75adfae4fe1f6dc48e73d3af9844df51860e33e6c3f79580648339e3ec5a894"},{"id":"func/thenPlayerInExpectedPlayerRoom","name":"thenPlayerInExpectedPlayerRoom","line":570,"end_line":572,"hash":"7a6ddc3cb5f53a8c08dbc487cc8c7e3fd1e6a4a4036ae7d7bfc5af1542b7c58e"},{"id":"func/thenPlayerInRelocationRoom","name":"thenPlayerInRelocationRoom","line":574,"end_line":576,"hash":"c9318779ea3f46571b49e01caa65aeb0898758c9f276e616af0099c391f06078"},{"id":"func/thenPlayerInExampleRoom","name":"thenPlayerInExampleRoom","line":578,"end_line":588,"hash":"b901f969c1c0e3da790ae4d31208caa968dc92e5d88ab63791b582c8c87c2233"},{"id":"func/thenGameStillInProgress","name":"thenGameStillInProgress","line":590,"end_line":592,"hash":"5402e966e59ffa3cd350c5b8277acbb9455f0c10cb65c6ce7854050621b2e117"},{"id":"func/thenGameStatus","name":"thenGameStatus","line":594,"end_line":596,"hash":"4c473a54f502f6a2022ff1302210af5a031e67f97701a157a1e196f522e8d226"},{"id":"func/thenPlayerLoses","name":"thenPlayerLoses","line":598,"end_line":600,"hash":"d519700803bfc1bebacb9fe652cd6fb300012edd168e008cc115791f7fb48988"},{"id":"func/assertGameStatus","name":"assertGameStatus","line":602,"end_line":608,"hash":"4dbe14fbfe822b22afd1fb1bb5e75f2bf4de40efcc72b3566f43fd57919b94e3"},{"id":"func/thenTurnMessagesAre","name":"thenTurnMessagesAre","line":610,"end_line":612,"hash":"f635a02eac8e7318d1a243c4dfe30c26799117910525caf9e8bcad3726e35d24"},{"id":"func/thenMoveRejectedWithMessage","name":"thenMoveRejectedWithMessage","line":614,"end_line":617,"hash":"5f0cce24a56cc9f5e8cadf5e420d5dfd065b812a19ecbe1ed53fa93d861e566e"},{"id":"func/givenNextBatRelocationRoom","name":"givenNextBatRelocationRoom","line":619,"end_line":626,"hash":"fba1a91320446c26360da0000789983d081969c088971d581ca0dbf781a1acc0"},{"id":"func/givenNextWumpusWakeChoice","name":"givenNextWumpusWakeChoice","line":628,"end_line":635,"hash":"376fb8d876819d319c5edf10c3d6ad5739d3cd33b2379285eb69bbd892618634"},{"id":"func/thenWumpusInRoom","name":"thenWumpusInRoom","line":637,"end_line":639,"hash":"858514c805e2baa0579a9273a83a64940fbb9a7771c29e58985dc82444be21ea"},{"id":"func/thenWumpusInWumpusRoom","name":"thenWumpusInWumpusRoom","line":641,"end_line":643,"hash":"1f93e75dc66db361a659716e0d1ea13e29223b98b193f343c23b0dfce24f43c1"},{"id":"func/thenWumpusInExampleRoom","name":"thenWumpusInExampleRoom","line":645,"end_line":655,"hash":"0bea0c032f6984274d3af6e9382d9d971b5efb99540b521123f37dd1c31b9df3"},{"id":"func/whenTurnWarningsRequested","name":"whenTurnWarningsRequested","line":657,"end_line":660,"hash":"cadf2260938820cc39f30aee91c15249bc50f73005773ae611417a1c8675eb05"},{"id":"func/thenWarningMessagesAre","name":"thenWarningMessagesAre","line":662,"end_line":664,"hash":"f21b9c015381493277db481a6fa29ee64a38145ee258aa30f4aa2cf12d4f76a3"},{"id":"func/givenOrThenPlayerHasArrows","name":"givenOrThenPlayerHasArrows","line":666,"end_line":672,"hash":"2b84982cc273afe8cbc2159b62f4c48cce712a41069dfd640fc0843e67f9a7e5"},{"id":"func/setOrAssertParsedInt","name":"setOrAssertParsedInt","line":674,"end_line":684,"hash":"94919279879d012e994a0ef1e8602908cacf78c851372c0e7a701a16c6646d21"},{"id":"func/setStringChoice","name":"setStringChoice","line":686,"end_line":692,"hash":"aece07139f8d598d5692e05ae2da2166ea433fa7b0cb2aa4fc7646ac0cf61aff"},{"id":"func/thenPlayerHasRemainingArrows","name":"thenPlayerHasRemainingArrows","line":694,"end_line":700,"hash":"1c25e30f315689fc63e09c184eb03e99d3f07bcf923845126e044fa310bbc645"},{"id":"func/assertArrows","name":"assertArrows","line":702,"end_line":708,"hash":"41617524809e988dfe58f62840b5bc15e0578ab27f438aa4c8878e0a45bed2ad"},{"id":"func/assertRejectedMessage","name":"assertRejectedMessage","line":710,"end_line":715,"hash":"661bf672f5cce7a51285db5a5df74dc9503e1d5e3dd59fb5fb836389509c3958"},{"id":"func/assertRoomList","name":"assertRoomList","line":717,"end_line":719,"hash":"acc602fedbc05083bbfecd8d6cf116c954e2a7db74aeec697d114ae831f9a951"},{"id":"func/assertOptionalRoomList","name":"assertOptionalRoomList","line":721,"end_line":723,"hash":"a511b59b0bcb46f65e6b296ea35bdce7dddf10cb7cfbe6790760124296bd43e2"},{"id":"func/assertParsedRoomListValue","name":"assertParsedRoomListValue","line":725,"end_line":731,"hash":"31db10b3e2b3649d99846ef299e3f3e04672da66a8609b758e79c55414682850"},{"id":"func/assertParsedRoomList","name":"assertParsedRoomList","line":733,"end_line":738,"hash":"2cf47aa2bd6568f34264e7e22de68807fcd981326867d8f5b0b3bb75ceaf6a93"},{"id":"func/givenInteractiveSetup","name":"givenInteractiveSetup","line":740,"end_line":752,"hash":"32e01e2ad3d2e2f22d2ce292a65d964d0581def2bacb68e2a16c859580e62277"},{"id":"func/givenInteractiveSetupSeed","name":"givenInteractiveSetupSeed","line":754,"end_line":761,"hash":"ea25c25b357cec0fe45fd03facd0e5b2a09ed58d364f66d1b663ee89fa9bf842"},{"id":"func/givenNewInteractiveSession","name":"givenNewInteractiveSession","line":763,"end_line":766,"hash":"477c6c36946723ba0cf7266b3a1f5d389b23c50149a8f51494cadc5faacd253b"},{"id":"func/whenNextTurnDisplayed","name":"whenNextTurnDisplayed","line":768,"end_line":771,"hash":"a6e40b81690976d1c2975b99a8c648996799650a71d4799a9aab1a9487d3d630"},{"id":"func/whenPlayerEntersCommand","name":"whenPlayerEntersCommand","line":773,"end_line":780,"hash":"5ffdcbbeba15175da9f5502259e931cb6f9ac29c268650005a45e65a633414d1"},{"id":"func/thenDisplayedLinesAre","name":"thenDisplayedLinesAre","line":782,"end_line":784,"hash":"25b4303db623d2eacacdc8841aee4354781e6b3ab6249092aa424c1818870930"},{"id":"func/assertStringState","name":"assertStringState","line":786,"end_line":788,"hash":"240180cc31ad79b78d459adb966dd95661a043a78f235013969a4be8c6e20782"},{"id":"func/assertStringList","name":"assertStringList","line":790,"end_line":799,"hash":"30ba284e82b2e753040088409f1bbf7665caead62f6c00a732725e8c5743c52b"},{"id":"func/thenDisplayedLinesInclude","name":"thenDisplayedLinesInclude","line":801,"end_line":814,"hash":"e01ee0d23eb08b265db40f692e282f78cafbc79f42875b9638875d8e512f284c"},{"id":"func/givenPlayerHasLost","name":"givenPlayerHasLost","line":816,"end_line":827,"hash":"9ab8662f712aa674956a999443943da00c8d875891ec21897dbe3f8780a92620"},{"id":"func/whenPlayerAnswersSameSetupPrompt","name":"whenPlayerAnswersSameSetupPrompt","line":829,"end_line":832,"hash":"b40056ab91813524c1a007e541cc3a4a1fbc437a73d8339a5d0c0717951a503a"},{"id":"func/thenNextGameSetupRelation","name":"thenNextGameSetupRelation","line":834,"end_line":845,"hash":"f373ed02fe4161887f0c5b0fd8d23f9336afcd5f0041ff4b58a1ceffdf6d73b2"},{"id":"func/whenPlayerAnswersInstructionsPrompt","name":"whenPlayerAnswersInstructionsPrompt","line":847,"end_line":850,"hash":"688365f36d502ade4504f527a8aea38cac3a37f2e3ce52a07ed88663d9528655"},{"id":"func/givenNextSleepyWumpusObservation","name":"givenNextSleepyWumpusObservation","line":852,"end_line":862,"hash":"e8bbfc658c59bb801862c9c6996fdffd98ab5c3bf3fedfe5d32b679aeea794d9"},{"id":"func/givenWumpusAsleep","name":"givenWumpusAsleep","line":864,"end_line":867,"hash":"775614c16c935e2f1becc245c106fe93f94f5599755ed886e3be81c0be438e83"},{"id":"func/givenWumpusAwake","name":"givenWumpusAwake","line":869,"end_line":872,"hash":"fecad09c04ee15b17e8d6c5b1ed4e94443be1a4c565a8b52a76e58b42cc47ba4"},{"id":"func/thenWumpusSleepState","name":"thenWumpusSleepState","line":874,"end_line":883,"hash":"14061f226838ca345f6f9d9243573625034516897b021e91c65e0608a66803d5"},{"id":"func/thenWumpusSleepStateAsleep","name":"thenWumpusSleepStateAsleep","line":885,"end_line":887,"hash":"fefafe1cb1767eb3e546c843fc8bb62a7c4b32f4ce4c19843fa35c35d9973027"},{"id":"func/thenWumpusSleepStateAwake","name":"thenWumpusSleepStateAwake","line":889,"end_line":891,"hash":"99181bed1443f4e804f57860c5e77e44649debe26ead5b1bf481823bf6249064"},{"id":"func/requireWumpusSleepState","name":"requireWumpusSleepState","line":893,"end_line":898,"hash":"8ce74cdf65372de647d1209a5f11f40e1c77c53844d0a7976ae1703f12ab2728"},{"id":"func/thenTurnWarningsAre","name":"thenTurnWarningsAre","line":900,"end_line":907,"hash":"a712e9f57634f1acbcda42327dc4adba3800ba7406dad54f9e12dd68b7c833dc"},{"id":"func/givenNextSleepingWumpusEntryOutcome","name":"givenNextSleepingWumpusEntryOutcome","line":909,"end_line":916,"hash":"d002770f3368b47adfcbed35f5f35ef005465658c60d0fdc29c683f4c48e952a"},{"id":"func/givenPlayerHasSeenSleepingWumpus","name":"givenPlayerHasSeenSleepingWumpus","line":918,"end_line":921,"hash":"23b5522d50edfc470e8abcb111fd28e7a83e5ab191ce909fed3d419ededb2e6e"},{"id":"func/whenBothGamesObserveSleepyWumpus","name":"whenBothGamesObserveSleepyWumpus","line":923,"end_line":927,"hash":"95a946dfe99a4bf8fef832a0c8991f99502328fb3b205c21240a2300c2ef4382"},{"id":"func/thenBothSleepyObservationsIdentical","name":"thenBothSleepyObservationsIdentical","line":929,"end_line":931,"hash":"21b286afdf10af00f73d37a09876474f2db52dcc0d2d5abb565b8efe5a7bf5f6"},{"id":"func/recordPairedStringObservations","name":"recordPairedStringObservations","line":933,"end_line":941,"hash":"4e85a6a31ab1c29f69acbe505435ab8239be6982c47543a07381ccdaaa38f2a3"},{"id":"func/assertStringObservationsIdentical","name":"assertStringObservationsIdentical","line":943,"end_line":950,"hash":"e69a1ec150047412f96f4293974b72a8c99318fe8e8c781e754df1a57fad4a46"},{"id":"func/setupSnapshot","name":"setupSnapshot","line":952,"end_line":958,"hash":"281567869ec92ee702b7087da698bcee785d98859c843b54ef13a421f1250f89"},{"id":"func/inspectSetup","name":"inspectSetup","line":960,"end_line":962,"hash":"a4cedce9df2e91f5b1f9455c6c992ba2feec3a9c1cec9d1493458c9732224500"},{"id":"func/storeSession","name":"storeSession","line":964,"end_line":967,"hash":"eb2ce186b12c5f32d9fd26d0c29fb554aee73d98d8e3fdfac583a9fe5c7355a1"},{"id":"func/gameFrom","name":"gameFrom","line":969,"end_line":971,"hash":"aaeee81e6f19c53a6b9197619d41ed998cf9f207a5ebdb67f6232bf0536d0312"},{"id":"func/sessionFrom","name":"sessionFrom","line":973,"end_line":975,"hash":"4b0f7f5d7d798d7125b08cf5243664b4cd8761b5ae7acec8c3a1efe79286791c"},{"id":"func/firstPresent","name":"firstPresent","line":977,"end_line":984,"hash":"50894efd3c5e00889ba877aa508c09685d2436d1b67501237727b5b4be2b4e2d"},{"id":"func/intAnyExample","name":"intAnyExample","line":986,"end_line":993,"hash":"e84e50dc42a925c038232f6c875275921708de97c348bcd6f57e63d7434c92bd"},{"id":"func/intExample","name":"intExample","line":995,"end_line":1005,"hash":"7bd03b5c2a2d06befbebf041ca10e7f319b032af0503ce8f3988f9fe147d9d33"},{"id":"func/parseWakeChoice","name":"parseWakeChoice","line":1007,"end_line":1020,"hash":"c2c170daf77137167aa459747296236d9c088f2c326af553c0508d598a96bada"},{"id":"func/int64Example","name":"int64Example","line":1022,"end_line":1032,"hash":"a4d6fde31b1bd879696ab39055fe116a932bac87d06b2b655c3aea3c1bcaf926"},{"id":"func/roomList","name":"roomList","line":1034,"end_line":1044,"hash":"12f84457daa82e5cf93a778fa64236ad21ac0a65aa731438bc4997abc57541bf"},{"id":"func/optionalRoomList","name":"optionalRoomList","line":1046,"end_line":1051,"hash":"52c2dcc631c7ecfd3c653fea0adeb4042e43a64bb640c697748a8eafdd61d9ad"},{"id":"func/stringList","name":"stringList","line":1053,"end_line":1064,"hash":"4b2429b2a6b552fc95cbfa4568e072889a4b70699ec224c66cdd503f422e66fa"},{"id":"func/hazardList","name":"hazardList","line":1066,"end_line":1068,"hash":"d4abe62e21fc6925976a4e5c439ece7273c34a6bf059caec5dac61281d875e7b"},{"id":"func/commaSeparatedStrings","name":"commaSeparatedStrings","line":1070,"end_line":1079,"hash":"9489e01c576628d5a219d1ff7829f3e5e8331959f9db1fa5b9d37e83b4fc72e7"},{"id":"func/firstUnoccupiedRoom","name":"firstUnoccupiedRoom","line":1081,"end_line":1090,"hash":"24be287e7954551866a994516d19d6f36601dff10ab00bb9c998a3cf29acf476"}]}
+// mutate4go-manifest-end

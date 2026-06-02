@@ -5,9 +5,12 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"htwgo/acceptance/runtime"
+	"htwgo/internal/interactive"
+	"htwgo/internal/wumpus"
 )
 
 func TestHandlersSatisfyCurrentAcceptanceFeatures(t *testing.T) {
@@ -31,17 +34,23 @@ func TestHandlersSatisfyCurrentAcceptanceFeatures(t *testing.T) {
 }
 
 func TestExampleParsingReportsMissingAndInvalidIntegers(t *testing.T) {
-	if _, err := intExample(map[string]string{}, "room"); err == nil {
+	if value, err := intExample(map[string]string{}, "room"); err == nil || value != 0 {
 		t.Fatal("expected missing integer example error")
 	}
-	if _, err := intExample(map[string]string{"room": "x"}, "room"); err == nil {
+	if value, err := intExample(map[string]string{"room": "x"}, "room"); err == nil || value != 0 {
 		t.Fatal("expected invalid integer example error")
 	}
-	if _, err := int64Example(map[string]string{"seed": "x"}, "seed"); err == nil {
+	if value, err := int64Example(map[string]string{"seed": "x"}, "seed"); err == nil || value != 0 {
 		t.Fatal("expected invalid int64 example error")
 	}
-	if _, err := intAnyExample(map[string]string{}, "room", "from_room"); err == nil {
+	if value, err := int64Example(map[string]string{}, "seed"); err == nil || value != 0 {
+		t.Fatal("expected missing int64 example error")
+	}
+	if value, err := intAnyExample(map[string]string{}, "room", "from_room"); err == nil || value != 0 {
 		t.Fatal("expected missing any-key integer example error")
+	}
+	if value, err := intAnyExample(map[string]string{"room": "7", "from_room": "9"}, "room", "from_room"); err != nil || value != 7 {
+		t.Fatalf("any-key integer = %d, %v; want 7, nil", value, err)
 	}
 }
 
@@ -89,6 +98,131 @@ func TestListsAndWakeChoicesParseFeatureValues(t *testing.T) {
 	rooms, err = optionalRoomList("none")
 	if err != nil || rooms != nil {
 		t.Fatalf("optional rooms = %v, %v; want nil, nil", rooms, err)
+	}
+}
+
+func TestStepAssertionsRejectMismatchesAndInvalidExamples(t *testing.T) {
+	world := &runtime.World{State: map[string]any{
+		"exits":          []int{1, 2, 3},
+		"reachable":      append([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, []int{11, 12, 13, 14, 15, 16, 17, 18, 19, 19}...),
+		"occupied_rooms": []int{1, 2, 3, 4, 5, 6},
+	}}
+
+	if err := thenExitsAre(world, map[string]string{"exits": "1, 2, 4"}); err == nil {
+		t.Fatal("expected exits mismatch")
+	}
+	if err := thenExitCountIs(world, map[string]string{"exit_count": "2"}); err == nil {
+		t.Fatal("expected exit count mismatch")
+	}
+	if err := thenEveryRoomReachable(world, nil); err == nil {
+		t.Fatal("expected missing reachable room")
+	}
+	if err := thenRoomIsNotExit(world, map[string]string{"room": "x"}); err == nil {
+		t.Fatal("expected invalid room example")
+	}
+	if err := requirePlaced(1, "player not placed"); err != nil {
+		t.Fatalf("placed room rejected: %v", err)
+	}
+
+	world.State["occupied_rooms"] = []int{0, 20}
+	if err := thenOccupiedRoomsValid(world, nil); err == nil {
+		t.Fatal("expected invalid low occupied room")
+	}
+	world.State["occupied_rooms"] = []int{1, 21}
+	if err := thenOccupiedRoomsValid(world, nil); err == nil {
+		t.Fatal("expected invalid high occupied room")
+	}
+	world.State["occupied_rooms"] = []int{20}
+	if err := thenOccupiedRoomsValid(world, nil); err != nil {
+		t.Fatalf("valid high occupied room rejected: %v", err)
+	}
+	world.State["occupied_rooms"] = []int{1, 1}
+	if err := requireDistinctOccupiedCount(world, 1); err != nil {
+		t.Fatalf("distinct room count rejected: %v", err)
+	}
+	expectErrorContains(t, thenDistinctOccupiedCount(world, map[string]string{"occupied_count": "x"}), "invalid integer")
+	if err := assertStringList("messages", []string{}, "hello"); err == nil {
+		t.Fatal("expected empty/non-empty string list mismatch")
+	}
+}
+
+func TestCaveInspectionAndBoundaryHelpersCoverAllRooms(t *testing.T) {
+	world := &runtime.World{State: map[string]any{"cave": wumpus.NewCave()}}
+	if err := whenCaveInvariantsInspected(world, nil); err != nil {
+		t.Fatal(err)
+	}
+	exitsByRoom := world.State["exits_by_room"].(map[int][]int)
+	if _, ok := exitsByRoom[20]; !ok || len(exitsByRoom) != 20 {
+		t.Fatalf("inspected rooms = %v", exitsByRoom)
+	}
+
+	occupied := []int{1, 2, 3, 4, 5, 6, 7}
+	occupied = append(occupied, []int{8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}...)
+	if room := firstUnoccupiedRoom(1, occupied[1:10], occupied[10:]); room != 20 {
+		t.Fatalf("first unoccupied room = %d, want 20", room)
+	}
+}
+
+func TestStatefulStepHelpersRecordActionsAndAssertState(t *testing.T) {
+	setup := wumpus.Setup{Player: 1, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{16, 17}}
+	game, err := wumpus.NewGameWithSetup(setup)
+	if err != nil {
+		t.Fatal(err)
+	}
+	game.SetArrows(5)
+	world := &runtime.World{State: map[string]any{"game": &game}}
+
+	if err := movePlayerToRoom(world, 2); err != nil {
+		t.Fatal(err)
+	}
+	if actionTaken, ok := world.State["action_taken"].(bool); !ok || !actionTaken {
+		t.Fatalf("action_taken = %v/%v, want true", world.State["action_taken"], ok)
+	}
+	expectErrorContains(t, thenPlayerInExampleRoom(world, map[string]string{"player_room": "x"}, "player_room"), "invalid integer")
+	expectErrorContains(t, thenWumpusInExampleRoom(world, map[string]string{"wumpus_room": "x"}, "wumpus_room"), "invalid integer")
+	expectErrorContains(t, thenPlayerHasRemainingArrows(world, map[string]string{"remaining_arrows": "x"}), "invalid integer")
+
+	sessionWorld := &runtime.World{State: map[string]any{}}
+	storeSession(sessionWorld, interactiveSessionForTest(t, setup))
+	if err := whenPlayerEntersCommand(sessionWorld, map[string]string{"command": "m 2"}); err != nil {
+		t.Fatal(err)
+	}
+	if actionTaken, ok := sessionWorld.State["action_taken"].(bool); !ok || !actionTaken {
+		t.Fatalf("interactive action_taken = %v/%v, want true", sessionWorld.State["action_taken"], ok)
+	}
+
+	shootingGame, err := wumpus.NewGameWithSetup(wumpus.Setup{Player: 1, Wumpus: 5, Pits: []int{13, 14}, Bats: []int{16, 17}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	shootingWorld := &runtime.World{State: map[string]any{"game": &shootingGame}}
+	if err := whenPlayerShootsPath(shootingWorld, map[string]string{"path": "5"}); err != nil {
+		t.Fatal(err)
+	}
+	if actionTaken, ok := shootingWorld.State["action_taken"].(bool); !ok || !actionTaken {
+		t.Fatalf("shoot action_taken = %v/%v, want true", shootingWorld.State["action_taken"], ok)
+	}
+	if err := thenArrowTraversedRoomsAre(shootingWorld, map[string]string{"traversed_rooms": "2"}); err == nil {
+		t.Fatal("expected arrow traversal mismatch")
+	}
+	if err := thenRequestedShotPathIs(shootingWorld, map[string]string{"expected_path": "2"}); err == nil {
+		t.Fatal("expected requested shot path mismatch")
+	}
+}
+
+func interactiveSessionForTest(t *testing.T, setup wumpus.Setup) *interactive.Session {
+	t.Helper()
+	game, err := wumpus.NewGameWithSetup(setup)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return interactive.NewSessionWithGame(game)
+}
+
+func expectErrorContains(t *testing.T, err error, text string) {
+	t.Helper()
+	if err == nil || !strings.Contains(err.Error(), text) {
+		t.Fatalf("error = %v, want text %q", err, text)
 	}
 }
 
@@ -250,14 +384,15 @@ func crookedArrowFeature() runtime.Feature {
 			{
 				Name: "arrow path that reaches Wumpus wins",
 				Steps: []runtime.Step{
-					{Text: "a game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>"},
-					{Text: "the player has <arrows> arrows"},
+					{Text: "a shooting game setup with the player in room <player_room> and the Wumpus in room <wumpus_room>"},
+					{Text: "the player starts with <initial_arrows> arrows"},
 					{Text: "the player shoots the path <path>"},
+					{Text: "the requested shot path is <expected_path>"},
 					{Text: "the player wins"},
 					{Text: "the player has <remaining_arrows> arrows"},
 					{Text: "the turn messages are <messages>"},
 				},
-				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "10", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "path": "2, 10", "remaining_arrows": "4", "messages": "AHA! YOU GOT THE WUMPUS! HEE HEE HEE - THE WUMPUS'LL GETCHA NEXT TIME!!"}},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "10", "initial_arrows": "5", "path": "2, 10", "expected_path": "2, 10", "remaining_arrows": "4", "messages": "AHA! YOU GOT THE WUMPUS! HEE HEE HEE - THE WUMPUS'LL GETCHA NEXT TIME!!"}},
 			},
 			{
 				Name: "invalid arrow segment deviates",
@@ -303,14 +438,16 @@ func crookedArrowFeature() runtime.Feature {
 			{
 				Name: "shooting path must contain rooms",
 				Steps: []runtime.Step{
-					{Text: "a game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>"},
-					{Text: "the player has <arrows> arrows"},
+					{Text: "a shooting game setup with the player in room <player_room> and the Wumpus in room <wumpus_room>"},
+					{Text: "the player starts with <initial_arrows> arrows"},
 					{Text: "the player shoots the path <path>"},
+					{Text: "the requested shot path is <expected_path>"},
 					{Text: "the shot is rejected with message <message>"},
-					{Text: "the player has <arrows> arrows"},
+					{Text: "the player has <remaining_arrows> arrows"},
 					{Text: "the game is still in progress"},
+					{Text: "the player is in room <expected_player_room>"},
 				},
-				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "10", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "path": "none", "message": "CAN'T SHOOT THERE"}},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "10", "initial_arrows": "5", "path": "none", "expected_path": "none", "remaining_arrows": "5", "expected_player_room": "1", "message": "CAN'T SHOOT THERE"}},
 			},
 		},
 	}
