@@ -89,11 +89,8 @@ func (s *Session) EnterCommand(command string) []string {
 
 func (s *Session) moveCommand(fields []string) []string {
 	shouldDetonate := s.hasPendingGrenade()
-	if len(fields) != 2 {
-		return []string{"CAN'T MOVE THERE"}
-	}
-	room, err := strconv.Atoi(fields[1])
-	if err != nil {
+	room, ok := parseCommandRoom(fields)
+	if !ok {
 		return []string{"CAN'T MOVE THERE"}
 	}
 	prefix := s.commandTurnMessages()
@@ -122,11 +119,8 @@ func (s *Session) shootCommand(fields []string) []string {
 }
 
 func (s *Session) throwCommand(fields []string) []string {
-	if len(fields) != 2 {
-		return []string{"CAN'T THROW THERE"}
-	}
-	room, err := strconv.Atoi(fields[1])
-	if err != nil {
+	room, ok := parseCommandRoom(fields)
+	if !ok {
 		return []string{"CAN'T THROW THERE"}
 	}
 	prefix := s.commandTurnMessages()
@@ -152,6 +146,14 @@ func (s *Session) restCommand(fields []string) []string {
 
 func (s *Session) commandTurnMessages() []string {
 	return s.game.ResolveJumpingWumpusTurn().Messages
+}
+
+func parseCommandRoom(fields []string) (int, bool) {
+	if len(fields) != 2 {
+		return 0, false
+	}
+	room, err := strconv.Atoi(fields[1])
+	return room, err == nil
 }
 
 func parseShotPath(values []string) ([]int, bool) {

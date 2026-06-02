@@ -1,6 +1,6 @@
 # mutation-stamp: sha256=24149fde36ab104faa185032d96dfacf124c9657c26f5aa861727e491ce28feb
 # acceptance-mutation-manifest-begin
-# {"version":1,"tested_at":"2026-06-02T14:14:49Z","feature_name":"Entity placement","feature_path":"features/entity-placement.feature","background_hash":"74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b","implementation_hash":"sha256:f8324f871f5a0fedf4a32f905b77a7767e6e4c3622a7ca4c4cd95eab15ddbc84","scenarios":[]}
+# {"version":1,"tested_at":"2026-06-02T15:23:47Z","feature_name":"Entity placement","feature_path":"features/entity-placement.feature","background_hash":"74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b","implementation_hash":"sha256:f8324f871f5a0fedf4a32f905b77a7767e6e4c3622a7ca4c4cd95eab15ddbc84","scenarios":[]}
 # acceptance-mutation-manifest-end
 
 Feature: Entity placement

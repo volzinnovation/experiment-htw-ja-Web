@@ -1,5 +1,7 @@
 package wumpus
 
+import "slices"
+
 type Status string
 
 const (
@@ -97,9 +99,9 @@ func (g Game) mustExits(room int) []int {
 
 func (g *Game) resolveArrival() []string {
 	switch {
-	case contains(g.setup.Pits, g.setup.Player):
+	case slices.Contains(g.setup.Pits, g.setup.Player):
 		return g.lose("YYYIIIIEEEE . . . FELL IN PIT")
-	case contains(g.setup.Bats, g.setup.Player):
+	case slices.Contains(g.setup.Bats, g.setup.Player):
 		return g.resolveBatArrival()
 	case g.setup.Wumpus == g.setup.Player:
 		if g.wumpusAsleep {

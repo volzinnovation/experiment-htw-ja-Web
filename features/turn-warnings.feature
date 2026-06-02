@@ -1,6 +1,6 @@
 # mutation-stamp: sha256=9a1a43e5e552e329eb8437b0e4789ca092d965217893a17dd5fcbf1c5ac41c98
 # acceptance-mutation-manifest-begin
-# {"version":1,"tested_at":"2026-06-02T14:14:50Z","feature_name":"Turn warnings","feature_path":"features/turn-warnings.feature","background_hash":"74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b","implementation_hash":"sha256:84eae0be346f4f4cc5d119ab61fcecb12264725995d9624acc03f2b1b3808d09","scenarios":[]}
+# {"version":1,"tested_at":"2026-06-02T15:23:48Z","feature_name":"Turn warnings","feature_path":"features/turn-warnings.feature","background_hash":"74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b","implementation_hash":"sha256:84eae0be346f4f4cc5d119ab61fcecb12264725995d9624acc03f2b1b3808d09","scenarios":[]}
 # acceptance-mutation-manifest-end
 
 Feature: Turn warnings

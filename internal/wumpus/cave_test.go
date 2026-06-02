@@ -72,6 +72,17 @@ func TestAdjacentHazardsReportsOnlyNeighboringHazardTypes(t *testing.T) {
 	}
 }
 
+func TestAdjacentHazardsReportsEachHazardTypeOnce(t *testing.T) {
+	setup := Setup{Player: 1, Wumpus: 20, Pits: []int{2, 5}, Bats: []int{16, 17}}
+
+	got := NewCave().AdjacentHazards(setup.Player, setup)
+	want := []Hazard{HazardPit}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("adjacent hazards = %v, want %v", got, want)
+	}
+}
+
 func TestAdjacentHazardsCanReportPitAndIgnoreInvalidRoom(t *testing.T) {
 	setup := Setup{Player: 10, Wumpus: 1, Pits: []int{9, 18}, Bats: []int{6, 7}}
 

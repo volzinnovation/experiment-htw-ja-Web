@@ -1,111 +1,106 @@
+# mutation-stamp: sha256=eeaca055be765aa05d48b66f7f018359fcacad95a328e31178e967c82f607184
+# acceptance-mutation-manifest-begin
+# {"version":1,"tested_at":"2026-06-02T15:23:48Z","feature_name":"Sleepy Wumpus","feature_path":"features/sleepy-wumpus.feature","background_hash":"74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b","implementation_hash":"sha256:54aa2a0ab07be21fba3ce621e7456e484c32d0e545073fe735c16000876d1a04","scenarios":[]}
+# acceptance-mutation-manifest-end
+
 Feature: Sleepy Wumpus
   The Wumpus can be asleep, allowing noisy warnings, risky close encounters, and explicit wake transitions.
 
   # Sleepy Wumpus 001
-  Scenario Outline: Sleepy Wumpus 001 adjacent room can include snoring with normal smell
-    Given a game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>
-    And the next sleepy Wumpus adjacent observation is <sleepy_observation>
-    When the player moves to room <to_room>
-    Then the Wumpus sleep state is <sleep_state>
-    And the turn warnings are <warnings>
-
-    Examples:
-      | from_room | to_room | wumpus_room | pit_rooms | bat_rooms | sleepy_observation | sleep_state | warnings                                           |
-      | 6         | 5       | 1           | 13, 14    | 16, 17    | asleep             | asleep      | I SMELL A WUMPUS, YOU HEAR HORRIBLE SNORING       |
-      | 6         | 5       | 1           | 13, 14    | 16, 17    | awake              | awake       | I SMELL A WUMPUS                                  |
+  Scenario: Sleepy Wumpus 001 adjacent room can include snoring with normal smell
+    Given a game setup with the player in room 6, the Wumpus in room 1, pits in rooms 13, 14, and bats in rooms 16, 17
+    And the next sleepy Wumpus adjacent observation is asleep
+    When the player moves to room 5
+    Then the Wumpus sleep state is asleep
+    And the turn warnings are I SMELL A WUMPUS, YOU HEAR HORRIBLE SNORING
 
   # Sleepy Wumpus 002
-  Scenario Outline: Sleepy Wumpus 002 moving away from sleeping Wumpus adjacency awakens it
-    Given a game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>
-    And the Wumpus is asleep
-    When the player moves to room <to_room>
+  Scenario: Sleepy Wumpus 002 adjacent room can leave Wumpus awake
+    Given a game setup with the player in room 6, the Wumpus in room 1, pits in rooms 13, 14, and bats in rooms 16, 17
+    And the next sleepy Wumpus adjacent observation is awake
+    When the player moves to room 5
     Then the Wumpus sleep state is awake
-    And the turn messages are <messages>
-
-    Examples:
-      | from_room | to_room | wumpus_room | pit_rooms | bat_rooms | messages                       |
-      | 5         | 6       | 1           | 13, 14    | 16, 17    | YOU HEAR A SNORT AND "HUH?"    |
+    And the turn warnings are I SMELL A WUMPUS
 
   # Sleepy Wumpus 003
-  Scenario Outline: Sleepy Wumpus 003 entering sleeping Wumpus room can wake and kill
-    Given a game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>
+  Scenario: Sleepy Wumpus 003 moving away from sleeping Wumpus adjacency awakens it
+    Given a game setup with the player in room 5, the Wumpus in room 1, pits in rooms 13, 14, and bats in rooms 16, 17
     And the Wumpus is asleep
-    And the next sleeping Wumpus room entry outcome is <entry_outcome>
-    When the player moves to room <wumpus_room>
-    Then the game is <game_status>
-    And the Wumpus sleep state is <sleep_state>
-    And the turn messages are <messages>
-
-    Examples:
-      | from_room | wumpus_room | pit_rooms | bat_rooms | entry_outcome | game_status | sleep_state | messages                                                                      |
-      | 1         | 2           | 13, 14    | 16, 17    | wakes         | lost        | awake       | YOU HEAR THE WUMPUS SAY "YUMMY BREAKFAST!", HA HA HA - YOU LOSE!              |
-      | 1         | 2           | 13, 14    | 16, 17    | stays asleep  | in progress | asleep      | YOU SEE THE HUDDLED HORRIBLE SHAPE OF THE SLEEPING WUMPUS                    |
+    When the player moves to room 6
+    Then the Wumpus sleep state is awake
+    And the turn messages are YOU HEAR A SNORT AND "HUH?"
 
   # Sleepy Wumpus 004
-  Scenario Outline: Sleepy Wumpus 004 leaving after seeing sleeping Wumpus awakens it
-    Given a game setup with the player in room <wumpus_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>
+  Scenario: Sleepy Wumpus 004 entering sleeping Wumpus room can wake and kill
+    Given a game setup with the player in room 1, the Wumpus in room 2, pits in rooms 13, 14, and bats in rooms 16, 17
     And the Wumpus is asleep
-    And the player has seen the sleeping Wumpus shape
-    When the player moves to room <to_room>
-    Then the Wumpus sleep state is awake
-    And the player is in room <to_room>
-    And the turn messages are <messages>
-
-    Examples:
-      | wumpus_room | to_room | pit_rooms | bat_rooms | messages                         |
-      | 2           | 1       | 13, 14    | 16, 17    | YOU HEAR A PETULANT SCREAM!      |
+    And the next sleeping Wumpus room entry outcome is wakes
+    When the player moves to room 2
+    Then the game is lost
+    And the Wumpus sleep state is awake
+    And the turn messages are YOU HEAR THE WUMPUS SAY "YUMMY BREAKFAST!", HA HA HA - YOU LOSE!
 
   # Sleepy Wumpus 005
-  Scenario Outline: Sleepy Wumpus 005 awake Wumpus entry uses original wake behavior
-    Given a game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>
-    And the Wumpus is awake
-    And the next Wumpus wake choice is <wake_choice>
-    When the player moves to room <wumpus_room>
-    Then the Wumpus is in room <expected_wumpus_room>
-    And the game is <game_status>
-    And the turn messages are <messages>
-
-    Examples:
-      | from_room | wumpus_room | wake_choice | expected_wumpus_room | pit_rooms | bat_rooms | game_status | messages                                            |
-      | 1         | 2           | stay        | 2                    | 13, 14    | 16, 17    | lost        | TSK TSK TSK - WUMPUS GOT YOU!, HA HA HA - YOU LOSE! |
+  Scenario: Sleepy Wumpus 005 entering sleeping Wumpus room can leave it asleep
+    Given a game setup with the player in room 1, the Wumpus in room 2, pits in rooms 13, 14, and bats in rooms 16, 17
+    And the Wumpus is asleep
+    And the next sleeping Wumpus room entry outcome is stays asleep
+    When the player moves to room 2
+    Then the game is in progress
+    And the Wumpus sleep state is asleep
+    And the turn messages are YOU SEE THE HUDDLED HORRIBLE SHAPE OF THE SLEEPING WUMPUS
 
   # Sleepy Wumpus 006
-  Scenario Outline: Sleepy Wumpus 006 shooting an arrow wakes sleeping Wumpus after a miss
-    Given a game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>
+  Scenario: Sleepy Wumpus 006 leaving after seeing sleeping Wumpus awakens it
+    Given a game setup with the player in room 2, the Wumpus in room 2, pits in rooms 13, 14, and bats in rooms 16, 17
     And the Wumpus is asleep
-    And the player has <arrows> arrows
-    And the next Wumpus wake choice is <wake_choice>
-    When the player shoots the path <path>
+    And the player has seen the sleeping Wumpus shape
+    When the player moves to room 1
     Then the Wumpus sleep state is awake
-    And the Wumpus is in room <expected_wumpus_room>
-    And the game is <game_status>
-
-    Examples:
-      | player_room | wumpus_room | pit_rooms | bat_rooms | arrows | path | wake_choice | expected_wumpus_room | game_status |
-      | 1           | 10          | 13, 14    | 16, 17    | 5      | 5    | move to 11  | 11                   | in progress |
+    And the player is in room 1
+    And the turn messages are YOU HEAR A PETULANT SCREAM!
 
   # Sleepy Wumpus 007
-  Scenario Outline: Sleepy Wumpus 007 seeded sleepy observations are reproducible
-    Given a new game created with seed <seed>
-    And another new game created with seed <seed>
-    When both games observe sleepy Wumpus behavior for <turn_count> turns
-    Then both games produce identical sleepy Wumpus observations
-
-    Examples:
-      | seed | turn_count |
-      | 1973 | 10         |
-      | 2026 | 10         |
+  Scenario: Sleepy Wumpus 007 awake Wumpus entry uses original wake behavior
+    Given a game setup with the player in room 1, the Wumpus in room 2, pits in rooms 13, 14, and bats in rooms 16, 17
+    And the Wumpus is awake
+    And the next Wumpus wake choice is stay
+    When the player moves to room 2
+    Then the Wumpus is in room 2
+    And the game is lost
+    And the turn messages are TSK TSK TSK - WUMPUS GOT YOU!, HA HA HA - YOU LOSE!
 
   # Sleepy Wumpus 008
-  Scenario Outline: Sleepy Wumpus 008 bat transport into Wumpus adjacency can reveal snoring
-    Given a game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>
-    And the next bat relocation room is <relocation_room>
-    And the next sleepy Wumpus adjacent observation is <sleepy_observation>
-    When the player moves to room <bat_room>
-    Then the player is in room <relocation_room>
-    And the Wumpus sleep state is <sleep_state>
-    And the turn warnings are <warnings>
+  Scenario: Sleepy Wumpus 008 shooting an arrow wakes sleeping Wumpus after a miss
+    Given a game setup with the player in room 1, the Wumpus in room 10, pits in rooms 13, 14, and bats in rooms 16, 17
+    And the Wumpus is asleep
+    And the player has 5 arrows
+    And the next Wumpus wake choice is move to 11
+    When the player shoots the path 5
+    Then the Wumpus sleep state is awake
+    And the Wumpus is in room 11
+    And the game is in progress
 
-    Examples:
-      | from_room | bat_room | relocation_room | wumpus_room | pit_rooms | bat_rooms | sleepy_observation | sleep_state | warnings                                     |
-      | 1         | 2        | 5               | 1           | 13, 14    | 2, 17     | asleep             | asleep      | I SMELL A WUMPUS, YOU HEAR HORRIBLE SNORING |
+  # Sleepy Wumpus 009
+  Scenario: Sleepy Wumpus 009 seeded sleepy observations are reproducible
+    Given a new game created with seed 1973
+    And another new game created with seed 1973
+    When both games observe sleepy Wumpus behavior for 10 turns
+    Then both games produce identical sleepy Wumpus observations
+
+  # Sleepy Wumpus 010
+  Scenario: Sleepy Wumpus 010 another seed produces reproducible sleepy observations
+    Given a new game created with seed 2026
+    And another new game created with seed 2026
+    When both games observe sleepy Wumpus behavior for 10 turns
+    Then both games produce identical sleepy Wumpus observations
+
+  # Sleepy Wumpus 011
+  Scenario: Sleepy Wumpus 011 bat transport into Wumpus adjacency can reveal snoring
+    Given a game setup with the player in room 1, the Wumpus in room 1, pits in rooms 13, 14, and bats in rooms 2, 17
+    And the next bat relocation room is 5
+    And the next sleepy Wumpus adjacent observation is asleep
+    When the player moves to room 2
+    Then the player is in room 5
+    And the Wumpus sleep state is asleep
+    And the turn warnings are I SMELL A WUMPUS, YOU HEAR HORRIBLE SNORING

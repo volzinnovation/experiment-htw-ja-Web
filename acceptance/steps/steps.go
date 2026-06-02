@@ -151,6 +151,7 @@ func NewHandlers() runtime.Handlers {
 		"both games evaluate jumping Wumpus behavior for <turn_count> turns": whenBothGamesEvaluateJumpingWumpus,
 		"both games produce identical jumping Wumpus events":                 thenBothJumpEventsIdentical,
 		"the turn count is <turn_count>":                                     givenOrThenTurnCount,
+		"the turn count starts at <turn_count>":                              givenOrThenTurnCount,
 		"the turn count is <expected_turn_count>":                            thenExpectedTurnCount,
 	}
 }
@@ -1396,10 +1397,14 @@ func stringList(value string) []string {
 		return nil
 	}
 	const whumpToken = "__WHUMP_MESSAGE__"
+	const armedPromptToken = "__ARMED_PROMPT__"
 	value = strings.ReplaceAll(value, "YOU HEAR WHUMP, WHUMP.", whumpToken)
+	value = strings.ReplaceAll(value, "SHOOT, MOVE OR THROW (S-M-T)?", armedPromptToken)
 	var values []string
 	for _, part := range strings.Split(value, ",") {
-		values = append(values, strings.ReplaceAll(strings.TrimSpace(part), whumpToken, "YOU HEAR WHUMP, WHUMP."))
+		item := strings.ReplaceAll(strings.TrimSpace(part), whumpToken, "YOU HEAR WHUMP, WHUMP.")
+		item = strings.ReplaceAll(item, armedPromptToken, "SHOOT, MOVE OR THROW (S-M-T)?")
+		values = append(values, item)
 	}
 	return values
 }

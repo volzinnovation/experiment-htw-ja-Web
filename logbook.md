@@ -416,3 +416,40 @@ commit hash: 60c6c82f534fe9b72a4b93d7529197d120039cb3
 Apply your own role rules to this state.
 
 Action taken: Re-read coder role and constitution, then prepared to merge the specified architect commit into the coder branch and apply coder responsibilities to the resulting state.
+
+## 2026-06-02 10:25:57 CDT - Architect Branch Log Entries
+
+Merged architect branch log history from `60c6c82f534fe9b72a4b93d7529197d120039cb3`.
+
+Recorded entries included architect processing for the combined `rest-command` refactorer state:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: rest-command
+branch name: swarmforge-refactorer
+commit hash: a0ac2e788e4524556d24d5765bbf207b3b09e2f8
+Apply your own role rules to this state.
+```
+
+The architect log also records two newer queued, unprocessed refactorer handoffs for `interactive-loop`:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: 583faffd7b7d1ea620466bb39789f2e7d2927595
+Apply your own role rules to this state.
+```
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: c30bf93defe56be59a86a9d14a17534225ef02d8
+Apply your own role rules to this state.
+```
+
+Action taken: Preserved current coder implementation history and retained architect branch handoff context while resolving the merge.
