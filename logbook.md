@@ -744,6 +744,16 @@ Apply your own role rules to this state.
 
 Summary: Queued rest-command coder handoff was merged as history, refactorer-side split files and manifests were preserved, CRAP remained clean, DRY had no new high-value duplication to remove, mutation scan counts stayed under the split threshold, and unit, property, and acceptance verification passed.
 
+## 2026-06-02 11:10:16 CDT - Processed Queued Handoff
+
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: rest-command
+branch name: swarmforge-coder
+commit hash: dd5cf69aa989f0e13546a47407a24028db421c1f
+
+Reason: Queued coder handoff was merged, refactored, verified, committed, and forwarded to the architect; removing the processed queue file.
+
 ## 2026-06-02 09:16:18 CDT - Received Handoff
 
 Re-read your role and constitution.
