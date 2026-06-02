@@ -21,6 +21,7 @@ func TestHandlersSatisfyCurrentAcceptanceFeatures(t *testing.T) {
 		holyHandGrenadeFeature(),
 		sleepyWumpusFeature(),
 		jumpingWumpusFeature(),
+		restCommandFeature(),
 	} {
 		t.Run(feature.Name, func(t *testing.T) {
 			path := writeFeature(t, feature)
@@ -635,6 +636,36 @@ func jumpingWumpusFeature() runtime.Feature {
 					{Text: "both games produce identical jumping Wumpus events"},
 				},
 				Examples: []map[string]string{{"seed": "1973", "turn_count": "20"}},
+			},
+		},
+	}
+}
+
+func restCommandFeature() runtime.Feature {
+	return runtime.Feature{
+		Name: "Rest command",
+		Scenarios: []runtime.Scenario{
+			{
+				Name: "rest consumes a full turn",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows"},
+					{Text: "the turn count is <turn_count>"},
+					{Text: "the player enters command <command>"},
+					{Text: "the turn count is <expected_turn_count>"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "20", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "turn_count": "1", "command": "r", "expected_turn_count": "2"}},
+			},
+			{
+				Name: "invalid rest syntax does not advance the game",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows"},
+					{Text: "the turn count is <turn_count>"},
+					{Text: "the player enters command <command>"},
+					{Text: "the displayed lines include <message>"},
+					{Text: "the turn count is <turn_count>"},
+					{Text: "the player is in room <player_room>"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "20", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "turn_count": "1", "command": "rest 12", "message": "REST IS NOT A COMMAND"}},
 			},
 		},
 	}

@@ -790,6 +790,9 @@ func assertStringState(world *runtime.World, key, label, wantValue string) error
 
 func assertStringList(label string, got []string, wantValue string) error {
 	want := stringList(wantValue)
+	if len(got) == 0 && len(want) == 0 {
+		return nil
+	}
 	if !reflect.DeepEqual(got, want) {
 		return fmt.Errorf("%s are %v, want %v", label, got, want)
 	}

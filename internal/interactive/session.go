@@ -72,6 +72,10 @@ func (s *Session) EnterCommand(command string) []string {
 	if len(fields) == 0 {
 		return []string{" IS NOT A COMMAND"}
 	}
+	return s.dispatchCommand(fields)
+}
+
+func (s *Session) dispatchCommand(fields []string) []string {
 	action := strings.ToLower(fields[0])
 	switch action {
 	case "m":
@@ -89,22 +93,10 @@ func (s *Session) EnterCommand(command string) []string {
 
 func (s *Session) moveCommand(fields []string) []string {
 	shouldDetonate := s.hasPendingGrenade()
-	if len(fields) != 2 {
-		return []string{"CAN'T MOVE THERE"}
-	}
-	room, err := strconv.Atoi(fields[1])
-	if err != nil {
-		return []string{"CAN'T MOVE THERE"}
-	}
-	prefix := s.commandTurnMessages()
-	if s.game.Status() != wumpus.StatusInProgress {
-		return s.finishCommand(prefix, false)
-	}
-	result := s.game.Move(room)
-	if result.RejectedMessage != "" {
-		return []string{result.RejectedMessage}
-	}
-	return s.finishCommand(append(prefix, result.Messages...), shouldDetonate)
+	return s.roomCommand(fields, "CAN'T MOVE THERE", shouldDetonate, func(room int) (string, []string) {
+		result := s.game.Move(room)
+		return result.RejectedMessage, result.Messages
+	})
 }
 
 func (s *Session) shootCommand(fields []string) []string {
@@ -122,22 +114,26 @@ func (s *Session) shootCommand(fields []string) []string {
 }
 
 func (s *Session) throwCommand(fields []string) []string {
-	if len(fields) != 2 {
-		return []string{"CAN'T THROW THERE"}
-	}
-	room, err := strconv.Atoi(fields[1])
-	if err != nil {
-		return []string{"CAN'T THROW THERE"}
+	return s.roomCommand(fields, "CAN'T THROW THERE", false, func(room int) (string, []string) {
+		result := s.game.ThrowGrenade(room)
+		return result.RejectedMessage, result.Messages
+	})
+}
+
+func (s *Session) roomCommand(fields []string, invalidMessage string, shouldDetonate bool, action func(int) (string, []string)) []string {
+	room, ok := parseCommandRoom(fields)
+	if !ok {
+		return []string{invalidMessage}
 	}
 	prefix := s.commandTurnMessages()
 	if s.game.Status() != wumpus.StatusInProgress {
 		return s.finishCommand(prefix, false)
 	}
-	result := s.game.ThrowGrenade(room)
-	if result.RejectedMessage != "" {
-		return []string{result.RejectedMessage}
+	rejected, messages := action(room)
+	if rejected != "" {
+		return []string{rejected}
 	}
-	return s.finishCommand(append(prefix, result.Messages...), false)
+	return s.finishCommand(append(prefix, messages...), shouldDetonate)
 }
 
 func (s *Session) restCommand(fields []string) []string {
@@ -148,6 +144,14 @@ func (s *Session) restCommand(fields []string) []string {
 	messages := s.commandTurnMessages()
 	s.turns++
 	return s.finishCommand(messages, shouldDetonate)
+}
+
+func parseCommandRoom(fields []string) (int, bool) {
+	if len(fields) != 2 {
+		return 0, false
+	}
+	room, err := strconv.Atoi(fields[1])
+	return room, err == nil
 }
 
 func (s *Session) commandTurnMessages() []string {
