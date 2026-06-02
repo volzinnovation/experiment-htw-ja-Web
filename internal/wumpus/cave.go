@@ -2,6 +2,7 @@ package wumpus
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 )
 
@@ -106,10 +107,10 @@ func hazardsInRoom(room int, setup Setup) []Hazard {
 	if setup.Wumpus == room {
 		hazards = append(hazards, HazardWumpus)
 	}
-	if contains(setup.Pits, room) {
+	if slices.Contains(setup.Pits, room) {
 		hazards = append(hazards, HazardPit)
 	}
-	if contains(setup.Bats, room) {
+	if slices.Contains(setup.Bats, room) {
 		hazards = append(hazards, HazardBats)
 	}
 	return hazards
@@ -122,13 +123,4 @@ func sortedKeys(values map[int]bool) []int {
 	}
 	sort.Ints(keys)
 	return keys
-}
-
-func contains(values []int, target int) bool {
-	for _, value := range values {
-		if value == target {
-			return true
-		}
-	}
-	return false
 }

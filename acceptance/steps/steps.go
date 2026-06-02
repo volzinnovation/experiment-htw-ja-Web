@@ -199,27 +199,23 @@ func givenNewGameSeed1973(world *runtime.World, _ map[string]string) error {
 }
 
 func givenNewGameSeed(world *runtime.World, example map[string]string) error {
-	seed, err := int64Example(example, "seed")
-	if err != nil {
-		return err
-	}
-	return setGame(world, seed, "game")
+	return setGameFromExample(world, example, "game")
 }
 
 func givenAnotherNewGameSeed(world *runtime.World, example map[string]string) error {
-	seed, err := int64Example(example, "seed")
-	if err != nil {
-		return err
-	}
-	return setGame(world, seed, "another_game")
+	return setGameFromExample(world, example, "another_game")
 }
 
 func givenCompletedGameSeed(world *runtime.World, example map[string]string) error {
+	return setGameFromExample(world, example, "game")
+}
+
+func setGameFromExample(world *runtime.World, example map[string]string, key string) error {
 	seed, err := int64Example(example, "seed")
 	if err != nil {
 		return err
 	}
-	return setGame(world, seed, "game")
+	return setGame(world, seed, key)
 }
 
 func setGame(world *runtime.World, seed int64, key string) error {
@@ -238,32 +234,34 @@ func whenSetupInspected(world *runtime.World, _ map[string]string) error {
 
 func thenOnePlayer(world *runtime.World, _ map[string]string) error {
 	setup := world.State["inspected_setup"].(inspectedSetup)
-	if setup.Player == 0 {
-		return fmt.Errorf("player not placed")
-	}
-	return nil
+	return requirePlaced(setup.Player, "player not placed")
 }
 
 func thenOneWumpus(world *runtime.World, _ map[string]string) error {
 	setup := world.State["inspected_setup"].(inspectedSetup)
-	if setup.Wumpus == 0 {
-		return fmt.Errorf("Wumpus not placed")
-	}
-	return nil
+	return requirePlaced(setup.Wumpus, "Wumpus not placed")
 }
 
 func thenTwoPits(world *runtime.World, _ map[string]string) error {
 	setup := world.State["inspected_setup"].(inspectedSetup)
-	if len(setup.Pits) != 2 {
-		return fmt.Errorf("got %d pits", len(setup.Pits))
-	}
-	return nil
+	return requireCount(len(setup.Pits), 2, "pits")
 }
 
 func thenTwoBats(world *runtime.World, _ map[string]string) error {
 	setup := world.State["inspected_setup"].(inspectedSetup)
-	if len(setup.Bats) != 2 {
-		return fmt.Errorf("got %d bats", len(setup.Bats))
+	return requireCount(len(setup.Bats), 2, "bats")
+}
+
+func requirePlaced(room int, message string) error {
+	if room == 0 {
+		return fmt.Errorf("%s", message)
+	}
+	return nil
+}
+
+func requireCount(got, want int, name string) error {
+	if got != want {
+		return fmt.Errorf("got %d %s", got, name)
 	}
 	return nil
 }

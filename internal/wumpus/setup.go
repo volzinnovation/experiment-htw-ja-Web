@@ -50,14 +50,25 @@ func (s Setup) OccupiedRooms() []int {
 }
 
 func validateSetup(setup Setup) error {
+	if err := validateHazardCounts(setup); err != nil {
+		return err
+	}
+	return validateOccupiedRooms(setup.OccupiedRooms())
+}
+
+func validateHazardCounts(setup Setup) error {
 	if len(setup.Pits) != 2 {
 		return fmt.Errorf("setup has %d pits, want 2", len(setup.Pits))
 	}
 	if len(setup.Bats) != 2 {
 		return fmt.Errorf("setup has %d bats, want 2", len(setup.Bats))
 	}
+	return nil
+}
+
+func validateOccupiedRooms(rooms []int) error {
 	seen := map[int]bool{}
-	for _, room := range setup.OccupiedRooms() {
+	for _, room := range rooms {
 		if room < 1 || room > 20 {
 			return fmt.Errorf("invalid room %d", room)
 		}
