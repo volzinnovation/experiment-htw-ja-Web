@@ -82,3 +82,36 @@ Apply your own role rules to this state.
 ```
 
 Summary: cave-setup architectural work is complete.
+
+## 2026-06-02 08:14:43 CDT
+
+Processing queued handoffs together:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: movement-hazards
+branch name: swarmforge-refactorer
+commit hash: 3c30b849ff11d2c938eb7d01def064185ae30960
+Apply your own role rules to this state.
+```
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: crooked-arrow
+branch name: swarmforge-refactorer
+commit hash: d19fd0253d8a2e91940436cc935fa084025054bd
+Apply your own role rules to this state.
+```
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: 1bfa26fadc19984ee1be85a1e8eb2618689a38a9
+Apply your own role rules to this state.
+```
+
+Action taken: re-read role and constitution; the latest interactive-loop commit contains the movement-hazards and crooked-arrow commits, so merging that combined refactorer state into the architect branch.
