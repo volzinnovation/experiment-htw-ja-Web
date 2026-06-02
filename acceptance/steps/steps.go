@@ -434,10 +434,7 @@ func thenTurnMessagesAre(world *runtime.World, example map[string]string) error 
 
 func thenMoveRejectedWithMessage(world *runtime.World, example map[string]string) error {
 	result := world.State["move_result"].(wumpus.MoveResult)
-	if result.RejectedMessage != example["message"] {
-		return fmt.Errorf("rejection message is %q, want %q", result.RejectedMessage, example["message"])
-	}
-	return nil
+	return assertRejectedMessage("move rejection", result.RejectedMessage, example["message"])
 }
 
 func givenNextBatRelocationRoom(world *runtime.World, example map[string]string) error {
@@ -554,8 +551,12 @@ func thenArrowTraversedRoomsAre(world *runtime.World, example map[string]string)
 
 func thenShotRejectedWithMessage(world *runtime.World, example map[string]string) error {
 	result := world.State["shoot_result"].(wumpus.ShootResult)
-	if result.RejectedMessage != example["message"] {
-		return fmt.Errorf("shot rejection message is %q, want %q", result.RejectedMessage, example["message"])
+	return assertRejectedMessage("shot rejection", result.RejectedMessage, example["message"])
+}
+
+func assertRejectedMessage(label, got, want string) error {
+	if got != want {
+		return fmt.Errorf("%s message is %q, want %q", label, got, want)
 	}
 	return nil
 }

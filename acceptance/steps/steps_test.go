@@ -16,6 +16,7 @@ func TestHandlersSatisfyCurrentAcceptanceFeatures(t *testing.T) {
 		entityPlacementFeature(),
 		movementAndHazardsFeature(),
 		turnWarningsFeature(),
+		crookedArrowFeature(),
 	} {
 		t.Run(feature.Name, func(t *testing.T) {
 			path := writeFeature(t, feature)
@@ -78,6 +79,11 @@ func TestListsAndWakeChoicesParseFeatureValues(t *testing.T) {
 	}
 	if _, err := parseWakeChoice("wander"); err == nil {
 		t.Fatal("expected unsupported wake choice error")
+	}
+
+	rooms, err = optionalRoomList("none")
+	if err != nil || rooms != nil {
+		t.Fatalf("optional rooms = %v, %v; want nil, nil", rooms, err)
 	}
 }
 
@@ -225,6 +231,79 @@ func turnWarningsFeature() runtime.Feature {
 				{"player_room": "1", "wumpus_room": "20", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "warnings": "none"},
 			},
 		}},
+	}
+}
+
+func crookedArrowFeature() runtime.Feature {
+	return runtime.Feature{
+		Name: "Crooked arrow shooting",
+		Scenarios: []runtime.Scenario{
+			{
+				Name: "arrow path that reaches Wumpus wins",
+				Steps: []runtime.Step{
+					{Text: "a game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>"},
+					{Text: "the player has <arrows> arrows"},
+					{Text: "the player shoots the path <path>"},
+					{Text: "the player wins"},
+					{Text: "the player has <remaining_arrows> arrows"},
+					{Text: "the turn messages are <messages>"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "10", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "path": "2, 10", "remaining_arrows": "4", "messages": "AHA! YOU GOT THE WUMPUS! HEE HEE HEE - THE WUMPUS'LL GETCHA NEXT TIME!!"}},
+			},
+			{
+				Name: "invalid arrow segment deviates",
+				Steps: []runtime.Step{
+					{Text: "a game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>"},
+					{Text: "the player has <arrows> arrows"},
+					{Text: "the next arrow deviation room is <deviation_room>"},
+					{Text: "the next Wumpus wake choice is <wake_choice>"},
+					{Text: "the player shoots the path <path>"},
+					{Text: "the arrow traversed rooms are <traversed_rooms>"},
+					{Text: "the game is <game_status>"},
+					{Text: "the player has <remaining_arrows> arrows"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "20", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "path": "3, 4", "deviation_room": "5", "traversed_rooms": "5, 4", "wake_choice": "stay", "game_status": "in progress", "remaining_arrows": "4"}},
+			},
+			{
+				Name: "arrow can hit player",
+				Steps: []runtime.Step{
+					{Text: "a game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>"},
+					{Text: "the player has <arrows> arrows"},
+					{Text: "the next arrow deviation room is <deviation_room>"},
+					{Text: "the player shoots the path <path>"},
+					{Text: "the player loses"},
+					{Text: "the player has <remaining_arrows> arrows"},
+					{Text: "the turn messages are <messages>"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "20", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "path": "3", "deviation_room": "1", "remaining_arrows": "4", "messages": "OUCH! ARROW GOT YOU!, HA HA HA - YOU LOSE!"}},
+			},
+			{
+				Name: "missed arrow wakes Wumpus",
+				Steps: []runtime.Step{
+					{Text: "a game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>"},
+					{Text: "the player has <arrows> arrows"},
+					{Text: "the next Wumpus wake choice is <wake_choice>"},
+					{Text: "the player shoots the path <path>"},
+					{Text: "the Wumpus is in room <expected_wumpus_room>"},
+					{Text: "the game is <game_status>"},
+					{Text: "the player has <remaining_arrows> arrows"},
+					{Text: "the turn messages are <messages>"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "2", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "path": "5", "wake_choice": "move to 1", "expected_wumpus_room": "1", "game_status": "lost", "remaining_arrows": "4", "messages": "MISSED, TSK TSK TSK - WUMPUS GOT YOU!, HA HA HA - YOU LOSE!"}},
+			},
+			{
+				Name: "shooting path must contain rooms",
+				Steps: []runtime.Step{
+					{Text: "a game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>"},
+					{Text: "the player has <arrows> arrows"},
+					{Text: "the player shoots the path <path>"},
+					{Text: "the shot is rejected with message <message>"},
+					{Text: "the player has <arrows> arrows"},
+					{Text: "the game is still in progress"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "10", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "path": "none", "message": "CAN'T SHOOT THERE"}},
+			},
+		},
 	}
 }
 

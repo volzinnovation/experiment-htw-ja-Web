@@ -70,6 +70,39 @@ func TestLegalEmptyMoveProperties(t *testing.T) {
 	}
 }
 
+func TestShootingPathProperties(t *testing.T) {
+	property := func(pathLength uint8) bool {
+		game, err := NewGameWithSetup(Setup{Player: 1, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{16, 17}})
+		if err != nil {
+			return false
+		}
+		game.SetArrows(5)
+		game.SetNextWumpusWakeChoice(WumpusWakeChoice{Stay: true})
+
+		path := safeArrowPath(int(pathLength % 7))
+		result := game.Shoot(path)
+		if len(path) < 1 || len(path) > 5 {
+			return result.RejectedMessage == "CAN'T SHOOT THERE" &&
+				game.Arrows() == 5 &&
+				game.Status() == StatusInProgress
+		}
+		return result.RejectedMessage == "" &&
+			len(result.TraversedRooms) == len(path) &&
+			game.Arrows() == 4
+	}
+	if err := quick.Check(property, nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func safeArrowPath(count int) []int {
+	rooms := []int{2, 3, 4, 5, 6}
+	if count > len(rooms) {
+		return append(rooms, 7)
+	}
+	return rooms[:count]
+}
+
 func safeEmptyMoveSetup(from, to int) Setup {
 	excluded := map[int]bool{from: true, to: true}
 	rooms := roomsOutside(excluded, 5)
