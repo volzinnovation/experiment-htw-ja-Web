@@ -106,6 +106,10 @@ func caveTopologyFeature() runtime.Feature {
 				Steps: []runtime.Step{{Text: "the cave is traversed from room 1"}, {Text: "every room from 1 through 20 is reachable"}},
 			},
 			{
+				Name:  "cave invariants hold",
+				Steps: []runtime.Step{{Text: "the cave invariants are inspected"}, {Text: "every room has exactly three exits"}, {Text: "no room is one of its own exits"}},
+			},
+			{
 				Name:     "tunnel links are bidirectional",
 				Steps:    []runtime.Step{{Text: "the tunnel from room <from_room> to room <to_room> is queried"}, {Text: "the reverse tunnel also exists"}},
 				Examples: []map[string]string{{"from_room": "1", "to_room": "2"}, {"from_room": "16", "to_room": "20"}},
