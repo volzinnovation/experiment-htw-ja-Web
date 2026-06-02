@@ -388,6 +388,25 @@ Apply your own role rules to this state.
 
 Action taken: Preserved refactorer branch history reporting queued coder interactive-loop handoff was merged, refactored, verified, and forwarded to architect.
 
+## 2026-06-02 11:13:35 CDT
+
+Merged branch handoff history from `swarmforge-architect` while merging everyone into `master`.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: rest-command
+branch name: swarmforge-refactorer
+commit hash: d00e2c3ab4a5a169b57d898fabbc36f5b892e3f2
+Apply your own role rules to this state.
+```
+
+Action taken: Preserved architect branch history reporting the latest rest-command refactorer handoff was merged into the architect branch.
+
+Summary: The architect branch was merged after coder and refactorer so `master` now contains all three role branch tips as merge ancestors.
+
 ## 2026-06-02 10:53:05 CDT
 
 Merged branch handoff history from `swarmforge-architect` while resolving the queued `interactive-loop` follow-up merge.
