@@ -175,23 +175,10 @@ func thenRoomIsNotExit(world *runtime.World, example map[string]string) error {
 }
 
 func givenConfiguredSetup(world *runtime.World, example map[string]string) error {
-	player, err := intAnyExample(example, "player_room", "from_room")
+	setup, err := setupFromExample(example)
 	if err != nil {
 		return err
 	}
-	wumpusRoom, err := intExample(example, "wumpus_room")
-	if err != nil {
-		return err
-	}
-	pits, err := roomList(example["pit_rooms"])
-	if err != nil {
-		return err
-	}
-	bats, err := roomList(example["bat_rooms"])
-	if err != nil {
-		return err
-	}
-	setup := wumpus.Setup{Player: player, Wumpus: wumpusRoom, Pits: pits, Bats: bats}
 	game, err := wumpus.NewGameWithSetup(setup)
 	if err != nil {
 		return err
@@ -199,6 +186,26 @@ func givenConfiguredSetup(world *runtime.World, example map[string]string) error
 	world.State["setup"] = setup
 	world.State["game"] = &game
 	return nil
+}
+
+func setupFromExample(example map[string]string) (wumpus.Setup, error) {
+	player, err := intAnyExample(example, "player_room", "from_room")
+	if err != nil {
+		return wumpus.Setup{}, err
+	}
+	wumpusRoom, err := intExample(example, "wumpus_room")
+	if err != nil {
+		return wumpus.Setup{}, err
+	}
+	pits, err := roomList(example["pit_rooms"])
+	if err != nil {
+		return wumpus.Setup{}, err
+	}
+	bats, err := roomList(example["bat_rooms"])
+	if err != nil {
+		return wumpus.Setup{}, err
+	}
+	return wumpus.Setup{Player: player, Wumpus: wumpusRoom, Pits: pits, Bats: bats}, nil
 }
 
 func whenAdjacentHazardsQueried(world *runtime.World, _ map[string]string) error {
@@ -540,6 +547,14 @@ func roomList(value string) ([]int, error) {
 }
 
 func stringList(value string) []string {
+	return commaSeparatedStrings(value)
+}
+
+func hazardList(value string) []string {
+	return commaSeparatedStrings(value)
+}
+
+func commaSeparatedStrings(value string) []string {
 	if value == "none" {
 		return nil
 	}
@@ -548,17 +563,6 @@ func stringList(value string) []string {
 		values = append(values, strings.TrimSpace(part))
 	}
 	return values
-}
-
-func hazardList(value string) []string {
-	if value == "none" {
-		return nil
-	}
-	var hazards []string
-	for _, part := range strings.Split(value, ",") {
-		hazards = append(hazards, strings.TrimSpace(part))
-	}
-	return hazards
 }
 
 func contains(values []int, target int) bool {
