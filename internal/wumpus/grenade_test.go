@@ -106,6 +106,17 @@ func TestGrenadeDetonationCanBeHarmless(t *testing.T) {
 	}
 }
 
+func TestGrenadeDetonationAtRoomThirteenDoesNotReachRoomTwenty(t *testing.T) {
+	game := mustGame(t, Setup{Player: 1, Wumpus: 20, Pits: []int{14, 15}, Bats: []int{16, 17}})
+	game.SetPendingGrenade(13)
+
+	game.DetonateGrenade()
+
+	if game.Status() != StatusInProgress {
+		t.Fatalf("status = %s, want %s", game.Status(), StatusInProgress)
+	}
+}
+
 func TestGrenadeDetonationKillsWumpusDestroysBatsAndLeavesPits(t *testing.T) {
 	game := mustGame(t, Setup{Player: 1, Wumpus: 10, Pits: []int{9, 14}, Bats: []int{2, 16}})
 	game.SetPendingGrenade(10)

@@ -101,6 +101,7 @@ func NewHandlers() runtime.Handlers {
 		"the displayed lines are <lines>":                                                 thenDisplayedLinesAre,
 		"the displayed lines include <message>":                                           thenDisplayedLinesInclude,
 		"the displayed lines include <messages>":                                          thenDisplayedLinesInclude,
+		"the displayed lines include <warnings>":                                          thenDisplayedLinesInclude,
 		"the displayed lines include <prompt>":                                            thenDisplayedLinesInclude,
 		"the player has lost":                                                             givenPlayerHasLost,
 		"the player answers same setup prompt with <answer>":                              whenPlayerAnswersSameSetupPrompt,
@@ -146,6 +147,8 @@ func NewHandlers() runtime.Handlers {
 		"every Wumpus jump segment is a legal tunnel":                        thenEveryWumpusJumpSegmentLegal,
 		"both games evaluate jumping Wumpus behavior for <turn_count> turns": whenBothGamesEvaluateJumpingWumpus,
 		"both games produce identical jumping Wumpus events":                 thenBothJumpEventsIdentical,
+		"the turn count is <turn_count>":                                     givenOrThenTurnCount,
+		"the turn count is <expected_turn_count>":                            thenExpectedTurnCount,
 	}
 }
 
@@ -771,6 +774,7 @@ func whenNextTurnDisplayed(world *runtime.World, _ map[string]string) error {
 func whenPlayerEntersCommand(world *runtime.World, example map[string]string) error {
 	lines := sessionFrom(world).EnterCommand(example["command"])
 	world.State["displayed_lines"] = lines
+	world.State["turn_messages"] = lines
 	world.State["game"] = sessionFrom(world).Game()
 	world.State["action_taken"] = true
 	return nil
@@ -794,7 +798,7 @@ func assertStringList(label string, got []string, wantValue string) error {
 
 func thenDisplayedLinesInclude(world *runtime.World, example map[string]string) error {
 	lines := world.State["displayed_lines"].([]string)
-	expected := stringList(firstPresent(example, "message", "messages"))
+	expected := stringList(firstPresent(example, "message", "messages", "warnings"))
 	if prompt, ok := example["prompt"]; ok {
 		expected = []string{prompt}
 	}

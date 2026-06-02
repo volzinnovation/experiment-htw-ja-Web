@@ -14,6 +14,7 @@ type Session struct {
 	seed     int64
 	hasSeed  bool
 	nextSeed int64
+	turns    int
 }
 
 func NewSession() *Session {
@@ -31,6 +32,14 @@ func NewSessionWithSeed(seed int64) *Session {
 
 func (s *Session) Game() *wumpus.Game {
 	return &s.game
+}
+
+func (s *Session) SetTurnCount(turns int) {
+	s.turns = turns
+}
+
+func (s *Session) TurnCount() int {
+	return s.turns
 }
 
 func (s *Session) DisplayTurn() []string {
@@ -71,6 +80,8 @@ func (s *Session) EnterCommand(command string) []string {
 		return s.shootCommand(fields)
 	case "t":
 		return s.throwCommand(fields)
+	case "r", "rest":
+		return s.restCommand(fields)
 	default:
 		return []string{strings.ToUpper(fields[0]) + " IS NOT A COMMAND"}
 	}
@@ -127,6 +138,16 @@ func (s *Session) throwCommand(fields []string) []string {
 		return []string{result.RejectedMessage}
 	}
 	return s.finishCommand(append(prefix, result.Messages...), false)
+}
+
+func (s *Session) restCommand(fields []string) []string {
+	if len(fields) != 1 {
+		return []string{strings.ToUpper(fields[0]) + " IS NOT A COMMAND"}
+	}
+	shouldDetonate := s.hasPendingGrenade()
+	messages := s.commandTurnMessages()
+	s.turns++
+	return s.finishCommand(messages, shouldDetonate)
 }
 
 func (s *Session) commandTurnMessages() []string {

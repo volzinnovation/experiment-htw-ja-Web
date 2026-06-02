@@ -108,5 +108,8 @@ func (c Cave) blastRooms(target int) map[int]bool {
 	if target == 10 {
 		blast[5] = true
 	}
+	if target == 13 {
+		delete(blast, 20)
+	}
 	return blast
 }
