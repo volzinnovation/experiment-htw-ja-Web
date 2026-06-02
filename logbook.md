@@ -93,3 +93,18 @@ commit hash: 82be8849d2e97af3d94f020e98b66fe324a2f026
 ```
 
 Reason: queued while the refactorer was completing the cave-setup handoff; processing after the required architect notification was sent.
+
+## 2026-06-02 07:52:40 CDT
+
+Sent handoff:
+
+```
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: movement-hazards
+branch name: swarmforge-refactorer
+commit hash: 3c30b849ff11d2c938eb7d01def064185ae30960
+Apply your own role rules to this state.
+```
+
+Summary: reported the refactored movement and hazard state for architect review.
