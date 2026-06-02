@@ -31,6 +31,14 @@ func (g *Game) SetPlayerRoom(room int) {
 	g.setup.Player = room
 }
 
+func (g *Game) SetPlayerRoomForQA(room int) error {
+	if err := validateRooms(room); err != nil {
+		return err
+	}
+	g.SetPlayerRoom(room)
+	return nil
+}
+
 func (g *Game) ObserveSleepyWumpusBehavior(turnCount int) []string {
 	return periodicBehavior(g.setup.Player, g.setup.Wumpus, turnCount, 2, "asleep", "awake")
 }
@@ -43,8 +51,10 @@ func (g *Game) observeAdjacentWumpus() {
 }
 
 func (g *Game) nextSleepyObservation() bool {
-	if len(g.nextSleepyObserve) == 0 && g.random != nil {
-		return g.random.Intn(2) == 0
+	if len(g.nextSleepyObserve) == 0 {
+		if value, ok := g.eventIntn(2); ok {
+			return value == 0
+		}
 	}
 	return dequeueOr(&g.nextSleepyObserve, false)
 }
@@ -59,11 +69,13 @@ func (g *Game) resolveSleepingWumpusEntry() []string {
 }
 
 func (g *Game) nextSleepingEntryOutcome() SleepingWumpusEntryOutcome {
-	if len(g.nextSleepingEntry) == 0 && g.random != nil {
-		if g.random.Intn(2) == 0 {
+	if len(g.nextSleepingEntry) == 0 {
+		if value, ok := g.eventIntn(2); ok && value == 0 {
 			return SleepingWumpusStaysAsleep
 		}
-		return SleepingWumpusWakes
+		if g.eventRandom != nil {
+			return SleepingWumpusWakes
+		}
 	}
 	return dequeueOr(&g.nextSleepingEntry, SleepingWumpusWakes)
 }

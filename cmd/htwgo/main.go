@@ -201,28 +201,36 @@ func (a *app) applyQACommand(fields []string) (string, bool) {
 		if !ok {
 			return "", false
 		}
-		game.SetPlayerRoom(room)
+		if err := game.SetPlayerRoomForQA(room); err != nil {
+			return "", false
+		}
 		return fmt.Sprintf("QA SET: PLAYER=%d", room), true
 	case "wumpus":
 		room, ok := parseOneRoom(fields[3:])
 		if !ok {
 			return "", false
 		}
-		game.SetWumpusRoom(room)
+		if err := game.SetWumpusRoomForQA(room); err != nil {
+			return "", false
+		}
 		return fmt.Sprintf("QA SET: WUMPUS=%d", room), true
 	case "pits":
 		first, second, ok := parseTwoRooms(fields[3:])
 		if !ok {
 			return "", false
 		}
-		game.SetPitRooms(first, second)
+		if err := game.SetPitRoomsForQA(first, second); err != nil {
+			return "", false
+		}
 		return fmt.Sprintf("QA SET: PITS=%d,%d", first, second), true
 	case "bats":
 		first, second, ok := parseTwoRooms(fields[3:])
 		if !ok {
 			return "", false
 		}
-		game.SetBatRooms(first, second)
+		if err := game.SetBatRoomsForQA(first, second); err != nil {
+			return "", false
+		}
 		return fmt.Sprintf("QA SET: BATS=%d,%d", first, second), true
 	case "hhg":
 		if len(fields) == 4 && strings.EqualFold(fields[3], "none") {
@@ -233,14 +241,18 @@ func (a *app) applyQACommand(fields []string) (string, bool) {
 		if !ok {
 			return "", false
 		}
-		game.SetGrenadeRoom(room)
+		if err := game.SetGrenadeRoomForQA(room); err != nil {
+			return "", false
+		}
 		return fmt.Sprintf("QA SET: HHG=%d", room), true
 	case "arrows":
 		arrows, ok := parseOneInt(fields[3:])
 		if !ok {
 			return "", false
 		}
-		game.SetArrows(arrows)
+		if err := game.SetArrowsForQA(arrows); err != nil {
+			return "", false
+		}
 		return fmt.Sprintf("QA SET: ARROWS=%d", arrows), true
 	default:
 		return "", false

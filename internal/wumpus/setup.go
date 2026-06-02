@@ -17,7 +17,7 @@ type Game struct {
 	status             Status
 	arrows             int
 	inertHazards       bool
-	random             *rand.Rand
+	eventRandom        *rand.Rand
 	grenadeRoom        *int
 	carriesGrenade     bool
 	pendingGrenadeRoom *int
@@ -34,8 +34,8 @@ type Game struct {
 }
 
 func NewGame(seed int64) (Game, error) {
-	random := rand.New(rand.NewSource(seed))
-	rooms := random.Perm(20)
+	setupRandom := newSetupRandom(seed)
+	rooms := setupRandom.Perm(20)
 	setup := Setup{
 		Player: rooms[0] + 1,
 		Wumpus: rooms[1] + 1,
@@ -46,7 +46,7 @@ func NewGame(seed int64) (Game, error) {
 	if err != nil {
 		return Game{}, err
 	}
-	game.random = random
+	game.eventRandom = newEventRandom(seed)
 	game.SetGrenadeRoom(rooms[6] + 1)
 	return game, nil
 }
@@ -66,12 +66,36 @@ func (g *Game) SetWumpusRoom(room int) {
 	g.setup.Wumpus = room
 }
 
+func (g *Game) SetWumpusRoomForQA(room int) error {
+	if err := validateRooms(room); err != nil {
+		return err
+	}
+	g.SetWumpusRoom(room)
+	return nil
+}
+
 func (g *Game) SetPitRooms(first, second int) {
 	g.setup.Pits = []int{first, second}
 }
 
+func (g *Game) SetPitRoomsForQA(first, second int) error {
+	if err := validateRooms(first, second); err != nil {
+		return err
+	}
+	g.SetPitRooms(first, second)
+	return nil
+}
+
 func (g *Game) SetBatRooms(first, second int) {
 	g.setup.Bats = []int{first, second}
+}
+
+func (g *Game) SetBatRoomsForQA(first, second int) error {
+	if err := validateRooms(first, second); err != nil {
+		return err
+	}
+	g.SetBatRooms(first, second)
+	return nil
 }
 
 func (g *Game) SetInertHazards(inert bool) {
@@ -82,13 +106,13 @@ func (g Game) InertHazards() bool {
 	return g.inertHazards
 }
 
-func (g Game) ReplaySameSetup() Game {
+func (g Game) ReplaySnapshot() Game {
 	replay := Game{
 		setup:              copySetup(g.setup),
 		status:             StatusInProgress,
 		arrows:             g.arrows,
 		inertHazards:       g.inertHazards,
-		random:             copyRandom(g.random),
+		eventRandom:        copyRandom(g.eventRandom),
 		carriesGrenade:     g.carriesGrenade,
 		pendingGrenadeRoom: copyRoomPtr(g.pendingGrenadeRoom),
 		grenadeRoom:        copyRoomPtr(g.grenadeRoom),
@@ -96,6 +120,10 @@ func (g Game) ReplaySameSetup() Game {
 		sawSleepingWumpus:  g.sawSleepingWumpus,
 	}
 	return replay
+}
+
+func (g Game) ReplaySameSetup() Game {
+	return g.ReplaySnapshot()
 }
 
 func (s Setup) OccupiedRooms() []int {
@@ -125,13 +153,22 @@ func validateHazardCounts(setup Setup) error {
 func validateOccupiedRooms(rooms []int) error {
 	seen := map[int]bool{}
 	for _, room := range rooms {
-		if room < 1 || room > 20 {
-			return fmt.Errorf("invalid room %d", room)
+		if err := validateRooms(room); err != nil {
+			return err
 		}
 		if seen[room] {
 			return fmt.Errorf("room %d is occupied more than once", room)
 		}
 		seen[room] = true
+	}
+	return nil
+}
+
+func validateRooms(rooms ...int) error {
+	for _, room := range rooms {
+		if room < 1 || room > 20 {
+			return fmt.Errorf("invalid room %d", room)
+		}
 	}
 	return nil
 }
@@ -151,21 +188,6 @@ func copyRoomPtr(room *int) *int {
 	}
 	copy := *room
 	return &copy
-}
-
-func copyRandom(random *rand.Rand) *rand.Rand {
-	if random == nil {
-		return nil
-	}
-	copy := *random
-	return &copy
-}
-
-func (g *Game) randomRoom() int {
-	if g.random == nil {
-		return 1
-	}
-	return g.random.Intn(20) + 1
 }
 
 // mutate4go-manifest-begin

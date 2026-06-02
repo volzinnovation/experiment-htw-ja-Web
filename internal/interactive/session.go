@@ -17,6 +17,8 @@ type Session struct {
 	turns    int
 }
 
+type commandAction func() (string, []string)
+
 func NewSession() *Session {
 	return &Session{}
 }
@@ -98,7 +100,11 @@ func (s *Session) dispatchCommand(fields []string) []string {
 
 func (s *Session) moveCommand(fields []string) []string {
 	shouldDetonate := s.hasPendingGrenade()
-	return s.roomCommand(fields, "CAN'T MOVE THERE", shouldDetonate, func(room int) (string, []string) {
+	room, ok := parseCommandRoom(fields)
+	if !ok {
+		return []string{"CAN'T MOVE THERE"}
+	}
+	return s.executeTurn(shouldDetonate, false, func() (string, []string) {
 		result := s.game.Move(room)
 		return result.RejectedMessage, result.Messages
 	})
@@ -110,31 +116,32 @@ func (s *Session) shootCommand(fields []string) []string {
 	if !ok {
 		return []string{"CAN'T SHOOT THERE"}
 	}
-	prefix := s.commandTurnMessages()
-	if s.game.Status() != wumpus.StatusInProgress {
-		return s.finishCommand(prefix, false)
-	}
-	result := s.game.Shoot(path)
-	return s.finishCommand(append(prefix, result.Messages...), shouldDetonate)
+	return s.executeTurn(shouldDetonate, false, func() (string, []string) {
+		result := s.game.Shoot(path)
+		return result.RejectedMessage, result.Messages
+	})
 }
 
 func (s *Session) throwCommand(fields []string) []string {
-	return s.roomCommand(fields, "CAN'T THROW THERE", false, func(room int) (string, []string) {
+	room, ok := parseCommandRoom(fields)
+	if !ok {
+		return []string{"CAN'T THROW THERE"}
+	}
+	return s.executeTurn(false, false, func() (string, []string) {
 		result := s.game.ThrowGrenade(room)
 		return result.RejectedMessage, result.Messages
 	})
 }
 
-func (s *Session) roomCommand(fields []string, invalidMessage string, shouldDetonate bool, action func(int) (string, []string)) []string {
-	room, ok := parseCommandRoom(fields)
-	if !ok {
-		return []string{invalidMessage}
-	}
+func (s *Session) executeTurn(shouldDetonate bool, incrementTurn bool, action commandAction) []string {
 	prefix := s.commandTurnMessages()
+	if incrementTurn {
+		s.turns++
+	}
 	if s.game.Status() != wumpus.StatusInProgress {
 		return s.finishCommand(prefix, false)
 	}
-	rejected, messages := action(room)
+	rejected, messages := action()
 	if rejected != "" {
 		return []string{rejected}
 	}
@@ -146,9 +153,9 @@ func (s *Session) restCommand(fields []string) []string {
 		return []string{strings.ToUpper(fields[0]) + " IS NOT A COMMAND"}
 	}
 	shouldDetonate := s.hasPendingGrenade()
-	messages := s.commandTurnMessages()
-	s.turns++
-	return s.finishCommand(messages, shouldDetonate)
+	return s.executeTurn(shouldDetonate, true, func() (string, []string) {
+		return "", nil
+	})
 }
 
 func parseCommandRoom(fields []string) (int, bool) {
@@ -211,7 +218,7 @@ func (s *Session) hasPendingGrenade() bool {
 
 func (s *Session) AnswerSameSetup(answer string) {
 	if strings.EqualFold(answer, "y") {
-		s.game = s.lostGame.ReplaySameSetup()
+		s.game = s.lostGame.ReplaySnapshot()
 		return
 	}
 	if s.hasSeed {

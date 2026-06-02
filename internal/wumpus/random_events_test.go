@@ -90,7 +90,7 @@ func TestRandomJumpingWumpusCanTriggerWhump(t *testing.T) {
 func firstRandomBatRoomNot(defaultRoom int) (int, bool) {
 	for seed := int64(1); seed <= 100; seed++ {
 		game, _ := NewGameWithSetup(Setup{Player: 1, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{2, 17}})
-		game.random = rand.New(rand.NewSource(seed))
+		game.eventRandom = rand.New(rand.NewSource(seed))
 		if room := game.nextBatRoom(); room != defaultRoom {
 			return room, true
 		}
@@ -123,6 +123,6 @@ func firstRandomArrowDeviationNot(t *testing.T, from, defaultRoom int) (int, boo
 func randomEventGame(t *testing.T, seed int64) *Game {
 	t.Helper()
 	game := mustGame(t, Setup{Player: 1, Wumpus: 10, Pits: []int{13, 14}, Bats: []int{16, 17}})
-	game.random = rand.New(rand.NewSource(seed))
+	game.eventRandom = rand.New(rand.NewSource(seed))
 	return game
 }

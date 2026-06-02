@@ -56,8 +56,10 @@ func (g Game) legalJumpDestination(room int) int {
 }
 
 func (g *Game) nextJumpingWumpusEvent() bool {
-	if len(g.nextJumpEvents) == 0 && g.random != nil {
-		return g.random.Intn(20) == 0
+	if len(g.nextJumpEvents) == 0 {
+		if value, ok := g.eventIntn(20); ok {
+			return value == 0
+		}
 	}
 	return dequeueOr(&g.nextJumpEvents, false)
 }
@@ -83,11 +85,13 @@ func (g *Game) resolveJumpLandingOnPlayer(jumpIndex int) []string {
 }
 
 func (g *Game) nextFirstJumpLandingOutcome() FirstJumpLandingOutcome {
-	if len(g.nextFirstJumpLand) == 0 && g.random != nil {
-		if g.random.Intn(2) == 0 {
+	if len(g.nextFirstJumpLand) == 0 {
+		if value, ok := g.eventIntn(2); ok && value == 0 {
 			return FirstJumpTramples
 		}
-		return FirstJumpSlams
+		if g.eventRandom != nil {
+			return FirstJumpSlams
+		}
 	}
 	return dequeueOr(&g.nextFirstJumpLand, FirstJumpTramples)
 }
@@ -109,10 +113,13 @@ func (g *Game) randomExit(room int) int {
 	if err != nil {
 		return room
 	}
-	if g.random == nil {
+	if value, ok := g.eventIntn(len(exits)); ok {
+		return exits[value]
+	}
+	if g.eventRandom == nil {
 		return exits[0]
 	}
-	return exits[g.random.Intn(len(exits))]
+	return exits[0]
 }
 
 // mutate4go-manifest-begin

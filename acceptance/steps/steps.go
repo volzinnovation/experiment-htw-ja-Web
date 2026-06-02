@@ -21,7 +21,21 @@ type inspectedSetup struct {
 }
 
 func NewHandlers() runtime.Handlers {
-	return runtime.Handlers{
+	handlers := runtime.Handlers{}
+	registerCaveHandlers(handlers)
+	registerSetupHandlers(handlers)
+	registerMovementHandlers(handlers)
+	registerShootingHandlers(handlers)
+	registerInteractiveHandlers(handlers)
+	registerGrenadeHandlers(handlers)
+	registerSleepyWumpusHandlers(handlers)
+	registerJumpingWumpusHandlers(handlers)
+	registerRestHandlers(handlers)
+	return handlers
+}
+
+func registerCaveHandlers(handlers runtime.Handlers) {
+	registerHandlers(handlers, runtime.Handlers{
 		"a new cave":                                                    givenNewCave,
 		"the exits for room <room> are queried":                         whenExitsQueried,
 		"the exits are <exits>":                                         thenExitsAre,
@@ -34,6 +48,11 @@ func NewHandlers() runtime.Handlers {
 		"the tunnel from room <from_room> to room <to_room> is queried": whenTunnelQueried,
 		"the reverse tunnel also exists":                                thenReverseTunnelExists,
 		"room <room> is not one of the exits":                           thenRoomIsNotExit,
+	})
+}
+
+func registerSetupHandlers(handlers runtime.Handlers) {
+	registerHandlers(handlers, runtime.Handlers{
 		"a game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>": givenConfiguredSetup,
 		"a game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>":   givenConfiguredSetup,
 		"a game setup with the player in room 1, the Wumpus in room 2, pits in rooms 3 and 4, and bats in rooms 5 and 6":                                 givenSetupRoom1WumpusBats,
@@ -53,39 +72,49 @@ func NewHandlers() runtime.Handlers {
 		"there are 2 bats":                                thenTwoBats,
 		"the occupied rooms are inspected":                whenOccupiedRoomsInspected,
 		"every occupied room number is from 1 through 20": thenOccupiedRoomsValid,
-		"exactly <occupied_count> distinct rooms are occupied by the player, Wumpus, pits, and bats":       thenDistinctOccupiedCount,
-		"exactly 6 distinct rooms are occupied by the player, Wumpus, pits, and bats":                      thenSixDistinctOccupiedRooms,
-		"another new game created with seed 1973":                                                          givenAnotherNewGameSeed1973,
-		"another new game created with seed <seed>":                                                        givenAnotherNewGameSeed,
-		"both setups are inspected":                                                                        whenBothSetupsInspected,
-		"both setups have identical player, Wumpus, pit, and bat rooms":                                    thenBothSetupsIdentical,
-		"a completed game created with seed 1973":                                                          givenCompletedGameSeed1973,
-		"a completed game created with seed <seed>":                                                        givenCompletedGameSeed,
-		"a same setup replay is started":                                                                   whenSameSetupReplayStarted,
-		"the replay setup has identical player, Wumpus, pit, and bat rooms":                                thenReplaySetupIdentical,
-		"the player moves to room <to_room>":                                                               whenPlayerMoves,
-		"the player moves to room <pit_room>":                                                              whenPlayerMoves,
-		"the player moves to room <bat_room>":                                                              whenPlayerMoves,
-		"the player moves to room <wumpus_room>":                                                           whenPlayerMoves,
-		"the player moves to room <grenade_room>":                                                          whenPlayerMovesToGrenadeRoom,
-		"the player is in room <to_room>":                                                                  thenPlayerInToRoom,
-		"the player is in room <from_room>":                                                                thenPlayerInFromRoom,
-		"the player is in room <player_room>":                                                              thenPlayerInPlayerRoom,
-		"the player is in room <expected_player_room>":                                                     thenPlayerInExpectedPlayerRoom,
-		"the player is in room <relocation_room>":                                                          thenPlayerInRelocationRoom,
-		"the game is still in progress":                                                                    thenGameStillInProgress,
-		"the game is in progress":                                                                          thenGameStillInProgress,
-		"the game is <game_status>":                                                                        thenGameStatus,
-		"the player loses":                                                                                 thenPlayerLoses,
-		"the turn messages are <messages>":                                                                 thenTurnMessagesAre,
-		"the move is rejected with message <message>":                                                      thenMoveRejectedWithMessage,
-		"the next bat relocation room is <relocation_room>":                                                givenNextBatRelocationRoom,
-		"the next bat relocation room is <wumpus_room>":                                                    givenNextBatRelocationRoom,
-		"the next Wumpus wake choice is <wake_choice>":                                                     givenNextWumpusWakeChoice,
-		"the Wumpus is in room <expected_wumpus_room>":                                                     thenWumpusInRoom,
-		"the Wumpus is in room <wumpus_room>":                                                              thenWumpusInWumpusRoom,
-		"the turn warnings are requested":                                                                  whenTurnWarningsRequested,
-		"the warning messages are <warnings>":                                                              thenWarningMessagesAre,
+		"exactly <occupied_count> distinct rooms are occupied by the player, Wumpus, pits, and bats": thenDistinctOccupiedCount,
+		"exactly 6 distinct rooms are occupied by the player, Wumpus, pits, and bats":                thenSixDistinctOccupiedRooms,
+		"another new game created with seed 1973":                                                    givenAnotherNewGameSeed1973,
+		"another new game created with seed <seed>":                                                  givenAnotherNewGameSeed,
+		"both setups are inspected":                                                                  whenBothSetupsInspected,
+		"both setups have identical player, Wumpus, pit, and bat rooms":                              thenBothSetupsIdentical,
+		"a completed game created with seed 1973":                                                    givenCompletedGameSeed1973,
+		"a completed game created with seed <seed>":                                                  givenCompletedGameSeed,
+		"a same setup replay is started":                                                             whenSameSetupReplayStarted,
+		"the replay setup has identical player, Wumpus, pit, and bat rooms":                          thenReplaySetupIdentical,
+	})
+}
+
+func registerMovementHandlers(handlers runtime.Handlers) {
+	registerHandlers(handlers, runtime.Handlers{
+		"the player moves to room <to_room>":                whenPlayerMoves,
+		"the player moves to room <pit_room>":               whenPlayerMoves,
+		"the player moves to room <bat_room>":               whenPlayerMoves,
+		"the player moves to room <wumpus_room>":            whenPlayerMoves,
+		"the player moves to room <grenade_room>":           whenPlayerMovesToGrenadeRoom,
+		"the player is in room <to_room>":                   thenPlayerInToRoom,
+		"the player is in room <from_room>":                 thenPlayerInFromRoom,
+		"the player is in room <player_room>":               thenPlayerInPlayerRoom,
+		"the player is in room <expected_player_room>":      thenPlayerInExpectedPlayerRoom,
+		"the player is in room <relocation_room>":           thenPlayerInRelocationRoom,
+		"the game is still in progress":                     thenGameStillInProgress,
+		"the game is in progress":                           thenGameStillInProgress,
+		"the game is <game_status>":                         thenGameStatus,
+		"the player loses":                                  thenPlayerLoses,
+		"the turn messages are <messages>":                  thenTurnMessagesAre,
+		"the move is rejected with message <message>":       thenMoveRejectedWithMessage,
+		"the next bat relocation room is <relocation_room>": givenNextBatRelocationRoom,
+		"the next bat relocation room is <wumpus_room>":     givenNextBatRelocationRoom,
+		"the next Wumpus wake choice is <wake_choice>":      givenNextWumpusWakeChoice,
+		"the Wumpus is in room <expected_wumpus_room>":      thenWumpusInRoom,
+		"the Wumpus is in room <wumpus_room>":               thenWumpusInWumpusRoom,
+		"the turn warnings are requested":                   whenTurnWarningsRequested,
+		"the warning messages are <warnings>":               thenWarningMessagesAre,
+	})
+}
+
+func registerShootingHandlers(handlers runtime.Handlers) {
+	registerHandlers(handlers, runtime.Handlers{
 		"a shooting game setup with the player in room <player_room> and the Wumpus in room <wumpus_room>": givenShootingSetup,
 		"the player starts with <initial_arrows> arrows":                                                   givenPlayerStartsWithArrows,
 		"the player has <arrows> arrows":                                                                   givenOrThenPlayerHasArrows,
@@ -96,21 +125,31 @@ func NewHandlers() runtime.Handlers {
 		"the arrow traversed rooms are <traversed_rooms>":                                                  thenArrowTraversedRoomsAre,
 		"the requested shot path is <expected_path>":                                                       thenRequestedShotPathIs,
 		"the shot is rejected with message <message>":                                                      thenShotRejectedWithMessage,
+	})
+}
+
+func registerInteractiveHandlers(handlers runtime.Handlers) {
+	registerHandlers(handlers, runtime.Handlers{
 		"an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows": givenInteractiveSetup,
 		"an interactive game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows":   givenInteractiveSetup,
-		"an interactive game setup with seed <seed>":                                      givenInteractiveSetupSeed,
-		"a new interactive session":                                                       givenNewInteractiveSession,
-		"the next turn is displayed":                                                      whenNextTurnDisplayed,
-		"the player enters command <command>":                                             whenPlayerEntersCommand,
-		"the displayed lines are <lines>":                                                 thenDisplayedLinesAre,
-		"the displayed lines include <message>":                                           thenDisplayedLinesInclude,
-		"the displayed lines include <messages>":                                          thenDisplayedLinesInclude,
-		"the displayed lines include <warnings>":                                          thenDisplayedLinesInclude,
-		"the displayed lines include <prompt>":                                            thenDisplayedLinesInclude,
-		"the player has lost":                                                             givenPlayerHasLost,
-		"the player answers same setup prompt with <answer>":                              whenPlayerAnswersSameSetupPrompt,
-		"the next game setup is <setup_relation> to the lost game setup":                  thenNextGameSetupRelation,
-		"the player answers instructions prompt with <answer>":                            whenPlayerAnswersInstructionsPrompt,
+		"an interactive game setup with seed <seed>":                     givenInteractiveSetupSeed,
+		"a new interactive session":                                      givenNewInteractiveSession,
+		"the next turn is displayed":                                     whenNextTurnDisplayed,
+		"the player enters command <command>":                            whenPlayerEntersCommand,
+		"the displayed lines are <lines>":                                thenDisplayedLinesAre,
+		"the displayed lines include <message>":                          thenDisplayedLinesInclude,
+		"the displayed lines include <messages>":                         thenDisplayedLinesInclude,
+		"the displayed lines include <warnings>":                         thenDisplayedLinesInclude,
+		"the displayed lines include <prompt>":                           thenDisplayedLinesInclude,
+		"the player has lost":                                            givenPlayerHasLost,
+		"the player answers same setup prompt with <answer>":             whenPlayerAnswersSameSetupPrompt,
+		"the next game setup is <setup_relation> to the lost game setup": thenNextGameSetupRelation,
+		"the player answers instructions prompt with <answer>":           whenPlayerAnswersInstructionsPrompt,
+	})
+}
+
+func registerGrenadeHandlers(handlers runtime.Handlers) {
+	registerHandlers(handlers, runtime.Handlers{
 		"there is 1 Holy Hand Grenade":                                                    thenOneHolyHandGrenade,
 		"the Holy Hand Grenade room is from 1 through 20":                                 thenGrenadeRoomValid,
 		"the Holy Hand Grenade room is not occupied by the player, Wumpus, pits, or bats": thenGrenadeRoomUnoccupied,
@@ -128,7 +167,12 @@ func NewHandlers() runtime.Handlers {
 		"the pit rooms are <pit_rooms>":                     thenPitRooms,
 		"the replay setup has identical player, Wumpus, pit, bat, and Holy Hand Grenade rooms": thenReplaySetupIncludingGrenadeIdentical,
 		"the replay Holy Hand Grenade pending detonation room is <target_room>":                thenReplayPendingGrenadeRoom,
-		"the next sleepy Wumpus adjacent observation is <sleepy_observation>":                  givenNextSleepyWumpusObservation,
+	})
+}
+
+func registerSleepyWumpusHandlers(handlers runtime.Handlers) {
+	registerHandlers(handlers, runtime.Handlers{
+		"the next sleepy Wumpus adjacent observation is <sleepy_observation>": givenNextSleepyWumpusObservation,
 		"the Wumpus is asleep":                                           givenWumpusAsleep,
 		"the Wumpus is awake":                                            givenWumpusAwake,
 		"the Wumpus sleep state is <sleep_state>":                        thenWumpusSleepState,
@@ -137,9 +181,14 @@ func NewHandlers() runtime.Handlers {
 		"the turn warnings are <warnings>":                               thenTurnWarningsAre,
 		"the next sleeping Wumpus room entry outcome is <entry_outcome>": givenNextSleepingWumpusEntryOutcome,
 		"a game setup with the player in room <wumpus_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>": givenConfiguredSetupPlayerWithWumpus,
-		"the player has seen the sleeping Wumpus shape":                      givenPlayerHasSeenSleepingWumpus,
-		"both games observe sleepy Wumpus behavior for <turn_count> turns":   whenBothGamesObserveSleepyWumpus,
-		"both games produce identical sleepy Wumpus observations":            thenBothSleepyObservationsIdentical,
+		"the player has seen the sleeping Wumpus shape":                    givenPlayerHasSeenSleepingWumpus,
+		"both games observe sleepy Wumpus behavior for <turn_count> turns": whenBothGamesObserveSleepyWumpus,
+		"both games produce identical sleepy Wumpus observations":          thenBothSleepyObservationsIdentical,
+	})
+}
+
+func registerJumpingWumpusHandlers(handlers runtime.Handlers) {
+	registerHandlers(handlers, runtime.Handlers{
 		"the next jumping Wumpus turn event is <jump_event>":                 givenNextJumpingWumpusTurnEvent,
 		"the next jumping Wumpus turn event is jumps":                        givenNextJumpingWumpusTurnEventJumps,
 		"the next jumping Wumpus turn event is no jump":                      givenNextJumpingWumpusTurnEventNoJump,
@@ -151,9 +200,20 @@ func NewHandlers() runtime.Handlers {
 		"every Wumpus jump segment is a legal tunnel":                        thenEveryWumpusJumpSegmentLegal,
 		"both games evaluate jumping Wumpus behavior for <turn_count> turns": whenBothGamesEvaluateJumpingWumpus,
 		"both games produce identical jumping Wumpus events":                 thenBothJumpEventsIdentical,
-		"the turn count starts at <turn_count>":                              givenTurnCount,
-		"the turn count is <turn_count>":                                     givenOrThenTurnCount,
-		"the turn count is <expected_turn_count>":                            thenExpectedTurnCount,
+	})
+}
+
+func registerRestHandlers(handlers runtime.Handlers) {
+	registerHandlers(handlers, runtime.Handlers{
+		"the turn count starts at <turn_count>":   givenTurnCount,
+		"the turn count is <turn_count>":          givenOrThenTurnCount,
+		"the turn count is <expected_turn_count>": thenExpectedTurnCount,
+	})
+}
+
+func registerHandlers(target runtime.Handlers, entries runtime.Handlers) {
+	for step, handler := range entries {
+		target[step] = handler
 	}
 }
 

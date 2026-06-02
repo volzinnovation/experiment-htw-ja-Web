@@ -1,5 +1,7 @@
 package wumpus
 
+import "fmt"
+
 type ShootResult struct {
 	RejectedMessage string
 	Messages        []string
@@ -8,6 +10,14 @@ type ShootResult struct {
 
 func (g *Game) SetArrows(arrows int) {
 	g.arrows = arrows
+}
+
+func (g *Game) SetArrowsForQA(arrows int) error {
+	if arrows < 0 {
+		return fmt.Errorf("invalid arrow count %d", arrows)
+	}
+	g.SetArrows(arrows)
+	return nil
 }
 
 func (g Game) Arrows() int {

@@ -9,6 +9,14 @@ func (g *Game) SetGrenadeRoom(room int) {
 	g.setGrenadeState(&g.grenadeRoom, room)
 }
 
+func (g *Game) SetGrenadeRoomForQA(room int) error {
+	if err := validateRooms(room); err != nil {
+		return err
+	}
+	g.SetGrenadeRoom(room)
+	return nil
+}
+
 func (g *Game) ClearGrenadeRoom() {
 	g.grenadeRoom = nil
 	g.carriesGrenade = false
