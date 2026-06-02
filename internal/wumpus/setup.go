@@ -19,9 +19,13 @@ type Game struct {
 	grenadeRoom        *int
 	carriesGrenade     bool
 	pendingGrenadeRoom *int
+	wumpusAsleep       bool
+	sawSleepingWumpus  bool
 	nextBatRelocation  []int
 	nextWumpusWake     []WumpusWakeChoice
 	nextArrowDeviation []int
+	nextSleepyObserve  []bool
+	nextSleepingEntry  []SleepingWumpusEntryOutcome
 }
 
 func NewGame(seed int64) (Game, error) {
@@ -59,6 +63,8 @@ func (g Game) ReplaySameSetup() Game {
 		carriesGrenade:     g.carriesGrenade,
 		pendingGrenadeRoom: copyRoomPtr(g.pendingGrenadeRoom),
 		grenadeRoom:        copyRoomPtr(g.grenadeRoom),
+		wumpusAsleep:       g.wumpusAsleep,
+		sawSleepingWumpus:  g.sawSleepingWumpus,
 	}
 	return replay
 }
