@@ -215,3 +215,95 @@ Apply your own role rules to this state.
 ```
 
 Action taken: Re-read role and constitution, then merge the architect state for completed `interactive-loop` work and ask for the next feature.
+
+## 2026-06-02 09:16:25 CDT
+
+Merged branch handoff history from `swarmforge-architect` while resolving the `interactive-loop` merge.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: movement-hazards
+branch name: swarmforge-coder
+commit hash: 82be8849d2e97af3d94f020e98b66fe324a2f026
+```
+
+Action taken: Preserved the coder branch history reporting movement and hazard behavior ready for refactorer review.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: crooked-arrow
+branch name: swarmforge-coder
+commit hash: bd7c6a2d0a0ae41768a2937247cbd2c6126d0712
+```
+
+Action taken: Preserved the coder branch history reporting crooked-arrow behavior ready for refactorer review.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: interactive-loop
+branch name: swarmforge-coder
+commit hash: 94e12c7115e4e3036670d23cf2dfe9702860c472
+```
+
+Action taken: Preserved the coder branch history reporting interactive-loop behavior queued for refactorer review.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: movement-hazards
+branch name: swarmforge-refactorer
+commit hash: 3c30b849ff11d2c938eb7d01def064185ae30960
+Apply your own role rules to this state.
+```
+
+Action taken: Preserved the refactorer branch history reporting movement-hazards ready for architect review.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: crooked-arrow
+branch name: swarmforge-refactorer
+commit hash: d19fd0253d8a2e91940436cc935fa084025054bd
+Apply your own role rules to this state.
+```
+
+Action taken: Preserved the refactorer branch history reporting crooked-arrow ready for architect review.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: 1bfa26fadc19984ee1be85a1e8eb2618689a38a9
+Apply your own role rules to this state.
+```
+
+Action taken: Preserved the refactorer branch history reporting interactive-loop ready for architect review.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: architect
+specifier handoff name: cave-setup
+branch name: swarmforge-architect
+commit hash: 5f63059c3bf5f00f05dc6fc3f3954b4bced4a7f8
+Apply your own role rules to this state.
+```
+
+Action taken: Preserved architect branch history reporting cave-setup architectural work complete.

@@ -3,11 +3,13 @@ package steps
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
 
 	"htwgo/acceptance/runtime"
+	"htwgo/internal/interactive"
 	"htwgo/internal/wumpus"
 )
 
@@ -33,33 +35,78 @@ func NewHandlers() runtime.Handlers {
 		"the reverse tunnel also exists":                                thenReverseTunnelExists,
 		"room <room> is not one of the exits":                           thenRoomIsNotExit,
 		"a game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>": givenConfiguredSetup,
-		"a game setup with the player in room 1, the Wumpus in room 2, pits in rooms 3 and 4, and bats in rooms 5 and 6":                                 givenSetupRoom1WumpusBats,
-		"a game setup with the player in room 10, the Wumpus in room 2, pits in rooms 9 and 18, and bats in rooms 6 and 7":                               givenSetupRoom10WumpusPit,
-		"a game setup with the player in room 6, the Wumpus in room 20, pits in rooms 1 and 2, and bats in rooms 3 and 4":                                givenSetupRoom6NoHazards,
-		"adjacent hazards are queried from the player room":                                                                                              whenAdjacentHazardsQueried,
-		"the adjacent hazard types are <hazards>":                                                                                                        thenAdjacentHazardsAre,
-		"the adjacent hazard types are Wumpus and Bats":                                                                                                  thenAdjacentHazardsWumpusBats,
-		"the adjacent hazard types are Wumpus and Pit":                                                                                                   thenAdjacentHazardsWumpusPit,
-		"there are no adjacent hazard types":                                                                                                             thenNoAdjacentHazards,
-		"a new game created with seed 1973":                                                                                                              givenNewGameSeed1973,
-		"a new game created with seed <seed>":                                                                                                            givenNewGameSeed,
-		"the setup is inspected":                                                                                                                         whenSetupInspected,
-		"there is 1 player":                                                                                                                              thenOnePlayer,
-		"there is 1 Wumpus":                                                                                                                              thenOneWumpus,
-		"there are 2 pits":                                                                                                                               thenTwoPits,
-		"there are 2 bats":                                                                                                                               thenTwoBats,
-		"the occupied rooms are inspected":                                                                                                               whenOccupiedRoomsInspected,
-		"every occupied room number is from 1 through 20":                                                                                                thenOccupiedRoomsValid,
-		"exactly <occupied_count> distinct rooms are occupied by the player, Wumpus, pits, and bats":                                                     thenDistinctOccupiedCount,
-		"exactly 6 distinct rooms are occupied by the player, Wumpus, pits, and bats":                                                                    thenSixDistinctOccupiedRooms,
-		"another new game created with seed 1973":                                                                                                        givenAnotherNewGameSeed1973,
-		"another new game created with seed <seed>":                                                                                                      givenAnotherNewGameSeed,
-		"both setups are inspected":                                                                                                                      whenBothSetupsInspected,
-		"both setups have identical player, Wumpus, pit, and bat rooms":                                                                                  thenBothSetupsIdentical,
-		"a completed game created with seed 1973":                                                                                                        givenCompletedGameSeed1973,
-		"a completed game created with seed <seed>":                                                                                                      givenCompletedGameSeed,
-		"a same setup replay is started":                                                                                                                 whenSameSetupReplayStarted,
-		"the replay setup has identical player, Wumpus, pit, and bat rooms":                                                                              thenReplaySetupIdentical,
+		"a game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>":   givenConfiguredSetup,
+		"adjacent hazards are queried from the player room":                                                                whenAdjacentHazardsQueried,
+		"the adjacent hazard types are <hazards>":                                                                          thenAdjacentHazardsAre,
+		"a game setup with the player in room 1, the Wumpus in room 2, pits in rooms 3 and 4, and bats in rooms 5 and 6":   givenSetupRoom1WumpusBats,
+		"a game setup with the player in room 10, the Wumpus in room 2, pits in rooms 9 and 18, and bats in rooms 6 and 7": givenSetupRoom10WumpusPit,
+		"a game setup with the player in room 6, the Wumpus in room 20, pits in rooms 1 and 2, and bats in rooms 3 and 4":  givenSetupRoom6NoHazards,
+		"the adjacent hazard types are Wumpus and Bats":                                                                    thenAdjacentHazardsWumpusBats,
+		"the adjacent hazard types are Wumpus and Pit":                                                                     thenAdjacentHazardsWumpusPit,
+		"there are no adjacent hazard types":                                                                               thenNoAdjacentHazards,
+		"a new game created with seed 1973":                                                                                givenNewGameSeed1973,
+		"a new game created with seed <seed>":                                                                              givenNewGameSeed,
+		"the setup is inspected":                                                                                           whenSetupInspected,
+		"there is 1 player":                                                                                                thenOnePlayer,
+		"there is 1 Wumpus":                                                                                                thenOneWumpus,
+		"there are 2 pits":                                                                                                 thenTwoPits,
+		"there are 2 bats":                                                                                                 thenTwoBats,
+		"the occupied rooms are inspected":                                                                                 whenOccupiedRoomsInspected,
+		"every occupied room number is from 1 through 20":                                                                  thenOccupiedRoomsValid,
+		"exactly <occupied_count> distinct rooms are occupied by the player, Wumpus, pits, and bats":                       thenDistinctOccupiedCount,
+		"exactly 6 distinct rooms are occupied by the player, Wumpus, pits, and bats":                                      thenSixDistinctOccupiedRooms,
+		"another new game created with seed 1973":                                                                          givenAnotherNewGameSeed1973,
+		"another new game created with seed <seed>":                                                                        givenAnotherNewGameSeed,
+		"both setups are inspected":                                                                                        whenBothSetupsInspected,
+		"both setups have identical player, Wumpus, pit, and bat rooms":                                                    thenBothSetupsIdentical,
+		"a completed game created with seed 1973":                                                                          givenCompletedGameSeed1973,
+		"a completed game created with seed <seed>":                                                                        givenCompletedGameSeed,
+		"a same setup replay is started":                                                                                   whenSameSetupReplayStarted,
+		"the replay setup has identical player, Wumpus, pit, and bat rooms":                                                thenReplaySetupIdentical,
+		"the player moves to room <to_room>":                                                                               whenPlayerMoves,
+		"the player moves to room <pit_room>":                                                                              whenPlayerMoves,
+		"the player moves to room <bat_room>":                                                                              whenPlayerMoves,
+		"the player moves to room <wumpus_room>":                                                                           whenPlayerMoves,
+		"the player is in room <to_room>":                                                                                  thenPlayerInToRoom,
+		"the player is in room <from_room>":                                                                                thenPlayerInFromRoom,
+		"the player is in room <player_room>":                                                                              thenPlayerInPlayerRoom,
+		"the player is in room <expected_player_room>":                                                                     thenPlayerInExpectedPlayerRoom,
+		"the player is in room <relocation_room>":                                                                          thenPlayerInRelocationRoom,
+		"the game is still in progress":                                                                                    thenGameStillInProgress,
+		"the game is in progress":                                                                                          thenGameStillInProgress,
+		"the game is <game_status>":                                                                                        thenGameStatus,
+		"the player loses":                                                                                                 thenPlayerLoses,
+		"the turn messages are <messages>":                                                                                 thenTurnMessagesAre,
+		"the move is rejected with message <message>":                                                                      thenMoveRejectedWithMessage,
+		"the next bat relocation room is <relocation_room>":                                                                givenNextBatRelocationRoom,
+		"the next bat relocation room is <wumpus_room>":                                                                    givenNextBatRelocationRoom,
+		"the next Wumpus wake choice is <wake_choice>":                                                                     givenNextWumpusWakeChoice,
+		"the Wumpus is in room <expected_wumpus_room>":                                                                     thenWumpusInRoom,
+		"the turn warnings are requested":                                                                                  whenTurnWarningsRequested,
+		"the warning messages are <warnings>":                                                                              thenWarningMessagesAre,
+		"a shooting game setup with the player in room <player_room> and the Wumpus in room <wumpus_room>":                 givenShootingSetup,
+		"the player starts with <initial_arrows> arrows":                                                                   givenPlayerStartsWithArrows,
+		"the player has <arrows> arrows":                                                                                   givenOrThenPlayerHasArrows,
+		"the player has <remaining_arrows> arrows":                                                                         thenPlayerHasRemainingArrows,
+		"the next arrow deviation room is <deviation_room>":                                                                givenNextArrowDeviationRoom,
+		"the player shoots the path <path>":                                                                                whenPlayerShootsPath,
+		"the player wins":                                                                                                  thenPlayerWins,
+		"the arrow traversed rooms are <traversed_rooms>":                                                                  thenArrowTraversedRoomsAre,
+		"the requested shot path is <expected_path>":                                                                       thenRequestedShotPathIs,
+		"the shot is rejected with message <message>":                                                                      thenShotRejectedWithMessage,
+		"an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows": givenInteractiveSetup,
+		"an interactive game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows":   givenInteractiveSetup,
+		"an interactive game setup with seed <seed>":                     givenInteractiveSetupSeed,
+		"a new interactive session":                                      givenNewInteractiveSession,
+		"the next turn is displayed":                                     whenNextTurnDisplayed,
+		"the player enters command <command>":                            whenPlayerEntersCommand,
+		"the displayed lines are <lines>":                                thenDisplayedLinesAre,
+		"the displayed lines include <message>":                          thenDisplayedLinesInclude,
+		"the displayed lines include <messages>":                         thenDisplayedLinesInclude,
+		"the player has lost":                                            givenPlayerHasLost,
+		"the player answers same setup prompt with <answer>":             whenPlayerAnswersSameSetupPrompt,
+		"the next game setup is <setup_relation> to the lost game setup": thenNextGameSetupRelation,
+		"the player answers instructions prompt with <answer>":           whenPlayerAnswersInstructionsPrompt,
 	}
 }
 
@@ -199,23 +246,37 @@ func thenRoomIsNotExit(world *runtime.World, example map[string]string) error {
 }
 
 func givenConfiguredSetup(world *runtime.World, example map[string]string) error {
-	player, err := intExample(example, "player_room")
+	setup, err := setupFromExample(example)
 	if err != nil {
 		return err
+	}
+	game, err := wumpus.NewGameWithSetup(setup)
+	if err != nil {
+		return err
+	}
+	world.State["setup"] = setup
+	world.State["game"] = &game
+	return nil
+}
+
+func setupFromExample(example map[string]string) (wumpus.Setup, error) {
+	player, err := intAnyExample(example, "player_room", "from_room")
+	if err != nil {
+		return wumpus.Setup{}, err
 	}
 	wumpusRoom, err := intExample(example, "wumpus_room")
 	if err != nil {
-		return err
+		return wumpus.Setup{}, err
 	}
 	pits, err := roomList(example["pit_rooms"])
 	if err != nil {
-		return err
+		return wumpus.Setup{}, err
 	}
 	bats, err := roomList(example["bat_rooms"])
 	if err != nil {
-		return err
+		return wumpus.Setup{}, err
 	}
-	return setConfiguredSetup(world, wumpus.Setup{Player: player, Wumpus: wumpusRoom, Pits: pits, Bats: bats})
+	return wumpus.Setup{Player: player, Wumpus: wumpusRoom, Pits: pits, Bats: bats}, nil
 }
 
 func givenSetupRoom1WumpusBats(world *runtime.World, _ map[string]string) error {
@@ -231,10 +292,12 @@ func givenSetupRoom6NoHazards(world *runtime.World, _ map[string]string) error {
 }
 
 func setConfiguredSetup(world *runtime.World, setup wumpus.Setup) error {
-	if _, err := wumpus.NewGameWithSetup(setup); err != nil {
+	game, err := wumpus.NewGameWithSetup(setup)
+	if err != nil {
 		return err
 	}
 	world.State["setup"] = setup
+	world.State["game"] = &game
 	return nil
 }
 
@@ -309,12 +372,12 @@ func setGame(world *runtime.World, seed int64, key string) error {
 	if err != nil {
 		return err
 	}
-	world.State[key] = game
+	world.State[key] = &game
 	return nil
 }
 
 func whenSetupInspected(world *runtime.World, _ map[string]string) error {
-	world.State["inspected_setup"] = setupSnapshot(world.State["game"].(wumpus.Game).Setup())
+	inspectSetup(world, "inspected_setup", "game")
 	return nil
 }
 
@@ -353,7 +416,7 @@ func requireCount(got, want int, name string) error {
 }
 
 func whenOccupiedRoomsInspected(world *runtime.World, _ map[string]string) error {
-	setup := world.State["game"].(wumpus.Game).Setup()
+	setup := gameFrom(world, "game").Setup()
 	world.State["occupied_rooms"] = setup.OccupiedRooms()
 	return nil
 }
@@ -392,8 +455,8 @@ func requireDistinctOccupiedCount(world *runtime.World, want int) error {
 }
 
 func whenBothSetupsInspected(world *runtime.World, _ map[string]string) error {
-	world.State["inspected_setup"] = setupSnapshot(world.State["game"].(wumpus.Game).Setup())
-	world.State["another_inspected_setup"] = setupSnapshot(world.State["another_game"].(wumpus.Game).Setup())
+	inspectSetup(world, "inspected_setup", "game")
+	inspectSetup(world, "another_inspected_setup", "another_game")
 	return nil
 }
 
@@ -407,17 +470,341 @@ func thenBothSetupsIdentical(world *runtime.World, _ map[string]string) error {
 }
 
 func whenSameSetupReplayStarted(world *runtime.World, _ map[string]string) error {
-	replay := world.State["game"].(wumpus.Game).ReplaySameSetup()
+	replay := gameFrom(world, "game").ReplaySameSetup()
 	world.State["replay_setup"] = setupSnapshot(replay.Setup())
 	return nil
 }
 
 func thenReplaySetupIdentical(world *runtime.World, _ map[string]string) error {
-	original := setupSnapshot(world.State["game"].(wumpus.Game).Setup())
+	original := setupSnapshot(gameFrom(world, "game").Setup())
 	replay := world.State["replay_setup"].(inspectedSetup)
 	if !reflect.DeepEqual(original, replay) {
 		return fmt.Errorf("replay setup %v differs from original %v", replay, original)
 	}
+	return nil
+}
+
+func whenPlayerMoves(world *runtime.World, example map[string]string) error {
+	room, err := intAnyExample(example, "to_room", "pit_room", "bat_room", "wumpus_room")
+	if err != nil {
+		return err
+	}
+	result := gameFrom(world, "game").Move(room)
+	world.State["move_result"] = result
+	world.State["turn_messages"] = result.Messages
+	world.State["action_taken"] = true
+	return nil
+}
+
+func thenPlayerInToRoom(world *runtime.World, example map[string]string) error {
+	return thenPlayerInExampleRoom(world, example, "to_room")
+}
+
+func thenPlayerInFromRoom(world *runtime.World, example map[string]string) error {
+	return thenPlayerInExampleRoom(world, example, "from_room")
+}
+
+func thenPlayerInPlayerRoom(world *runtime.World, example map[string]string) error {
+	return thenPlayerInExampleRoom(world, example, "player_room")
+}
+
+func thenPlayerInExpectedPlayerRoom(world *runtime.World, example map[string]string) error {
+	return thenPlayerInExampleRoom(world, example, "expected_player_room")
+}
+
+func thenPlayerInRelocationRoom(world *runtime.World, example map[string]string) error {
+	return thenPlayerInExampleRoom(world, example, "relocation_room")
+}
+
+func thenPlayerInExampleRoom(world *runtime.World, example map[string]string, key string) error {
+	want, err := intExample(example, key)
+	if err != nil {
+		return err
+	}
+	got := gameFrom(world, "game").Setup().Player
+	if got != want {
+		return fmt.Errorf("player room is %d, want %d", got, want)
+	}
+	return nil
+}
+
+func thenGameStillInProgress(world *runtime.World, _ map[string]string) error {
+	return assertGameStatus(world, wumpus.StatusInProgress)
+}
+
+func thenGameStatus(world *runtime.World, example map[string]string) error {
+	return assertGameStatus(world, wumpus.Status(example["game_status"]))
+}
+
+func thenPlayerLoses(world *runtime.World, _ map[string]string) error {
+	return assertGameStatus(world, wumpus.StatusLost)
+}
+
+func assertGameStatus(world *runtime.World, want wumpus.Status) error {
+	got := gameFrom(world, "game").Status()
+	if got != want {
+		return fmt.Errorf("game status is %s, want %s", got, want)
+	}
+	return nil
+}
+
+func thenTurnMessagesAre(world *runtime.World, example map[string]string) error {
+	return assertStringState(world, "turn_messages", "turn messages", example["messages"])
+}
+
+func thenMoveRejectedWithMessage(world *runtime.World, example map[string]string) error {
+	result := world.State["move_result"].(wumpus.MoveResult)
+	return assertRejectedMessage("move rejection", result.RejectedMessage, example["message"])
+}
+
+func givenNextBatRelocationRoom(world *runtime.World, example map[string]string) error {
+	room, err := intAnyExample(example, "relocation_room", "wumpus_room")
+	if err != nil {
+		return err
+	}
+	gameFrom(world, "game").SetNextBatRelocation(room)
+	return nil
+}
+
+func givenNextWumpusWakeChoice(world *runtime.World, example map[string]string) error {
+	choice, err := parseWakeChoice(example["wake_choice"])
+	if err != nil {
+		return err
+	}
+	gameFrom(world, "game").SetNextWumpusWakeChoice(choice)
+	return nil
+}
+
+func thenWumpusInRoom(world *runtime.World, example map[string]string) error {
+	want, err := intExample(example, "expected_wumpus_room")
+	if err != nil {
+		return err
+	}
+	got := gameFrom(world, "game").Setup().Wumpus
+	if got != want {
+		return fmt.Errorf("Wumpus room is %d, want %d", got, want)
+	}
+	return nil
+}
+
+func whenTurnWarningsRequested(world *runtime.World, _ map[string]string) error {
+	world.State["warnings"] = gameFrom(world, "game").TurnWarnings()
+	return nil
+}
+
+func thenWarningMessagesAre(world *runtime.World, example map[string]string) error {
+	return assertStringState(world, "warnings", "warning messages", example["warnings"])
+}
+
+func givenShootingSetup(world *runtime.World, example map[string]string) error {
+	player, err := intExample(example, "player_room")
+	if err != nil {
+		return err
+	}
+	wumpusRoom, err := intExample(example, "wumpus_room")
+	if err != nil {
+		return err
+	}
+	setup := wumpus.Setup{Player: player, Wumpus: wumpusRoom, Pits: []int{13, 14}, Bats: []int{16, 17}}
+	return setConfiguredSetup(world, setup)
+}
+
+func givenOrThenPlayerHasArrows(world *runtime.World, example map[string]string) error {
+	arrows, err := intExample(example, "arrows")
+	if err != nil {
+		return err
+	}
+	if _, actionTaken := world.State["action_taken"]; !actionTaken {
+		gameFrom(world, "game").SetArrows(arrows)
+		return nil
+	}
+	return assertArrows(world, arrows)
+}
+
+func givenPlayerStartsWithArrows(world *runtime.World, example map[string]string) error {
+	arrows, err := intExample(example, "initial_arrows")
+	if err != nil {
+		return err
+	}
+	gameFrom(world, "game").SetArrows(arrows)
+	return nil
+}
+
+func thenPlayerHasRemainingArrows(world *runtime.World, example map[string]string) error {
+	arrows, err := intExample(example, "remaining_arrows")
+	if err != nil {
+		return err
+	}
+	return assertArrows(world, arrows)
+}
+
+func assertArrows(world *runtime.World, want int) error {
+	got := gameFrom(world, "game").Arrows()
+	if got != want {
+		return fmt.Errorf("player has %d arrows, want %d", got, want)
+	}
+	return nil
+}
+
+func givenNextArrowDeviationRoom(world *runtime.World, example map[string]string) error {
+	if example["deviation_room"] == "none" {
+		return nil
+	}
+	room, err := intExample(example, "deviation_room")
+	if err != nil {
+		return err
+	}
+	gameFrom(world, "game").SetNextArrowDeviation(room)
+	return nil
+}
+
+func whenPlayerShootsPath(world *runtime.World, example map[string]string) error {
+	path, err := optionalRoomList(example["path"])
+	if err != nil {
+		return err
+	}
+	world.State["requested_shot_path"] = path
+	result := gameFrom(world, "game").Shoot(path)
+	world.State["shoot_result"] = result
+	world.State["turn_messages"] = result.Messages
+	world.State["action_taken"] = true
+	return nil
+}
+
+func thenPlayerWins(world *runtime.World, _ map[string]string) error {
+	return assertGameStatus(world, wumpus.StatusWon)
+}
+
+func thenArrowTraversedRoomsAre(world *runtime.World, example map[string]string) error {
+	want, err := roomList(example["traversed_rooms"])
+	if err != nil {
+		return err
+	}
+	got := world.State["shoot_result"].(wumpus.ShootResult).TraversedRooms
+	if !reflect.DeepEqual(got, want) {
+		return fmt.Errorf("arrow traversed rooms %v, want %v", got, want)
+	}
+	return nil
+}
+
+func thenRequestedShotPathIs(world *runtime.World, example map[string]string) error {
+	want, err := optionalRoomList(example["expected_path"])
+	if err != nil {
+		return err
+	}
+	got := world.State["requested_shot_path"].([]int)
+	if !reflect.DeepEqual(got, want) {
+		return fmt.Errorf("requested shot path %v, want %v", got, want)
+	}
+	return nil
+}
+
+func thenShotRejectedWithMessage(world *runtime.World, example map[string]string) error {
+	result := world.State["shoot_result"].(wumpus.ShootResult)
+	return assertRejectedMessage("shot rejection", result.RejectedMessage, example["message"])
+}
+
+func assertRejectedMessage(label, got, want string) error {
+	if got != want {
+		return fmt.Errorf("%s message is %q, want %q", label, got, want)
+	}
+	return nil
+}
+
+func givenInteractiveSetup(world *runtime.World, example map[string]string) error {
+	if err := givenConfiguredSetup(world, example); err != nil {
+		return err
+	}
+	arrows, err := intExample(example, "arrows")
+	if err != nil {
+		return err
+	}
+	game := *gameFrom(world, "game")
+	game.SetArrows(arrows)
+	storeSession(world, interactive.NewSessionWithGame(game))
+	return nil
+}
+
+func givenInteractiveSetupSeed(world *runtime.World, example map[string]string) error {
+	seed, err := int64Example(example, "seed")
+	if err != nil {
+		return err
+	}
+	storeSession(world, interactive.NewSessionWithSeed(seed))
+	return nil
+}
+
+func givenNewInteractiveSession(world *runtime.World, _ map[string]string) error {
+	storeSession(world, interactive.NewSession())
+	return nil
+}
+
+func whenNextTurnDisplayed(world *runtime.World, _ map[string]string) error {
+	world.State["displayed_lines"] = sessionFrom(world).DisplayTurn()
+	return nil
+}
+
+func whenPlayerEntersCommand(world *runtime.World, example map[string]string) error {
+	lines := sessionFrom(world).EnterCommand(example["command"])
+	world.State["displayed_lines"] = lines
+	world.State["game"] = sessionFrom(world).Game()
+	world.State["action_taken"] = true
+	return nil
+}
+
+func thenDisplayedLinesAre(world *runtime.World, example map[string]string) error {
+	return assertStringState(world, "displayed_lines", "displayed lines", example["lines"])
+}
+
+func assertStringState(world *runtime.World, key, label, wantValue string) error {
+	return assertStringList(label, world.State[key].([]string), wantValue)
+}
+
+func assertStringList(label string, got []string, wantValue string) error {
+	want := stringList(wantValue)
+	if !reflect.DeepEqual(got, want) {
+		return fmt.Errorf("%s are %v, want %v", label, got, want)
+	}
+	return nil
+}
+
+func thenDisplayedLinesInclude(world *runtime.World, example map[string]string) error {
+	lines := world.State["displayed_lines"].([]string)
+	for _, want := range stringList(firstPresent(example, "message", "messages")) {
+		if !slices.Contains(lines, want) {
+			return fmt.Errorf("displayed lines %v do not include %q", lines, want)
+		}
+	}
+	return nil
+}
+
+func givenPlayerHasLost(world *runtime.World, _ map[string]string) error {
+	session := sessionFrom(world)
+	world.State["lost_setup"] = session.Game().Setup()
+	session.MarkLostForTest()
+	return nil
+}
+
+func whenPlayerAnswersSameSetupPrompt(world *runtime.World, example map[string]string) error {
+	sessionFrom(world).AnswerSameSetup(example["answer"])
+	return nil
+}
+
+func thenNextGameSetupRelation(world *runtime.World, example map[string]string) error {
+	lost := world.State["lost_setup"].(wumpus.Setup)
+	current := sessionFrom(world).Game().Setup()
+	identical := reflect.DeepEqual(lost, current)
+	if example["setup_relation"] == "identical" && !identical {
+		return fmt.Errorf("setup is %v, want identical to %v", current, lost)
+	}
+	if example["setup_relation"] == "different" && identical {
+		return fmt.Errorf("setup is identical to lost setup %v", lost)
+	}
+	return nil
+}
+
+func whenPlayerAnswersInstructionsPrompt(world *runtime.World, example map[string]string) error {
+	world.State["displayed_lines"] = sessionFrom(world).AnswerInstructions(example["answer"])
 	return nil
 }
 
@@ -427,6 +814,41 @@ func setupSnapshot(setup wumpus.Setup) inspectedSetup {
 	sort.Ints(pits)
 	sort.Ints(bats)
 	return inspectedSetup{Player: setup.Player, Wumpus: setup.Wumpus, Pits: pits, Bats: bats}
+}
+
+func inspectSetup(world *runtime.World, stateKey, gameKey string) {
+	world.State[stateKey] = setupSnapshot(gameFrom(world, gameKey).Setup())
+}
+
+func storeSession(world *runtime.World, session *interactive.Session) {
+	world.State["session"] = session
+	world.State["game"] = session.Game()
+}
+
+func gameFrom(world *runtime.World, key string) *wumpus.Game {
+	return world.State[key].(*wumpus.Game)
+}
+
+func sessionFrom(world *runtime.World) *interactive.Session {
+	return world.State["session"].(*interactive.Session)
+}
+
+func firstPresent(example map[string]string, keys ...string) string {
+	for _, key := range keys {
+		if value, ok := example[key]; ok {
+			return value
+		}
+	}
+	return ""
+}
+
+func intAnyExample(example map[string]string, keys ...string) (int, error) {
+	for _, key := range keys {
+		if _, ok := example[key]; ok {
+			return intExample(example, key)
+		}
+	}
+	return 0, fmt.Errorf("missing any example key %v", keys)
 }
 
 func intExample(example map[string]string, key string) (int, error) {
@@ -439,6 +861,21 @@ func intExample(example map[string]string, key string) (int, error) {
 		return 0, fmt.Errorf("invalid integer %q for %s", value, key)
 	}
 	return parsed, nil
+}
+
+func parseWakeChoice(value string) (wumpus.WumpusWakeChoice, error) {
+	if value == "stay" {
+		return wumpus.WumpusWakeChoice{Stay: true}, nil
+	}
+	const prefix = "move to "
+	if strings.HasPrefix(value, prefix) {
+		room, err := strconv.Atoi(strings.TrimPrefix(value, prefix))
+		if err != nil {
+			return wumpus.WumpusWakeChoice{}, fmt.Errorf("invalid wake choice %q", value)
+		}
+		return wumpus.WumpusWakeChoice{Destination: room}, nil
+	}
+	return wumpus.WumpusWakeChoice{}, fmt.Errorf("unsupported wake choice %q", value)
 }
 
 func int64Example(example map[string]string, key string) (int64, error) {
@@ -465,15 +902,30 @@ func roomList(value string) ([]int, error) {
 	return rooms, nil
 }
 
+func optionalRoomList(value string) ([]int, error) {
+	if value == "none" {
+		return nil, nil
+	}
+	return roomList(value)
+}
+
+func stringList(value string) []string {
+	return commaSeparatedStrings(value)
+}
+
 func hazardList(value string) []string {
+	return commaSeparatedStrings(value)
+}
+
+func commaSeparatedStrings(value string) []string {
 	if value == "none" {
 		return nil
 	}
-	var hazards []string
+	var values []string
 	for _, part := range strings.Split(value, ",") {
-		hazards = append(hazards, strings.TrimSpace(part))
+		values = append(values, strings.TrimSpace(part))
 	}
-	return hazards
+	return values
 }
 
 func contains(values []int, target int) bool {
