@@ -95,7 +95,7 @@ import (
 )
 
 func Test%s(t *testing.T) {
-	runtime.RunFeatureFile(t, %q, steps.NewHandlers())
+	runtime.RunGeneratedFeatureFile(t, %q, steps.NewHandlers())
 }
 `, exportedName(featureName), filepath.ToSlash(irPath))
 }

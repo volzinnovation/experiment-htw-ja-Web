@@ -26,28 +26,40 @@ func NewHandlers() runtime.Handlers {
 		"the exit count is <exit_count>":                                thenExitCountIs,
 		"the cave is traversed from room 1":                             whenCaveTraversed,
 		"every room from 1 through 20 is reachable":                     thenEveryRoomReachable,
+		"the cave invariants are inspected":                             whenCaveInvariantsInspected,
+		"every room has exactly three exits":                            thenEveryRoomHasThreeExits,
+		"no room is one of its own exits":                               thenNoRoomIsItsOwnExit,
 		"the tunnel from room <from_room> to room <to_room> is queried": whenTunnelQueried,
 		"the reverse tunnel also exists":                                thenReverseTunnelExists,
 		"room <room> is not one of the exits":                           thenRoomIsNotExit,
 		"a game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>": givenConfiguredSetup,
-		"adjacent hazards are queried from the player room": whenAdjacentHazardsQueried,
-		"the adjacent hazard types are <hazards>":           thenAdjacentHazardsAre,
-		"a new game created with seed 1973":                 givenNewGameSeed1973,
-		"a new game created with seed <seed>":               givenNewGameSeed,
-		"the setup is inspected":                            whenSetupInspected,
-		"there is 1 player":                                 thenOnePlayer,
-		"there is 1 Wumpus":                                 thenOneWumpus,
-		"there are 2 pits":                                  thenTwoPits,
-		"there are 2 bats":                                  thenTwoBats,
-		"the occupied rooms are inspected":                  whenOccupiedRoomsInspected,
-		"every occupied room number is from 1 through 20":   thenOccupiedRoomsValid,
-		"exactly <occupied_count> distinct rooms are occupied by the player, Wumpus, pits, and bats": thenDistinctOccupiedCount,
-		"another new game created with seed <seed>":                                                  givenAnotherNewGameSeed,
-		"both setups are inspected":                                                                  whenBothSetupsInspected,
-		"both setups have identical player, Wumpus, pit, and bat rooms":                              thenBothSetupsIdentical,
-		"a completed game created with seed <seed>":                                                  givenCompletedGameSeed,
-		"a same setup replay is started":                                                             whenSameSetupReplayStarted,
-		"the replay setup has identical player, Wumpus, pit, and bat rooms":                          thenReplaySetupIdentical,
+		"a game setup with the player in room 1, the Wumpus in room 2, pits in rooms 3 and 4, and bats in rooms 5 and 6":                                 givenSetupRoom1WumpusBats,
+		"a game setup with the player in room 10, the Wumpus in room 2, pits in rooms 9 and 18, and bats in rooms 6 and 7":                               givenSetupRoom10WumpusPit,
+		"a game setup with the player in room 6, the Wumpus in room 20, pits in rooms 1 and 2, and bats in rooms 3 and 4":                                givenSetupRoom6NoHazards,
+		"adjacent hazards are queried from the player room":                                                                                              whenAdjacentHazardsQueried,
+		"the adjacent hazard types are <hazards>":                                                                                                        thenAdjacentHazardsAre,
+		"the adjacent hazard types are Wumpus and Bats":                                                                                                  thenAdjacentHazardsWumpusBats,
+		"the adjacent hazard types are Wumpus and Pit":                                                                                                   thenAdjacentHazardsWumpusPit,
+		"there are no adjacent hazard types":                                                                                                             thenNoAdjacentHazards,
+		"a new game created with seed 1973":                                                                                                              givenNewGameSeed1973,
+		"a new game created with seed <seed>":                                                                                                            givenNewGameSeed,
+		"the setup is inspected":                                                                                                                         whenSetupInspected,
+		"there is 1 player":                                                                                                                              thenOnePlayer,
+		"there is 1 Wumpus":                                                                                                                              thenOneWumpus,
+		"there are 2 pits":                                                                                                                               thenTwoPits,
+		"there are 2 bats":                                                                                                                               thenTwoBats,
+		"the occupied rooms are inspected":                                                                                                               whenOccupiedRoomsInspected,
+		"every occupied room number is from 1 through 20":                                                                                                thenOccupiedRoomsValid,
+		"exactly <occupied_count> distinct rooms are occupied by the player, Wumpus, pits, and bats":                                                     thenDistinctOccupiedCount,
+		"exactly 6 distinct rooms are occupied by the player, Wumpus, pits, and bats":                                                                    thenSixDistinctOccupiedRooms,
+		"another new game created with seed 1973":                                                                                                        givenAnotherNewGameSeed1973,
+		"another new game created with seed <seed>":                                                                                                      givenAnotherNewGameSeed,
+		"both setups are inspected":                                                                                                                      whenBothSetupsInspected,
+		"both setups have identical player, Wumpus, pit, and bat rooms":                                                                                  thenBothSetupsIdentical,
+		"a completed game created with seed 1973":                                                                                                        givenCompletedGameSeed1973,
+		"a completed game created with seed <seed>":                                                                                                      givenCompletedGameSeed,
+		"a same setup replay is started":                                                                                                                 whenSameSetupReplayStarted,
+		"the replay setup has identical player, Wumpus, pit, and bat rooms":                                                                              thenReplaySetupIdentical,
 	}
 }
 
@@ -112,6 +124,38 @@ func thenEveryRoomReachable(world *runtime.World, _ map[string]string) error {
 	return nil
 }
 
+func whenCaveInvariantsInspected(world *runtime.World, _ map[string]string) error {
+	cave := world.State["cave"].(wumpus.Cave)
+	exitsByRoom := map[int][]int{}
+	for room := 1; room <= 20; room++ {
+		exits, err := cave.Exits(room)
+		if err != nil {
+			return err
+		}
+		exitsByRoom[room] = exits
+	}
+	world.State["exits_by_room"] = exitsByRoom
+	return nil
+}
+
+func thenEveryRoomHasThreeExits(world *runtime.World, _ map[string]string) error {
+	for room, exits := range world.State["exits_by_room"].(map[int][]int) {
+		if len(exits) != 3 {
+			return fmt.Errorf("room %d has exits %v", room, exits)
+		}
+	}
+	return nil
+}
+
+func thenNoRoomIsItsOwnExit(world *runtime.World, _ map[string]string) error {
+	for room, exits := range world.State["exits_by_room"].(map[int][]int) {
+		if contains(exits, room) {
+			return fmt.Errorf("room %d connects to itself", room)
+		}
+	}
+	return nil
+}
+
 func whenTunnelQueried(world *runtime.World, example map[string]string) error {
 	cave := world.State["cave"].(wumpus.Cave)
 	from, err := intExample(example, "from_room")
@@ -171,7 +215,26 @@ func givenConfiguredSetup(world *runtime.World, example map[string]string) error
 	if err != nil {
 		return err
 	}
-	world.State["setup"] = wumpus.Setup{Player: player, Wumpus: wumpusRoom, Pits: pits, Bats: bats}
+	return setConfiguredSetup(world, wumpus.Setup{Player: player, Wumpus: wumpusRoom, Pits: pits, Bats: bats})
+}
+
+func givenSetupRoom1WumpusBats(world *runtime.World, _ map[string]string) error {
+	return setConfiguredSetup(world, wumpus.Setup{Player: 1, Wumpus: 2, Pits: []int{3, 4}, Bats: []int{5, 6}})
+}
+
+func givenSetupRoom10WumpusPit(world *runtime.World, _ map[string]string) error {
+	return setConfiguredSetup(world, wumpus.Setup{Player: 10, Wumpus: 2, Pits: []int{9, 18}, Bats: []int{6, 7}})
+}
+
+func givenSetupRoom6NoHazards(world *runtime.World, _ map[string]string) error {
+	return setConfiguredSetup(world, wumpus.Setup{Player: 6, Wumpus: 20, Pits: []int{1, 2}, Bats: []int{3, 4}})
+}
+
+func setConfiguredSetup(world *runtime.World, setup wumpus.Setup) error {
+	if _, err := wumpus.NewGameWithSetup(setup); err != nil {
+		return err
+	}
+	world.State["setup"] = setup
 	return nil
 }
 
@@ -182,7 +245,22 @@ func whenAdjacentHazardsQueried(world *runtime.World, _ map[string]string) error
 }
 
 func thenAdjacentHazardsAre(world *runtime.World, example map[string]string) error {
-	want := hazardList(example["hazards"])
+	return requireHazards(world, hazardList(example["hazards"]))
+}
+
+func thenAdjacentHazardsWumpusBats(world *runtime.World, _ map[string]string) error {
+	return requireHazards(world, []string{"Wumpus", "Bats"})
+}
+
+func thenAdjacentHazardsWumpusPit(world *runtime.World, _ map[string]string) error {
+	return requireHazards(world, []string{"Wumpus", "Pit"})
+}
+
+func thenNoAdjacentHazards(world *runtime.World, _ map[string]string) error {
+	return requireHazards(world, nil)
+}
+
+func requireHazards(world *runtime.World, want []string) error {
 	got := world.State["hazards"].([]wumpus.Hazard)
 	var gotStrings []string
 	for _, hazard := range got {
@@ -206,8 +284,16 @@ func givenAnotherNewGameSeed(world *runtime.World, example map[string]string) er
 	return setGameFromExample(world, example, "another_game")
 }
 
+func givenAnotherNewGameSeed1973(world *runtime.World, _ map[string]string) error {
+	return setGame(world, 1973, "another_game")
+}
+
 func givenCompletedGameSeed(world *runtime.World, example map[string]string) error {
 	return setGameFromExample(world, example, "game")
+}
+
+func givenCompletedGameSeed1973(world *runtime.World, _ map[string]string) error {
+	return setGame(world, 1973, "game")
 }
 
 func setGameFromExample(world *runtime.World, example map[string]string, key string) error {
@@ -233,23 +319,23 @@ func whenSetupInspected(world *runtime.World, _ map[string]string) error {
 }
 
 func thenOnePlayer(world *runtime.World, _ map[string]string) error {
-	setup := world.State["inspected_setup"].(inspectedSetup)
-	return requirePlaced(setup.Player, "player not placed")
+	return requirePlaced(inspected(world).Player, "player not placed")
 }
 
 func thenOneWumpus(world *runtime.World, _ map[string]string) error {
-	setup := world.State["inspected_setup"].(inspectedSetup)
-	return requirePlaced(setup.Wumpus, "Wumpus not placed")
+	return requirePlaced(inspected(world).Wumpus, "Wumpus not placed")
 }
 
 func thenTwoPits(world *runtime.World, _ map[string]string) error {
-	setup := world.State["inspected_setup"].(inspectedSetup)
-	return requireCount(len(setup.Pits), 2, "pits")
+	return requireCount(len(inspected(world).Pits), 2, "pits")
 }
 
 func thenTwoBats(world *runtime.World, _ map[string]string) error {
-	setup := world.State["inspected_setup"].(inspectedSetup)
-	return requireCount(len(setup.Bats), 2, "bats")
+	return requireCount(len(inspected(world).Bats), 2, "bats")
+}
+
+func inspected(world *runtime.World) inspectedSetup {
+	return world.State["inspected_setup"].(inspectedSetup)
 }
 
 func requirePlaced(room int, message string) error {
@@ -286,6 +372,14 @@ func thenDistinctOccupiedCount(world *runtime.World, example map[string]string) 
 	if err != nil {
 		return err
 	}
+	return requireDistinctOccupiedCount(world, want)
+}
+
+func thenSixDistinctOccupiedRooms(world *runtime.World, _ map[string]string) error {
+	return requireDistinctOccupiedCount(world, 6)
+}
+
+func requireDistinctOccupiedCount(world *runtime.World, want int) error {
 	rooms := world.State["occupied_rooms"].([]int)
 	distinct := map[int]bool{}
 	for _, room := range rooms {

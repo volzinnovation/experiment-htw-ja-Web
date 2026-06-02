@@ -44,6 +44,19 @@ func TestNewGameIsReproducibleBySeed(t *testing.T) {
 	}
 }
 
+func TestNewGameUsesOneBasedRoomNumbersForSeededSetup(t *testing.T) {
+	game, err := NewGame(1973)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := game.Setup()
+	want := Setup{Player: 3, Wumpus: 13, Pits: []int{15, 5}, Bats: []int{1, 18}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("setup = %v, want %v", got, want)
+	}
+}
+
 func TestReplaySameSetupPreservesPlacement(t *testing.T) {
 	game, err := NewGame(1)
 	if err != nil {
@@ -58,30 +71,25 @@ func TestReplaySameSetupPreservesPlacement(t *testing.T) {
 }
 
 func TestConfiguredSetupRequiresValidDistinctRooms(t *testing.T) {
-	_, err := NewGameWithSetup(Setup{Player: 1, Wumpus: 1, Pits: []int{2, 3}, Bats: []int{4, 5}})
-	if err == nil {
-		t.Fatal("expected duplicate-room setup error")
-	}
+	requireInvalidSetup(t, Setup{Player: 1, Wumpus: 1, Pits: []int{2, 3}, Bats: []int{4, 5}}, "duplicate-room setup")
 }
 
 func TestConfiguredSetupRequiresTwoPits(t *testing.T) {
-	_, err := NewGameWithSetup(Setup{Player: 1, Wumpus: 2, Pits: []int{3}, Bats: []int{4, 5}})
-	if err == nil {
-		t.Fatal("expected pit-count setup error")
-	}
+	requireInvalidSetup(t, Setup{Player: 1, Wumpus: 2, Pits: []int{3}, Bats: []int{4, 5}}, "pit-count setup")
 }
 
 func TestConfiguredSetupRequiresTwoBats(t *testing.T) {
-	_, err := NewGameWithSetup(Setup{Player: 1, Wumpus: 2, Pits: []int{3, 4}, Bats: []int{5}})
-	if err == nil {
-		t.Fatal("expected bat-count setup error")
-	}
+	requireInvalidSetup(t, Setup{Player: 1, Wumpus: 2, Pits: []int{3, 4}, Bats: []int{5}}, "bat-count setup")
 }
 
 func TestConfiguredSetupRequiresValidRooms(t *testing.T) {
-	_, err := NewGameWithSetup(Setup{Player: 0, Wumpus: 2, Pits: []int{3, 4}, Bats: []int{5, 6}})
-	if err == nil {
-		t.Fatal("expected invalid-room setup error")
+	requireInvalidSetup(t, Setup{Player: 0, Wumpus: 2, Pits: []int{3, 4}, Bats: []int{5, 6}}, "invalid-room setup")
+}
+
+func TestConfiguredSetupAcceptsRoomTwenty(t *testing.T) {
+	_, err := NewGameWithSetup(Setup{Player: 20, Wumpus: 2, Pits: []int{3, 4}, Bats: []int{5, 6}})
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -91,4 +99,11 @@ func distinctCount(rooms []int) int {
 		distinct[room] = true
 	}
 	return len(distinct)
+}
+
+func requireInvalidSetup(t *testing.T, setup Setup, reason string) {
+	t.Helper()
+	if _, err := NewGameWithSetup(setup); err == nil {
+		t.Fatalf("expected %s error", reason)
+	}
 }

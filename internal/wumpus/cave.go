@@ -124,3 +124,7 @@ func sortedKeys(values map[int]bool) []int {
 	sort.Ints(keys)
 	return keys
 }
+
+// mutate4go-manifest-begin
+// {"version":1,"tested_at":"2026-06-02T07:54:22-05:00","module_hash":"4e881f8e9a6831fa38f1fef94f798103cfbb42dd863edb91e1bdbb707a578169","functions":[{"id":"func/NewCave","name":"NewCave","line":21,"end_line":45,"hash":"682215dabf2f6e64840ef529aa393c7d6ca3bf4410c70c3d42ea20f6dfc59004"},{"id":"func/Cave.Exits","name":"Cave.Exits","line":47,"end_line":53,"hash":"c92e8c40813bb0a35e13ba03f6548e8664cb53593de31fe0c870dcfb81be9925"},{"id":"func/Cave.HasTunnel","name":"Cave.HasTunnel","line":55,"end_line":66,"hash":"eecfc59abe2742483633cf907329d282d27bad29d7483b6f0cf638a4e0103e82"},{"id":"func/Cave.ReachableFrom","name":"Cave.ReachableFrom","line":68,"end_line":85,"hash":"a9c332448a2e1f36299eaf211b6b9b8e5670a82b2b452edcacc8603214838393"},{"id":"func/Cave.AdjacentHazards","name":"Cave.AdjacentHazards","line":87,"end_line":103,"hash":"19af123b7236f2bd5440113862bf6371c3909a2e55774d1a477a2b833f94cd76"},{"id":"func/hazardsInRoom","name":"hazardsInRoom","line":105,"end_line":117,"hash":"4d0d4e47f15b4acfeb6c636780791a5e143322d704fc1b0fbe06aff0bd21bf1e"},{"id":"func/sortedKeys","name":"sortedKeys","line":119,"end_line":126,"hash":"6c274e6f394af82b8d613639f5bc6c397a22e3c8f1af63888c664655cb17be24"}]}
+// mutate4go-manifest-end
