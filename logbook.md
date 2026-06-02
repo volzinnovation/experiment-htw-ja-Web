@@ -272,3 +272,18 @@ Apply your own role rules to this state.
 ```
 
 Action taken: Re-read the refactorer role and constitution, then prepared to merge the specified architect commit into the refactorer branch and apply refactorer checks.
+
+## 2026-06-02 08:19:01 CDT
+
+Sent handoff:
+
+```
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: cave-setup
+branch name: swarmforge-refactorer
+commit hash: 03dbfb3f36548474176901a48fd8ac622681eb4e
+Apply your own role rules to this state.
+```
+
+Summary: reported the refactored cave-setup architect follow-up for architect review.
