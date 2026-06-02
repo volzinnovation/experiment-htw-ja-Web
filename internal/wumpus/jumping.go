@@ -89,8 +89,12 @@ func (g *Game) ObserveJumpingWumpusBehavior(turnCount int) []string {
 
 func firstExit(room int) int {
 	exits, err := NewCave().Exits(room)
-	if err != nil || len(exits) == 0 {
+	if err != nil {
 		return room
 	}
 	return exits[0]
 }
+
+// mutate4go-manifest-begin
+// {"version":1,"tested_at":"2026-06-02T09:34:52-05:00","module_hash":"6f3cd4231d9f7993b6a1ae6f3f3462e92ff2fab0cd82baf8bc805b960b9b6f01","functions":[{"id":"func/Game.SetNextJumpingWumpusTurnEvent","name":"Game.SetNextJumpingWumpusTurnEvent","line":15,"end_line":17,"hash":"321df785aa31f7e38a119f7b97a3353e710fccc490d96d408eae9166c3e83526"},{"id":"func/Game.SetNextWumpusJumpPath","name":"Game.SetNextWumpusJumpPath","line":19,"end_line":21,"hash":"038e240a13152eb3448149600231e885e8d851efac558a58d037b1fe7100eb64"},{"id":"func/Game.SetNextFirstJumpPlayerLandingOutcome","name":"Game.SetNextFirstJumpPlayerLandingOutcome","line":23,"end_line":25,"hash":"ecb4173a9fbda05dab783f5f014601a4a179048463c41c128429d9fd649793a7"},{"id":"func/Game.ResolveJumpingWumpusTurn","name":"Game.ResolveJumpingWumpusTurn","line":27,"end_line":38,"hash":"7b5fb23f6b81cd7aafdf7e2e20f0da2284dc35ba4498fa88a148a1bbcb7b7c2d"},{"id":"func/Game.resolveWumpusJump","name":"Game.resolveWumpusJump","line":40,"end_line":49,"hash":"f9d4752108033c91bb08dc0620923e3bb4c64b1c1762979e512b0f0bbb71a828"},{"id":"func/Game.legalJumpDestination","name":"Game.legalJumpDestination","line":51,"end_line":56,"hash":"abf6956b4b5c3e92b246aa87e5083c0681900163a73d18ed7437ad2caa3339a9"},{"id":"func/Game.nextJumpingWumpusEvent","name":"Game.nextJumpingWumpusEvent","line":58,"end_line":60,"hash":"7a74fa4036746cb580a299468ac06191933e0748b7679bf707c0939aa04daa9d"},{"id":"func/Game.nextWumpusJumpPath","name":"Game.nextWumpusJumpPath","line":62,"end_line":70,"hash":"40ba6177973d80830a3ff446171ca6faebf0b0cc857f35e1d59c0775a61486b3"},{"id":"func/Game.resolveJumpLandingOnPlayer","name":"Game.resolveJumpLandingOnPlayer","line":72,"end_line":80,"hash":"bbde4dfae5a61f341ae54e9b5e62f97c76a18a0797b42476db137b4ba3fa8ec1"},{"id":"func/Game.nextFirstJumpLandingOutcome","name":"Game.nextFirstJumpLandingOutcome","line":82,"end_line":84,"hash":"d77597064e40255b42296bb8727721592fd94e4b0b2ef5f4c0f7f4031b1cc81f"},{"id":"func/Game.ObserveJumpingWumpusBehavior","name":"Game.ObserveJumpingWumpusBehavior","line":86,"end_line":88,"hash":"b2965048a455fb0ce13fd239325a9e63ad50482f0fe3c3b21379d87c8c67efa5"},{"id":"func/firstExit","name":"firstExit","line":90,"end_line":96,"hash":"e68bc0f5404f3faca8a71379ce67976c74a7cd683f2ca43cc70e56ae45a521fd"}]}
+// mutate4go-manifest-end

@@ -19,6 +19,9 @@ func TestNewGamePlacesGrenadeInUnoccupiedRoom(t *testing.T) {
 	if room < 1 || room > 20 {
 		t.Fatalf("grenade room = %d, want valid room", room)
 	}
+	if room != 12 {
+		t.Fatalf("grenade room = %d, want seeded room 12", room)
+	}
 	if slices.Contains(game.Setup().OccupiedRooms(), room) {
 		t.Fatalf("grenade room %d overlaps occupied rooms %v", room, game.Setup().OccupiedRooms())
 	}
@@ -103,6 +106,26 @@ func TestGrenadeDetonationCanBeHarmless(t *testing.T) {
 	}
 	if game.Status() != StatusInProgress {
 		t.Fatalf("status = %s, want %s", game.Status(), StatusInProgress)
+	}
+}
+
+func TestGrenadeDetonationAtRoomTenReachesRoomFive(t *testing.T) {
+	game := mustGame(t, Setup{Player: 1, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{16, 17}})
+	game.SetPlayerRoom(5)
+	game.SetPendingGrenade(10)
+
+	messages := game.DetonateGrenade()
+
+	wantMessages := []string{
+		"YOU HEAR A HORRENDOUS EXPLOSION!",
+		"YOU ARE BLOWN UP BY YOUR OWN HOLY HAND GRENADE!",
+		"HA HA HA - YOU LOSE!",
+	}
+	if !reflect.DeepEqual(messages, wantMessages) {
+		t.Fatalf("messages = %v, want %v", messages, wantMessages)
+	}
+	if game.Status() != StatusLost {
+		t.Fatalf("status = %s, want %s", game.Status(), StatusLost)
 	}
 }
 

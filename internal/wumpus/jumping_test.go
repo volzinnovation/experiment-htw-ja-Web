@@ -23,6 +23,24 @@ func TestJumpingWumpusMovesAlongTwoRoomPath(t *testing.T) {
 	}
 }
 
+func TestJumpingWumpusConsumesQueuedPathsInOrder(t *testing.T) {
+	game := mustGame(t, Setup{Player: 1, Wumpus: 10, Pits: []int{13, 14}, Bats: []int{16, 17}})
+	game.SetNextJumpingWumpusTurnEvent(true)
+	game.SetNextJumpingWumpusTurnEvent(true)
+	game.SetNextWumpusJumpPath([]int{11})
+	game.SetNextWumpusJumpPath([]int{12})
+
+	first := game.ResolveJumpingWumpusTurn()
+	second := game.ResolveJumpingWumpusTurn()
+
+	if !reflect.DeepEqual(first.JumpedRooms, []int{11}) {
+		t.Fatalf("first jumped rooms = %v, want [11]", first.JumpedRooms)
+	}
+	if !reflect.DeepEqual(second.JumpedRooms, []int{12}) {
+		t.Fatalf("second jumped rooms = %v, want [12]", second.JumpedRooms)
+	}
+}
+
 func TestNoJumpingWumpusEventLeavesWumpusInPlace(t *testing.T) {
 	game := mustGame(t, Setup{Player: 1, Wumpus: 10, Pits: []int{13, 14}, Bats: []int{16, 17}})
 	game.SetNextJumpingWumpusTurnEvent(false)

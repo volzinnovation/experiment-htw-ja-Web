@@ -151,6 +151,7 @@ func NewHandlers() runtime.Handlers {
 		"every Wumpus jump segment is a legal tunnel":                        thenEveryWumpusJumpSegmentLegal,
 		"both games evaluate jumping Wumpus behavior for <turn_count> turns": whenBothGamesEvaluateJumpingWumpus,
 		"both games produce identical jumping Wumpus events":                 thenBothJumpEventsIdentical,
+		"the turn count starts at <turn_count>":                              givenTurnCount,
 		"the turn count is <turn_count>":                                     givenOrThenTurnCount,
 		"the turn count is <expected_turn_count>":                            thenExpectedTurnCount,
 	}
@@ -543,7 +544,11 @@ func thenReplaySetupIdentical(world *runtime.World, _ map[string]string) error {
 }
 
 func whenPlayerMoves(world *runtime.World, example map[string]string) error {
-	room, err := intAnyExample(example, "to_room", "pit_room", "bat_room", "wumpus_room")
+	return movePlayerToAnyExampleRoom(world, example, "to_room", "pit_room", "bat_room", "wumpus_room")
+}
+
+func movePlayerToAnyExampleRoom(world *runtime.World, example map[string]string, keys ...string) error {
+	room, err := intAnyExample(example, keys...)
 	if err != nil {
 		return err
 	}
@@ -667,15 +672,31 @@ func thenWarningMessagesAre(world *runtime.World, example map[string]string) err
 }
 
 func givenOrThenPlayerHasArrows(world *runtime.World, example map[string]string) error {
-	arrows, err := intExample(example, "arrows")
+	return setOrAssertParsedInt(world, example, "arrows", func(arrows int) {
+		gameFrom(world, "game").SetArrows(arrows)
+	}, func(arrows int) error {
+		return assertArrows(world, arrows)
+	})
+}
+
+func setOrAssertParsedInt(world *runtime.World, example map[string]string, key string, set func(int), assert func(int) error) error {
+	value, err := intExample(example, key)
 	if err != nil {
 		return err
 	}
 	if _, actionTaken := world.State["action_taken"]; !actionTaken {
-		gameFrom(world, "game").SetArrows(arrows)
+		set(value)
 		return nil
 	}
-	return assertArrows(world, arrows)
+	return assert(value)
+}
+
+func setStringChoice(value, label string, allowed []string, set func(string)) error {
+	if slices.Contains(allowed, value) {
+		set(value)
+		return nil
+	}
+	return fmt.Errorf("unsupported %s %q", label, value)
 }
 
 func thenPlayerHasRemainingArrows(world *runtime.World, example map[string]string) error {
@@ -871,14 +892,12 @@ func thenTurnWarningsAre(world *runtime.World, example map[string]string) error 
 }
 
 func givenNextSleepingWumpusEntryOutcome(world *runtime.World, example map[string]string) error {
-	outcome := wumpus.SleepingWumpusEntryOutcome(example["entry_outcome"])
-	switch outcome {
-	case wumpus.SleepingWumpusWakes, wumpus.SleepingWumpusStaysAsleep:
-		gameFrom(world, "game").SetNextSleepingWumpusEntryOutcome(outcome)
-		return nil
-	default:
-		return fmt.Errorf("unsupported sleeping Wumpus entry outcome %q", example["entry_outcome"])
-	}
+	return setStringChoice(example["entry_outcome"], "sleeping Wumpus entry outcome", []string{
+		string(wumpus.SleepingWumpusWakes),
+		string(wumpus.SleepingWumpusStaysAsleep),
+	}, func(value string) {
+		gameFrom(world, "game").SetNextSleepingWumpusEntryOutcome(wumpus.SleepingWumpusEntryOutcome(value))
+	})
 }
 
 func givenPlayerHasSeenSleepingWumpus(world *runtime.World, _ map[string]string) error {
@@ -887,20 +906,30 @@ func givenPlayerHasSeenSleepingWumpus(world *runtime.World, _ map[string]string)
 }
 
 func whenBothGamesObserveSleepyWumpus(world *runtime.World, example map[string]string) error {
+	return recordPairedStringObservations(world, example, "sleepy_observations", "another_sleepy_observations", func(game *wumpus.Game, turnCount int) []string {
+		return game.ObserveSleepyWumpusBehavior(turnCount)
+	})
+}
+
+func thenBothSleepyObservationsIdentical(world *runtime.World, _ map[string]string) error {
+	return assertStringObservationsIdentical(world, "sleepy observations", "sleepy_observations", "another_sleepy_observations")
+}
+
+func recordPairedStringObservations(world *runtime.World, example map[string]string, leftKey, rightKey string, observe func(*wumpus.Game, int) []string) error {
 	turnCount, err := intExample(example, "turn_count")
 	if err != nil {
 		return err
 	}
-	world.State["sleepy_observations"] = gameFrom(world, "game").ObserveSleepyWumpusBehavior(turnCount)
-	world.State["another_sleepy_observations"] = gameFrom(world, "another_game").ObserveSleepyWumpusBehavior(turnCount)
+	world.State[leftKey] = observe(gameFrom(world, "game"), turnCount)
+	world.State[rightKey] = observe(gameFrom(world, "another_game"), turnCount)
 	return nil
 }
 
-func thenBothSleepyObservationsIdentical(world *runtime.World, _ map[string]string) error {
-	left := world.State["sleepy_observations"].([]string)
-	right := world.State["another_sleepy_observations"].([]string)
+func assertStringObservationsIdentical(world *runtime.World, label, leftKey, rightKey string) error {
+	left := world.State[leftKey].([]string)
+	right := world.State[rightKey].([]string)
 	if !reflect.DeepEqual(left, right) {
-		return fmt.Errorf("sleepy observations differ: %v and %v", left, right)
+		return fmt.Errorf("%s differ: %v and %v", label, left, right)
 	}
 	return nil
 }
@@ -1008,10 +1037,13 @@ func optionalRoomList(value string) ([]int, error) {
 
 func stringList(value string) []string {
 	const whumpToken = "__WHUMP_MESSAGE__"
+	const armedPromptToken = "__ARMED_PROMPT__"
 	value = strings.ReplaceAll(value, "YOU HEAR WHUMP, WHUMP.", whumpToken)
+	value = strings.ReplaceAll(value, "SHOOT, MOVE OR THROW (S-M-T)?", armedPromptToken)
 	values := commaSeparatedStrings(value)
 	for index, item := range values {
 		values[index] = strings.ReplaceAll(item, whumpToken, "YOU HEAR WHUMP, WHUMP.")
+		values[index] = strings.ReplaceAll(values[index], armedPromptToken, "SHOOT, MOVE OR THROW (S-M-T)?")
 	}
 	return values
 }

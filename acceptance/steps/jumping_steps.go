@@ -2,7 +2,6 @@ package steps
 
 import (
 	"fmt"
-	"reflect"
 	"slices"
 
 	"htwgo/acceptance/runtime"
@@ -45,14 +44,12 @@ func givenNextWumpusJumpPath(world *runtime.World, example map[string]string) er
 }
 
 func givenNextFirstJumpLandingOutcome(world *runtime.World, example map[string]string) error {
-	outcome := wumpus.FirstJumpLandingOutcome(example["landing_outcome"])
-	switch outcome {
-	case wumpus.FirstJumpTramples, wumpus.FirstJumpSlams:
-		gameFrom(world, "game").SetNextFirstJumpPlayerLandingOutcome(outcome)
-		return nil
-	default:
-		return fmt.Errorf("unsupported first jump landing outcome %q", example["landing_outcome"])
-	}
+	return setStringChoice(example["landing_outcome"], "first jump landing outcome", []string{
+		string(wumpus.FirstJumpTramples),
+		string(wumpus.FirstJumpSlams),
+	}, func(value string) {
+		gameFrom(world, "game").SetNextFirstJumpPlayerLandingOutcome(wumpus.FirstJumpLandingOutcome(value))
+	})
 }
 
 func whenNextTurnBegins(world *runtime.World, _ map[string]string) error {
@@ -92,20 +89,11 @@ func thenEveryWumpusJumpSegmentLegal(world *runtime.World, _ map[string]string) 
 }
 
 func whenBothGamesEvaluateJumpingWumpus(world *runtime.World, example map[string]string) error {
-	turnCount, err := intExample(example, "turn_count")
-	if err != nil {
-		return err
-	}
-	world.State["jump_events"] = gameFrom(world, "game").ObserveJumpingWumpusBehavior(turnCount)
-	world.State["another_jump_events"] = gameFrom(world, "another_game").ObserveJumpingWumpusBehavior(turnCount)
-	return nil
+	return recordPairedStringObservations(world, example, "jump_events", "another_jump_events", func(game *wumpus.Game, turnCount int) []string {
+		return game.ObserveJumpingWumpusBehavior(turnCount)
+	})
 }
 
 func thenBothJumpEventsIdentical(world *runtime.World, _ map[string]string) error {
-	left := world.State["jump_events"].([]string)
-	right := world.State["another_jump_events"].([]string)
-	if !reflect.DeepEqual(left, right) {
-		return fmt.Errorf("jump events differ: %v and %v", left, right)
-	}
-	return nil
+	return assertStringObservationsIdentical(world, "jump events", "jump_events", "another_jump_events")
 }

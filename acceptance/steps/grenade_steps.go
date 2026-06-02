@@ -28,11 +28,7 @@ func givenConfiguredSetupWithGrenade(world *runtime.World, example map[string]st
 }
 
 func whenPlayerMovesToGrenadeRoom(world *runtime.World, example map[string]string) error {
-	room, err := intExample(example, "grenade_room")
-	if err != nil {
-		return err
-	}
-	return movePlayerToRoom(world, room)
+	return movePlayerToAnyExampleRoom(world, example, "grenade_room")
 }
 
 func givenInteractiveSetupCarryingGrenade(world *runtime.World, example map[string]string) error {
@@ -107,13 +103,16 @@ func thenPlayerDoesNotCarryGrenade(world *runtime.World, _ map[string]string) er
 }
 
 func thenNoUnclaimedGrenade(world *runtime.World, _ map[string]string) error {
-	room, ok := gameFrom(world, "game").GrenadeRoom()
-	return assertNoRoom("unclaimed grenade remains", roomState{room: room, ok: ok})
+	return assertNoRoomFrom("unclaimed grenade remains", gameFrom(world, "game").GrenadeRoom)
 }
 
 func thenNoGrenadePending(world *runtime.World, _ map[string]string) error {
-	room, ok := gameFrom(world, "game").PendingGrenadeRoom()
-	return assertNoRoom("grenade pending", roomState{room: room, ok: ok})
+	return assertNoRoomFrom("grenade pending", gameFrom(world, "game").PendingGrenadeRoom)
+}
+
+func assertNoRoomFrom(label string, read func() (int, bool)) error {
+	room, ok := read()
+	return assertNoRoom(label, roomState{room: room, ok: ok})
 }
 
 func assertNoRoom(label string, state roomState) error {
@@ -124,19 +123,15 @@ func assertNoRoom(label string, state roomState) error {
 }
 
 func givenOrThenGrenadePending(world *runtime.World, example map[string]string) error {
-	room, err := intExample(example, "target_room")
-	if err != nil {
-		return err
-	}
-	if _, actionTaken := world.State["action_taken"]; !actionTaken {
+	return setOrAssertParsedInt(world, example, "target_room", func(room int) {
 		gameFrom(world, "game").SetPendingGrenade(room)
+	}, func(room int) error {
+		got, ok := gameFrom(world, "game").PendingGrenadeRoom()
+		if !ok || got != room {
+			return fmt.Errorf("pending grenade room = %d/%v, want %d/true", got, ok, room)
+		}
 		return nil
-	}
-	got, ok := gameFrom(world, "game").PendingGrenadeRoom()
-	if !ok || got != room {
-		return fmt.Errorf("pending grenade room = %d/%v, want %d/true", got, ok, room)
-	}
-	return nil
+	})
 }
 
 func thenWumpusAlive(world *runtime.World, _ map[string]string) error {

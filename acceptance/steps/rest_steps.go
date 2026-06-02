@@ -7,15 +7,20 @@ import (
 )
 
 func givenOrThenTurnCount(world *runtime.World, example map[string]string) error {
+	return setOrAssertParsedInt(world, example, "turn_count", func(turnCount int) {
+		sessionFrom(world).SetTurnCount(turnCount)
+	}, func(turnCount int) error {
+		return requireTurnCount(world, turnCount)
+	})
+}
+
+func givenTurnCount(world *runtime.World, example map[string]string) error {
 	turnCount, err := intExample(example, "turn_count")
 	if err != nil {
 		return err
 	}
-	if _, actionTaken := world.State["action_taken"]; !actionTaken {
-		sessionFrom(world).SetTurnCount(turnCount)
-		return nil
-	}
-	return requireTurnCount(world, turnCount)
+	sessionFrom(world).SetTurnCount(turnCount)
+	return nil
 }
 
 func thenExpectedTurnCount(world *runtime.World, example map[string]string) error {
