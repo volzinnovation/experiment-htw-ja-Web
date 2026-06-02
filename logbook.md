@@ -357,3 +357,106 @@ Apply your own role rules to this state.
 ```
 
 Summary: interactive-loop architectural work is complete.
+
+## 2026-06-02 09:17:05 CDT
+
+Queued handoffs noted before cleanup and processing:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: movement-hazards
+branch name: swarmforge-refactorer
+commit hash: 3c30b849ff11d2c938eb7d01def064185ae30960
+Apply your own role rules to this state.
+```
+
+Reason: this queued handoff was processed as part of the completed interactive-loop combined refactorer state and is being removed from the local queue after the required architect handoffs were sent.
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: crooked-arrow
+branch name: swarmforge-refactorer
+commit hash: d19fd0253d8a2e91940436cc935fa084025054bd
+Apply your own role rules to this state.
+```
+
+Reason: this queued handoff was processed as part of the completed interactive-loop combined refactorer state and is being removed from the local queue after the required architect handoffs were sent.
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: interactive-loop
+branch name: swarmforge-refactorer
+commit hash: 1bfa26fadc19984ee1be85a1e8eb2618689a38a9
+Apply your own role rules to this state.
+```
+
+Reason: this queued handoff was processed as part of the completed interactive-loop combined refactorer state and is being removed from the local queue after the required architect handoffs were sent.
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: cave-setup
+branch name: swarmforge-refactorer
+commit hash: 03dbfb3f36548474176901a48fd8ac622681eb4e
+Apply your own role rules to this state.
+```
+
+Reason: queued while the architect was completing the interactive-loop combined handoff; processing with the newer queued refactorer commits because the latest rest-command commit contains this state.
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: holy-grenade
+branch name: swarmforge-refactorer
+commit hash: 135b2874e742a836e95da591447ebf05984217b4
+Apply your own role rules to this state.
+```
+
+Reason: queued while the architect was completing the interactive-loop combined handoff; processing with the newer queued refactorer commits because the latest rest-command commit contains this state.
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: cave-setup
+branch name: swarmforge-refactorer
+commit hash: 14161523f79591b2e8c9cc17bf4faef7b0b83163
+Apply your own role rules to this state.
+```
+
+Reason: queued while the architect was completing the interactive-loop combined handoff; processing with the newer queued refactorer commits because the latest rest-command commit contains this state.
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: sleepy-wumpus
+branch name: swarmforge-refactorer
+commit hash: 98db2019c6e9438b56eade9c0cd4a7ddbe5752d5
+Apply your own role rules to this state.
+```
+
+Reason: queued while the architect was completing the interactive-loop combined handoff; processing with the newer queued refactorer commits because the latest rest-command commit contains this state.
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: jumping-wumpus
+branch name: swarmforge-refactorer
+commit hash: 20b851c37da14ac9a50a58c66c5d93e5ba6498ae
+Apply your own role rules to this state.
+```
+
+Reason: queued while the architect was completing the interactive-loop combined handoff; processing with the newer queued refactorer commits because the latest rest-command commit contains this state.
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: rest-command
+branch name: swarmforge-refactorer
+commit hash: a0ac2e788e4524556d24d5765bbf207b3b09e2f8
+Apply your own role rules to this state.
+```
+
+Reason: queued while the architect was completing the interactive-loop combined handoff; processing this latest combined refactorer state now.
