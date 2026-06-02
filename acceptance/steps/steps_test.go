@@ -20,6 +20,7 @@ func TestHandlersSatisfyCurrentAcceptanceFeatures(t *testing.T) {
 		interactiveLoopFeature(),
 		holyHandGrenadeFeature(),
 		sleepyWumpusFeature(),
+		jumpingWumpusFeature(),
 	} {
 		t.Run(feature.Name, func(t *testing.T) {
 			path := writeFeature(t, feature)
@@ -565,6 +566,75 @@ func sleepyWumpusFeature() runtime.Feature {
 					{Text: "both games produce identical sleepy Wumpus observations"},
 				},
 				Examples: []map[string]string{{"seed": "1973", "turn_count": "10"}},
+			},
+		},
+	}
+}
+
+func jumpingWumpusFeature() runtime.Feature {
+	return runtime.Feature{
+		Name: "Jumping Wumpus",
+		Scenarios: []runtime.Scenario{
+			{
+				Name: "seeded turn can trigger double jump event",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows"},
+					{Text: "the next jumping Wumpus turn event is <jump_event>"},
+					{Text: "the next Wumpus jump path is <jump_path>"},
+					{Text: "the next turn begins"},
+					{Text: "the Wumpus is in room <expected_wumpus_room>"},
+					{Text: "the displayed lines include <message>"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "10", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "jump_event": "jumps", "jump_path": "11, 12", "expected_wumpus_room": "12", "message": "YOU HEAR WHUMP, WHUMP."}},
+			},
+			{
+				Name: "no jump event leaves Wumpus in place",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows"},
+					{Text: "the next jumping Wumpus turn event is <jump_event>"},
+					{Text: "the next turn begins"},
+					{Text: "the Wumpus is in room <wumpus_room>"},
+					{Text: "the displayed lines do not include <message>"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "10", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "jump_event": "no jump", "message": "YOU HEAR WHUMP, WHUMP."}},
+			},
+			{
+				Name: "first jump landing on player can trample or slam",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows"},
+					{Text: "the next jumping Wumpus turn event is jumps"},
+					{Text: "the next Wumpus jump path is <jump_path>"},
+					{Text: "the next first jump player landing outcome is <landing_outcome>"},
+					{Text: "the next turn begins"},
+					{Text: "the game is <game_status>"},
+					{Text: "the displayed lines include <messages>"},
+				},
+				Examples: []map[string]string{
+					{"player_room": "2", "wumpus_room": "10", "jump_path": "2, 1", "landing_outcome": "trample", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "game_status": "lost", "messages": "YOU HEAR WHUMP, WHUMP., THE WUMPUS TRAMPLES YOU TO DEATH!, HA HA HA - YOU LOSE!"},
+					{"player_room": "2", "wumpus_room": "10", "jump_path": "2, 1", "landing_outcome": "slam", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "game_status": "in progress", "messages": "YOU HEAR WHUMP, WHUMP., YOU ARE SLAMMED AGAINST THE CAVE WALL BY THE SNARLING WUMPUS!"},
+				},
+			},
+			{
+				Name: "jumps only follow legal tunnels and seeded events are reproducible",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows"},
+					{Text: "the next jumping Wumpus turn event is jumps"},
+					{Text: "the next Wumpus jump path is <jump_path>"},
+					{Text: "the next turn begins"},
+					{Text: "every Wumpus jump segment is a legal tunnel"},
+					{Text: "the Wumpus is in room <expected_wumpus_room>"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "20", "jump_path": "19, 18", "expected_wumpus_room": "18", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5"}},
+			},
+			{
+				Name: "seeded jump events are reproducible",
+				Steps: []runtime.Step{
+					{Text: "a new game created with seed <seed>"},
+					{Text: "another new game created with seed <seed>"},
+					{Text: "both games evaluate jumping Wumpus behavior for <turn_count> turns"},
+					{Text: "both games produce identical jumping Wumpus events"},
+				},
+				Examples: []map[string]string{{"seed": "1973", "turn_count": "20"}},
 			},
 		},
 	}

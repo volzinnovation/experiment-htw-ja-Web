@@ -32,15 +32,7 @@ func (g *Game) SetPlayerRoom(room int) {
 }
 
 func (g *Game) ObserveSleepyWumpusBehavior(turnCount int) []string {
-	observations := make([]string, 0, turnCount)
-	for i := 0; i < turnCount; i++ {
-		if (g.setup.Player+g.setup.Wumpus+i)%2 == 0 {
-			observations = append(observations, "asleep")
-		} else {
-			observations = append(observations, "awake")
-		}
-	}
-	return observations
+	return periodicBehavior(g.setup.Player, g.setup.Wumpus, turnCount, 2, "asleep", "awake")
 }
 
 func (g *Game) observeAdjacentWumpus() {
@@ -51,12 +43,7 @@ func (g *Game) observeAdjacentWumpus() {
 }
 
 func (g *Game) nextSleepyObservation() bool {
-	if len(g.nextSleepyObserve) == 0 {
-		return false
-	}
-	asleep := g.nextSleepyObserve[0]
-	g.nextSleepyObserve = g.nextSleepyObserve[1:]
-	return asleep
+	return dequeueOr(&g.nextSleepyObserve, false)
 }
 
 func (g *Game) resolveSleepingWumpusEntry() []string {
@@ -69,10 +56,5 @@ func (g *Game) resolveSleepingWumpusEntry() []string {
 }
 
 func (g *Game) nextSleepingEntryOutcome() SleepingWumpusEntryOutcome {
-	if len(g.nextSleepingEntry) == 0 {
-		return SleepingWumpusWakes
-	}
-	outcome := g.nextSleepingEntry[0]
-	g.nextSleepingEntry = g.nextSleepingEntry[1:]
-	return outcome
+	return dequeueOr(&g.nextSleepingEntry, SleepingWumpusWakes)
 }

@@ -37,6 +37,23 @@ func TestNoJumpingWumpusEventLeavesWumpusInPlace(t *testing.T) {
 	}
 }
 
+func TestJumpingWumpusUsesDefaultLegalPath(t *testing.T) {
+	game := mustGame(t, Setup{Player: 1, Wumpus: 10, Pits: []int{13, 14}, Bats: []int{16, 17}})
+	game.SetNextJumpingWumpusTurnEvent(true)
+
+	result := game.ResolveJumpingWumpusTurn()
+
+	if !reflect.DeepEqual(result.JumpedRooms, []int{2, 1}) {
+		t.Fatalf("jumped rooms = %v, want [2 1]", result.JumpedRooms)
+	}
+}
+
+func TestFirstExitReturnsRoomForInvalidRoom(t *testing.T) {
+	if got := firstExit(999); got != 999 {
+		t.Fatalf("firstExit(999) = %d, want 999", got)
+	}
+}
+
 func TestFirstJumpLandingOnPlayerCanTrample(t *testing.T) {
 	game := mustGame(t, Setup{Player: 2, Wumpus: 10, Pits: []int{13, 14}, Bats: []int{16, 17}})
 	game.SetNextJumpingWumpusTurnEvent(true)

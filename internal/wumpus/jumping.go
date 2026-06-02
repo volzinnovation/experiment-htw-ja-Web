@@ -29,30 +29,34 @@ func (g *Game) ResolveJumpingWumpusTurn() JumpResult {
 		return JumpResult{}
 	}
 	result := JumpResult{Messages: []string{"YOU HEAR WHUMP, WHUMP."}}
-	path := g.nextWumpusJumpPath()
-	for index, room := range path {
-		if !NewCave().HasTunnel(g.setup.Wumpus, room) {
-			room = firstExit(g.setup.Wumpus)
-		}
-		g.setup.Wumpus = room
-		result.JumpedRooms = append(result.JumpedRooms, room)
-		if room == g.setup.Player {
-			result.Messages = append(result.Messages, g.resolveJumpLandingOnPlayer(index)...)
-			if g.status != StatusInProgress {
-				break
-			}
+	for index, room := range g.nextWumpusJumpPath() {
+		if !g.resolveWumpusJump(index, room, &result) {
+			break
 		}
 	}
 	return result
 }
 
-func (g *Game) nextJumpingWumpusEvent() bool {
-	if len(g.nextJumpEvents) == 0 {
-		return false
+func (g *Game) resolveWumpusJump(index, room int, result *JumpResult) bool {
+	room = g.legalJumpDestination(room)
+	g.setup.Wumpus = room
+	result.JumpedRooms = append(result.JumpedRooms, room)
+	if room != g.setup.Player {
+		return true
 	}
-	jumps := g.nextJumpEvents[0]
-	g.nextJumpEvents = g.nextJumpEvents[1:]
-	return jumps
+	result.Messages = append(result.Messages, g.resolveJumpLandingOnPlayer(index)...)
+	return g.status == StatusInProgress
+}
+
+func (g Game) legalJumpDestination(room int) int {
+	if NewCave().HasTunnel(g.setup.Wumpus, room) {
+		return room
+	}
+	return firstExit(g.setup.Wumpus)
+}
+
+func (g *Game) nextJumpingWumpusEvent() bool {
+	return dequeueOr(&g.nextJumpEvents, false)
 }
 
 func (g *Game) nextWumpusJumpPath() []int {
@@ -76,24 +80,11 @@ func (g *Game) resolveJumpLandingOnPlayer(jumpIndex int) []string {
 }
 
 func (g *Game) nextFirstJumpLandingOutcome() FirstJumpLandingOutcome {
-	if len(g.nextFirstJumpLand) == 0 {
-		return FirstJumpTramples
-	}
-	outcome := g.nextFirstJumpLand[0]
-	g.nextFirstJumpLand = g.nextFirstJumpLand[1:]
-	return outcome
+	return dequeueOr(&g.nextFirstJumpLand, FirstJumpTramples)
 }
 
 func (g *Game) ObserveJumpingWumpusBehavior(turnCount int) []string {
-	events := make([]string, 0, turnCount)
-	for i := 0; i < turnCount; i++ {
-		if (g.setup.Player+g.setup.Wumpus+i)%3 == 0 {
-			events = append(events, "jumps")
-		} else {
-			events = append(events, "no jump")
-		}
-	}
-	return events
+	return periodicBehavior(g.setup.Player, g.setup.Wumpus, turnCount, 3, "jumps", "no jump")
 }
 
 func firstExit(room int) int {
