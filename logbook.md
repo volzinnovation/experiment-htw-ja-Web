@@ -185,3 +185,32 @@ commit hash: 5f63059c3bf5f00f05dc6fc3f3954b4bced4a7f8
 Apply your own role rules to this state.
 
 Action taken: Processed queued architect handoff after completing the holy-grenade refactorer handoff; prepared to merge the specified architect commit into the coder branch and apply coder responsibilities to the resulting state.
+
+## 2026-06-02 07:34:26 CDT - Architect Branch Log Entry
+
+Received handoff:
+
+```text
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: cave-setup
+branch name: swarmforge-coder
+commit hash: d87ae24a89e55fff36c7125aaf1563fd2cc19912
+```
+
+Action taken: re-read role and constitution, then prepared to merge the named coder state into the refactorer worktree.
+
+## 2026-06-02 07:47:41 CDT
+
+Received handoff:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: cave-setup
+branch name: swarmforge-refactorer
+commit hash: 33e43f406c3e4bcbd5e32ea076144a354b7270a6
+Apply your own role rules to this state.
+```
+
+Action taken: re-read role and constitution, then merging the referenced refactorer state into the architect branch for architectural review.

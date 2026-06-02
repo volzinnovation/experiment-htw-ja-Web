@@ -18,7 +18,7 @@ func TestNewGamePlacesGrenadeInUnoccupiedRoom(t *testing.T) {
 	if room < 1 || room > 20 {
 		t.Fatalf("grenade room = %d, want valid room", room)
 	}
-	if containsRoom(game.Setup().OccupiedRooms(), room) {
+	if contains(game.Setup().OccupiedRooms(), room) {
 		t.Fatalf("grenade room %d overlaps occupied rooms %v", room, game.Setup().OccupiedRooms())
 	}
 }

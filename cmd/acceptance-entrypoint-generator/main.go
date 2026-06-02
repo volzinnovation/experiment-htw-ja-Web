@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go/format"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -26,41 +27,61 @@ type metadata struct {
 }
 
 func main() {
-	if len(os.Args) != 3 {
-		fmt.Fprintln(os.Stderr, "usage: acceptance-entrypoint-generator <json-ir> <generated-test-output>")
-		os.Exit(2)
+	os.Exit(run(os.Args, os.Stderr))
+}
+
+func run(args []string, stderr io.Writer) int {
+	if len(args) != 3 {
+		fmt.Fprintln(stderr, "usage: acceptance-entrypoint-generator <json-ir> <generated-test-output>")
+		return 2
 	}
-	if err := generate(os.Args[1], os.Args[2]); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+	if err := generate(args[1], args[2]); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
 	}
+	return 0
 }
 
 func generate(irPath, outputDir string) error {
-	contents, err := os.ReadFile(irPath)
+	feature, err := readFeatureIR(irPath)
 	if err != nil {
 		return err
 	}
-	var feature featureIR
-	if err := json.Unmarshal(contents, &feature); err != nil {
+	source, err := formattedTestSource(feature.Name, irPath)
+	if err != nil {
 		return err
 	}
-	if feature.Name == "" {
-		return fmt.Errorf("feature name missing in %s", irPath)
-	}
-
 	if err := os.MkdirAll(outputDir, 0o755); err != nil {
 		return err
 	}
 	testPath := filepath.Join(outputDir, generatedFilename(irPath))
-	source, err := format.Source([]byte(testSource(feature.Name, irPath)))
-	if err != nil {
-		return err
-	}
 	if err := os.WriteFile(testPath, source, 0o644); err != nil {
 		return err
 	}
 	return writeMetadata(outputDir, irPath, testPath, source)
+}
+
+func readFeatureIR(irPath string) (featureIR, error) {
+	contents, err := os.ReadFile(irPath)
+	if err != nil {
+		return featureIR{}, err
+	}
+	var feature featureIR
+	if err := json.Unmarshal(contents, &feature); err != nil {
+		return featureIR{}, err
+	}
+	if feature.Name == "" {
+		return featureIR{}, fmt.Errorf("feature name missing in %s", irPath)
+	}
+	return feature, nil
+}
+
+func formattedTestSource(featureName, irPath string) ([]byte, error) {
+	source, err := format.Source([]byte(testSource(featureName, irPath)))
+	if err != nil {
+		return nil, err
+	}
+	return source, nil
 }
 
 func testSource(featureName, irPath string) string {
@@ -74,7 +95,7 @@ import (
 )
 
 func Test%s(t *testing.T) {
-	runtime.RunFeatureFile(t, %q, steps.NewHandlers())
+	runtime.RunGeneratedFeatureFile(t, %q, steps.NewHandlers())
 }
 `, exportedName(featureName), filepath.ToSlash(irPath))
 }

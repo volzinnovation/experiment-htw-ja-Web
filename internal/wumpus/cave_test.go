@@ -2,6 +2,7 @@ package wumpus
 
 import (
 	"reflect"
+	"slices"
 	"testing"
 )
 
@@ -32,7 +33,7 @@ func TestCaveReachabilityIncludesAllRooms(t *testing.T) {
 		t.Fatalf("reachable rooms = %v, want 20 rooms", reachable)
 	}
 	for room := 1; room <= 20; room++ {
-		if !containsRoom(reachable, room) {
+		if !slices.Contains(reachable, room) {
 			t.Fatalf("room %d was not reachable from room 1", room)
 		}
 	}
@@ -83,13 +84,4 @@ func TestAdjacentHazardsCanReportPitAndIgnoreInvalidRoom(t *testing.T) {
 	if hazards := NewCave().AdjacentHazards(21, setup); len(hazards) != 0 {
 		t.Fatalf("adjacent hazards from invalid room = %v, want none", hazards)
 	}
-}
-
-func containsRoom(rooms []int, target int) bool {
-	for _, room := range rooms {
-		if room == target {
-			return true
-		}
-	}
-	return false
 }
