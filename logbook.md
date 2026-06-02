@@ -464,6 +464,16 @@ Apply your own role rules to this state.
 
 Action taken: Re-read coder role and constitution, then prepared to merge the specified architect commit into the coder branch and apply coder responsibilities to the resulting state.
 
+## 2026-06-02 11:05:25 CDT - Sent Handoff
+
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: rest-command
+branch name: swarmforge-coder
+commit hash: dd5cf69aa989f0e13546a47407a24028db421c1f
+
+Summary: Architect rest-command cleanup has been merged into the coder branch, duplicate incoming split steps were reconciled with the existing step adapter, and normal acceptance and unit verification are green.
+
 ## 2026-06-02 11:02:45 CDT - Architect Branch Log Entries
 
 Merged architect branch log history from `aff89c3b53bdc0601822225ea541c87eac3d23c3`.
