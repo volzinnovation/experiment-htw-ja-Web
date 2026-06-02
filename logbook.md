@@ -47,6 +47,23 @@ Apply your own role rules to this state.
 
 Summary: Task 2 movement validation, warnings, hazard resolution, bat relocation, and Wumpus wake specifications are ready for coder review.
 
+## 2026-06-02 07:33:01 CDT
+
+Sent handoff to coder.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: specifier
+specifier handoff name: crooked-arrow
+branch name: master
+commit hash: 9aa042085072577f85d2e0b4c586d83735e7cbda
+Apply your own role rules to this state.
+```
+
+Summary: Task 3 crooked arrow traversal, deviation, hit, self-hit, miss, Wumpus wake, and arrow exhaustion specifications are ready for coder review.
+
 ## 2026-06-02 07:33:07 CDT - Sent Handoff
 
 Re-read your role and constitution.
@@ -132,6 +149,27 @@ Apply your own role rules to this state.
 
 Action taken: Processed queued specifier handoff after completing the movement-hazards refactorer handoff; prepared to merge the specified master commit into the coder branch and implement the crooked-arrow behavior slice.
 
+## 2026-06-02 07:49:43 CDT - Sent Handoff
+
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: crooked-arrow
+branch name: swarmforge-coder
+commit hash: bd7c6a2d0a0ae41768a2937247cbd2c6126d0712
+
+Summary: Crooked-arrow shooting behavior is ready for refactorer review.
+
+## 2026-06-02 07:50:42 CDT - Received Queued Handoff
+
+Re-read your role and constitution.
+sender role: specifier
+specifier handoff name: interactive-loop
+branch name: master
+commit hash: a140f247af90fbeff44264f1266fe6f70d366330
+Apply your own role rules to this state.
+
+Action taken: Processed queued specifier handoff after completing the crooked-arrow refactorer handoff; prepared to merge the specified master commit into the coder branch and implement the interactive-loop behavior slice.
+
 ## 2026-06-02 07:52:40 CDT
 
 Sent handoff:
@@ -175,3 +213,17 @@ Apply your own role rules to this state.
 ```
 
 Summary: reported the refactored crooked-arrow state for architect review.
+
+## 2026-06-02 08:00:10 CDT
+
+Queued handoff noted before processing:
+
+```
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: interactive-loop
+branch name: swarmforge-coder
+commit hash: 94e12c7115e4e3036670d23cf2dfe9702860c472
+```
+
+Reason: queued while the refactorer was completing the crooked-arrow handoff; processing after the required architect notification was sent.

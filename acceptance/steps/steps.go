@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"htwgo/acceptance/runtime"
+	"htwgo/internal/interactive"
 	"htwgo/internal/wumpus"
 )
 
@@ -55,6 +56,7 @@ func NewHandlers() runtime.Handlers {
 		"the player moves to room <wumpus_room>":                                                     whenPlayerMoves,
 		"the player is in room <to_room>":                                                            thenPlayerInToRoom,
 		"the player is in room <from_room>":                                                          thenPlayerInFromRoom,
+		"the player is in room <player_room>":                                                        thenPlayerInPlayerRoom,
 		"the player is in room <relocation_room>":                                                    thenPlayerInRelocationRoom,
 		"the game is still in progress":                                                              thenGameStillInProgress,
 		"the game is in progress":                                                                    thenGameStillInProgress,
@@ -75,6 +77,19 @@ func NewHandlers() runtime.Handlers {
 		"the player wins":                                                                            thenPlayerWins,
 		"the arrow traversed rooms are <traversed_rooms>":                                            thenArrowTraversedRoomsAre,
 		"the shot is rejected with message <message>":                                                thenShotRejectedWithMessage,
+		"an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows": givenInteractiveSetup,
+		"an interactive game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows":   givenInteractiveSetup,
+		"an interactive game setup with seed <seed>":                     givenInteractiveSetupSeed,
+		"a new interactive session":                                      givenNewInteractiveSession,
+		"the next turn is displayed":                                     whenNextTurnDisplayed,
+		"the player enters command <command>":                            whenPlayerEntersCommand,
+		"the displayed lines are <lines>":                                thenDisplayedLinesAre,
+		"the displayed lines include <message>":                          thenDisplayedLinesInclude,
+		"the displayed lines include <messages>":                         thenDisplayedLinesInclude,
+		"the player has lost":                                            givenPlayerHasLost,
+		"the player answers same setup prompt with <answer>":             whenPlayerAnswersSameSetupPrompt,
+		"the next game setup is <setup_relation> to the lost game setup": thenNextGameSetupRelation,
+		"the player answers instructions prompt with <answer>":           whenPlayerAnswersInstructionsPrompt,
 	}
 }
 
@@ -387,6 +402,10 @@ func thenPlayerInFromRoom(world *runtime.World, example map[string]string) error
 	return thenPlayerInExampleRoom(world, example, "from_room")
 }
 
+func thenPlayerInPlayerRoom(world *runtime.World, example map[string]string) error {
+	return thenPlayerInExampleRoom(world, example, "player_room")
+}
+
 func thenPlayerInRelocationRoom(world *runtime.World, example map[string]string) error {
 	return thenPlayerInExampleRoom(world, example, "relocation_room")
 }
@@ -561,6 +580,100 @@ func assertRejectedMessage(label, got, want string) error {
 	return nil
 }
 
+func givenInteractiveSetup(world *runtime.World, example map[string]string) error {
+	if err := givenConfiguredSetup(world, example); err != nil {
+		return err
+	}
+	arrows, err := intExample(example, "arrows")
+	if err != nil {
+		return err
+	}
+	game := *gameFrom(world, "game")
+	game.SetArrows(arrows)
+	session := interactive.NewSessionWithGame(game)
+	world.State["session"] = session
+	world.State["game"] = session.Game()
+	return nil
+}
+
+func givenInteractiveSetupSeed(world *runtime.World, example map[string]string) error {
+	seed, err := int64Example(example, "seed")
+	if err != nil {
+		return err
+	}
+	session := interactive.NewSessionWithSeed(seed)
+	world.State["session"] = session
+	world.State["game"] = session.Game()
+	return nil
+}
+
+func givenNewInteractiveSession(world *runtime.World, _ map[string]string) error {
+	world.State["session"] = interactive.NewSession()
+	return nil
+}
+
+func whenNextTurnDisplayed(world *runtime.World, _ map[string]string) error {
+	world.State["displayed_lines"] = sessionFrom(world).DisplayTurn()
+	return nil
+}
+
+func whenPlayerEntersCommand(world *runtime.World, example map[string]string) error {
+	lines := sessionFrom(world).EnterCommand(example["command"])
+	world.State["displayed_lines"] = lines
+	world.State["game"] = sessionFrom(world).Game()
+	world.State["action_taken"] = true
+	return nil
+}
+
+func thenDisplayedLinesAre(world *runtime.World, example map[string]string) error {
+	got := world.State["displayed_lines"].([]string)
+	want := stringList(example["lines"])
+	if !reflect.DeepEqual(got, want) {
+		return fmt.Errorf("displayed lines are %v, want %v", got, want)
+	}
+	return nil
+}
+
+func thenDisplayedLinesInclude(world *runtime.World, example map[string]string) error {
+	lines := world.State["displayed_lines"].([]string)
+	for _, want := range stringList(firstPresent(example, "message", "messages")) {
+		if !containsString(lines, want) {
+			return fmt.Errorf("displayed lines %v do not include %q", lines, want)
+		}
+	}
+	return nil
+}
+
+func givenPlayerHasLost(world *runtime.World, _ map[string]string) error {
+	session := sessionFrom(world)
+	world.State["lost_setup"] = session.Game().Setup()
+	session.MarkLostForTest()
+	return nil
+}
+
+func whenPlayerAnswersSameSetupPrompt(world *runtime.World, example map[string]string) error {
+	sessionFrom(world).AnswerSameSetup(example["answer"])
+	return nil
+}
+
+func thenNextGameSetupRelation(world *runtime.World, example map[string]string) error {
+	lost := world.State["lost_setup"].(wumpus.Setup)
+	current := sessionFrom(world).Game().Setup()
+	identical := reflect.DeepEqual(lost, current)
+	if example["setup_relation"] == "identical" && !identical {
+		return fmt.Errorf("setup is %v, want identical to %v", current, lost)
+	}
+	if example["setup_relation"] == "different" && identical {
+		return fmt.Errorf("setup is identical to lost setup %v", lost)
+	}
+	return nil
+}
+
+func whenPlayerAnswersInstructionsPrompt(world *runtime.World, example map[string]string) error {
+	world.State["displayed_lines"] = sessionFrom(world).AnswerInstructions(example["answer"])
+	return nil
+}
+
 func setupSnapshot(setup wumpus.Setup) inspectedSetup {
 	pits := append([]int(nil), setup.Pits...)
 	bats := append([]int(nil), setup.Bats...)
@@ -571,6 +684,19 @@ func setupSnapshot(setup wumpus.Setup) inspectedSetup {
 
 func gameFrom(world *runtime.World, key string) *wumpus.Game {
 	return world.State[key].(*wumpus.Game)
+}
+
+func sessionFrom(world *runtime.World) *interactive.Session {
+	return world.State["session"].(*interactive.Session)
+}
+
+func firstPresent(example map[string]string, keys ...string) string {
+	for _, key := range keys {
+		if value, ok := example[key]; ok {
+			return value
+		}
+	}
+	return ""
 }
 
 func intAnyExample(example map[string]string, keys ...string) (int, error) {
@@ -660,6 +786,15 @@ func commaSeparatedStrings(value string) []string {
 }
 
 func contains(values []int, target int) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+	return false
+}
+
+func containsString(values []string, target string) bool {
 	for _, value := range values {
 		if value == target {
 			return true
