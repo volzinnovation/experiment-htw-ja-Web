@@ -22,3 +22,14 @@ branch name: swarmforge-coder
 commit hash: d87ae24a89e55fff36c7125aaf1563fd2cc19912
 
 Summary: Cave setup implementation, tests, and normal acceptance pipeline are ready for refactorer review.
+
+## 2026-06-02 07:34:09 CDT - Received Queued Handoff
+
+Re-read your role and constitution.
+sender role: specifier
+specifier handoff name: movement-hazards
+branch name: master
+commit hash: 45660982b68912fb1bc3e15fa6b7979959b2893a
+Apply your own role rules to this state.
+
+Action taken: Processed queued specifier handoff after completing the cave-setup refactorer handoff; prepared to merge the specified master commit into the coder branch and implement the movement and hazard behavior slice.
