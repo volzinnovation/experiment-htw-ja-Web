@@ -130,6 +130,17 @@ commit hash: 5311ca0d06564974f646d1616d25376083f7aac3
 
 Action taken: Processed queued coder handoff after completing the sleepy-wumpus refactorer handoff; preparing to merge the specified coder commit into the refactorer branch and apply refactorer responsibilities.
 
+## 2026-06-02 08:56:18 CDT - Sent Handoff
+
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: jumping-wumpus
+branch name: swarmforge-refactorer
+commit hash: 20b851c37da14ac9a50a58c66c5d93e5ba6498ae
+Apply your own role rules to this state.
+
+Summary: Merged jumping Wumpus behavior, split jumping acceptance step handlers under the mutation-site limit, consolidated Wumpus queue and deterministic behavior helpers, and verified CRAP, DRY, mutation scans, unit, property, and acceptance suites.
+
 ```
 Re-read your role and constitution.
 sender role: coder
