@@ -328,3 +328,13 @@ Apply your own role rules to this state.
 ```
 
 Summary: Task 7 Jumping Wumpus trigger, legal jumps, first-landing outcomes, second-landing sighting, turn timing, and integration specifications are ready for coder review.
+
+## 2026-06-02 08:44:18 CDT - Sent Handoff
+
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: rest-command
+branch name: swarmforge-coder
+commit hash: 7b13e8c38112627f832ff656d25bbd4b13e0984a
+
+Summary: Rest command, turn count, invalid rest syntax, jump-before-rest ordering, grenade detonation after rest, and rest hazard behavior are ready for refactorer review.
