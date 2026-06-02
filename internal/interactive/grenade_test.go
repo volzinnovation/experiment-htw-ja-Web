@@ -2,6 +2,7 @@ package interactive
 
 import (
 	"reflect"
+	"slices"
 	"testing"
 
 	"htwgo/internal/wumpus"
@@ -49,10 +50,5 @@ func TestMalformedThrowCommandsReportThrowError(t *testing.T) {
 }
 
 func containsLine(lines []string, target string) bool {
-	for _, line := range lines {
-		if line == target {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(lines, target)
 }

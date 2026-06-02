@@ -6,15 +6,11 @@ type GrenadeResult struct {
 }
 
 func (g *Game) SetGrenadeRoom(room int) {
-	g.grenadeRoom = &room
-	g.carriesGrenade = false
+	g.setGrenadeState(&g.grenadeRoom, room)
 }
 
 func (g Game) GrenadeRoom() (int, bool) {
-	if g.grenadeRoom == nil {
-		return 0, false
-	}
-	return *g.grenadeRoom, true
+	return roomPtrValue(g.grenadeRoom)
 }
 
 func (g *Game) GiveGrenade() {
@@ -27,15 +23,27 @@ func (g Game) CarriesGrenade() bool {
 }
 
 func (g *Game) SetPendingGrenade(room int) {
-	g.pendingGrenadeRoom = &room
-	g.carriesGrenade = false
+	g.setGrenadeState(&g.pendingGrenadeRoom, room)
 }
 
 func (g Game) PendingGrenadeRoom() (int, bool) {
-	if g.pendingGrenadeRoom == nil {
+	return roomPtrValue(g.pendingGrenadeRoom)
+}
+
+func intPtr(value int) *int {
+	return &value
+}
+
+func roomPtrValue(room *int) (int, bool) {
+	if room == nil {
 		return 0, false
 	}
-	return *g.pendingGrenadeRoom, true
+	return *room, true
+}
+
+func (g *Game) setGrenadeState(target **int, room int) {
+	*target = intPtr(room)
+	g.carriesGrenade = false
 }
 
 func (g *Game) ThrowGrenade(target int) GrenadeResult {

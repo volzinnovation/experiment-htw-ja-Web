@@ -179,7 +179,7 @@ func thenEveryRoomReachable(world *runtime.World, _ map[string]string) error {
 		return fmt.Errorf("got reachable rooms %v", reachable)
 	}
 	for room := 1; room <= 20; room++ {
-		if !contains(reachable, room) {
+		if !slices.Contains(reachable, room) {
 			return fmt.Errorf("room %d is not reachable", room)
 		}
 	}
@@ -211,7 +211,7 @@ func thenEveryRoomHasThreeExits(world *runtime.World, _ map[string]string) error
 
 func thenNoRoomIsItsOwnExit(world *runtime.World, _ map[string]string) error {
 	for room, exits := range world.State["exits_by_room"].(map[int][]int) {
-		if contains(exits, room) {
+		if slices.Contains(exits, room) {
 			return fmt.Errorf("room %d connects to itself", room)
 		}
 	}
@@ -311,18 +311,6 @@ func setConfiguredSetup(world *runtime.World, setup wumpus.Setup) error {
 		return err
 	}
 	world.State["setup"] = setup
-	return nil
-}
-
-func givenConfiguredSetupWithGrenade(world *runtime.World, example map[string]string) error {
-	if err := givenConfiguredSetup(world, example); err != nil {
-		return err
-	}
-	room, err := intExample(example, "grenade_room")
-	if err != nil {
-		return err
-	}
-	gameFrom(world, "game").SetGrenadeRoom(room)
 	return nil
 }
 
@@ -511,14 +499,6 @@ func thenReplaySetupIdentical(world *runtime.World, _ map[string]string) error {
 
 func whenPlayerMoves(world *runtime.World, example map[string]string) error {
 	room, err := intAnyExample(example, "to_room", "pit_room", "bat_room", "wumpus_room")
-	if err != nil {
-		return err
-	}
-	return movePlayerToRoom(world, room)
-}
-
-func whenPlayerMovesToGrenadeRoom(world *runtime.World, example map[string]string) error {
-	room, err := intExample(example, "grenade_room")
 	if err != nil {
 		return err
 	}
@@ -723,24 +703,6 @@ func givenInteractiveSetup(world *runtime.World, example map[string]string) erro
 	return nil
 }
 
-func givenInteractiveSetupCarryingGrenade(world *runtime.World, example map[string]string) error {
-	setup := wumpus.Setup{Player: 1, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{16, 17}}
-	game, err := wumpus.NewGameWithSetup(setup)
-	if err != nil {
-		return err
-	}
-	arrows, err := intExample(example, "arrows")
-	if err != nil {
-		return err
-	}
-	game.SetArrows(arrows)
-	game.GiveGrenade()
-	session := interactive.NewSessionWithGame(game)
-	world.State["session"] = session
-	world.State["game"] = session.Game()
-	return nil
-}
-
 func givenInteractiveSetupSeed(world *runtime.World, example map[string]string) error {
 	seed, err := int64Example(example, "seed")
 	if err != nil {
@@ -831,147 +793,6 @@ func thenNextGameSetupRelation(world *runtime.World, example map[string]string) 
 
 func whenPlayerAnswersInstructionsPrompt(world *runtime.World, example map[string]string) error {
 	world.State["displayed_lines"] = sessionFrom(world).AnswerInstructions(example["answer"])
-	return nil
-}
-
-func thenOneHolyHandGrenade(world *runtime.World, _ map[string]string) error {
-	if _, ok := gameFrom(world, "game").GrenadeRoom(); !ok {
-		return fmt.Errorf("Holy Hand Grenade not placed")
-	}
-	return nil
-}
-
-func thenGrenadeRoomValid(world *runtime.World, _ map[string]string) error {
-	room, ok := gameFrom(world, "game").GrenadeRoom()
-	if !ok || room < 1 || room > 20 {
-		return fmt.Errorf("grenade room = %d/%v, want valid", room, ok)
-	}
-	return nil
-}
-
-func thenGrenadeRoomUnoccupied(world *runtime.World, _ map[string]string) error {
-	room, _ := gameFrom(world, "game").GrenadeRoom()
-	if contains(gameFrom(world, "game").Setup().OccupiedRooms(), room) {
-		return fmt.Errorf("grenade room %d overlaps occupied rooms", room)
-	}
-	return nil
-}
-
-func thenBothGrenadeRoomsIdentical(world *runtime.World, _ map[string]string) error {
-	leftRoom, leftOK := gameFrom(world, "game").GrenadeRoom()
-	rightRoom, rightOK := gameFrom(world, "another_game").GrenadeRoom()
-	if leftOK != rightOK || leftRoom != rightRoom {
-		return fmt.Errorf("grenade rooms differ: %d/%v and %d/%v", leftRoom, leftOK, rightRoom, rightOK)
-	}
-	return nil
-}
-
-func thenOrGivenPlayerCarriesGrenade(world *runtime.World, _ map[string]string) error {
-	if _, actionTaken := world.State["action_taken"]; !actionTaken {
-		gameFrom(world, "game").GiveGrenade()
-		return nil
-	}
-	if messages, ok := world.State["turn_messages"].([]string); ok {
-		if slices.Contains(messages, "YOU FOUND THE HOLY HAND GRENADE! USE IT WISELY!") {
-			gameFrom(world, "game").GiveGrenade()
-			return nil
-		}
-	}
-	if !gameFrom(world, "game").CarriesGrenade() {
-		return fmt.Errorf("player does not carry grenade")
-	}
-	return nil
-}
-
-func thenPlayerDoesNotCarryGrenade(world *runtime.World, _ map[string]string) error {
-	if gameFrom(world, "game").CarriesGrenade() {
-		return fmt.Errorf("player carries grenade")
-	}
-	return nil
-}
-
-func thenNoUnclaimedGrenade(world *runtime.World, _ map[string]string) error {
-	if room, ok := gameFrom(world, "game").GrenadeRoom(); ok {
-		return fmt.Errorf("unclaimed grenade remains in room %d", room)
-	}
-	return nil
-}
-
-func thenNoGrenadePending(world *runtime.World, _ map[string]string) error {
-	if room, ok := gameFrom(world, "game").PendingGrenadeRoom(); ok {
-		return fmt.Errorf("grenade pending in room %d", room)
-	}
-	return nil
-}
-
-func givenOrThenGrenadePending(world *runtime.World, example map[string]string) error {
-	room, err := intExample(example, "target_room")
-	if err != nil {
-		return err
-	}
-	if _, actionTaken := world.State["action_taken"]; !actionTaken {
-		gameFrom(world, "game").SetPendingGrenade(room)
-		return nil
-	}
-	got, ok := gameFrom(world, "game").PendingGrenadeRoom()
-	if !ok || got != room {
-		return fmt.Errorf("pending grenade room = %d/%v, want %d/true", got, ok, room)
-	}
-	return nil
-}
-
-func thenWumpusAlive(world *runtime.World, _ map[string]string) error {
-	if !gameFrom(world, "game").WumpusAlive() {
-		return fmt.Errorf("Wumpus is not alive")
-	}
-	return nil
-}
-
-func thenRemainingBatRooms(world *runtime.World, example map[string]string) error {
-	want, err := roomList(example["remaining_bat_rooms"])
-	if err != nil {
-		return err
-	}
-	got := gameFrom(world, "game").Setup().Bats
-	if !reflect.DeepEqual(got, want) {
-		return fmt.Errorf("bat rooms = %v, want %v", got, want)
-	}
-	return nil
-}
-
-func thenPitRooms(world *runtime.World, example map[string]string) error {
-	want, err := roomList(example["pit_rooms"])
-	if err != nil {
-		return err
-	}
-	got := gameFrom(world, "game").Setup().Pits
-	if !reflect.DeepEqual(got, want) {
-		return fmt.Errorf("pit rooms = %v, want %v", got, want)
-	}
-	return nil
-}
-
-func thenReplaySetupIncludingGrenadeIdentical(world *runtime.World, _ map[string]string) error {
-	session := sessionFrom(world)
-	if !reflect.DeepEqual(session.Game().Setup(), world.State["lost_setup"].(wumpus.Setup)) {
-		return fmt.Errorf("replay setup differs")
-	}
-	room, ok := session.Game().GrenadeRoom()
-	if ok != world.State["lost_grenade_ok"].(bool) || room != world.State["lost_grenade_room"].(int) {
-		return fmt.Errorf("replay grenade room = %d/%v", room, ok)
-	}
-	return nil
-}
-
-func thenReplayPendingGrenadeRoom(world *runtime.World, example map[string]string) error {
-	want, err := intExample(example, "target_room")
-	if err != nil {
-		return err
-	}
-	got, ok := sessionFrom(world).Game().PendingGrenadeRoom()
-	if !ok || got != want {
-		return fmt.Errorf("replay pending grenade room = %d/%v, want %d/true", got, ok, want)
-	}
 	return nil
 }
 
@@ -1093,13 +914,4 @@ func commaSeparatedStrings(value string) []string {
 		values = append(values, strings.TrimSpace(part))
 	}
 	return values
-}
-
-func contains(values []int, target int) bool {
-	for _, value := range values {
-		if value == target {
-			return true
-		}
-	}
-	return false
 }

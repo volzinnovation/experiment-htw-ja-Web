@@ -18,6 +18,7 @@ func TestHandlersSatisfyCurrentAcceptanceFeatures(t *testing.T) {
 		turnWarningsFeature(),
 		crookedArrowFeature(),
 		interactiveLoopFeature(),
+		holyHandGrenadeFeature(),
 	} {
 		t.Run(feature.Name, func(t *testing.T) {
 			path := writeFeature(t, feature)
@@ -391,6 +392,117 @@ func interactiveLoopFeature() runtime.Feature {
 					{"answer": "y", "lines": "WELCOME TO 'HUNT THE WUMPUS'"},
 					{"answer": "n", "lines": "none"},
 				},
+			},
+		},
+	}
+}
+
+func holyHandGrenadeFeature() runtime.Feature {
+	return runtime.Feature{
+		Name: "Holy Hand Grenade",
+		Scenarios: []runtime.Scenario{
+			{
+				Name: "setup places one grenade in a valid empty room",
+				Steps: []runtime.Step{
+					{Text: "a new game created with seed <seed>"},
+					{Text: "the setup is inspected"},
+					{Text: "there is 1 Holy Hand Grenade"},
+					{Text: "the Holy Hand Grenade room is from 1 through 20"},
+					{Text: "the Holy Hand Grenade room is not occupied by the player, Wumpus, pits, or bats"},
+				},
+				Examples: []map[string]string{{"seed": "1973"}},
+			},
+			{
+				Name: "same seed creates same grenade placement",
+				Steps: []runtime.Step{
+					{Text: "a new game created with seed <seed>"},
+					{Text: "another new game created with seed <seed>"},
+					{Text: "both setups are inspected"},
+					{Text: "both setups have identical Holy Hand Grenade rooms"},
+				},
+				Examples: []map[string]string{{"seed": "1973"}},
+			},
+			{
+				Name: "entering grenade room acquires it",
+				Steps: []runtime.Step{
+					{Text: "a game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and the Holy Hand Grenade in room <grenade_room>"},
+					{Text: "the player moves to room <grenade_room>"},
+					{Text: "the player carries the Holy Hand Grenade"},
+					{Text: "the cave has no unclaimed Holy Hand Grenade"},
+					{Text: "the turn messages are <messages>"},
+				},
+				Examples: []map[string]string{{"from_room": "1", "grenade_room": "2", "wumpus_room": "20", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "messages": "YOU FOUND THE HOLY HAND GRENADE! USE IT WISELY!"}},
+			},
+			{
+				Name: "armed prompt includes throw",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup where the player carries the Holy Hand Grenade and has <arrows> arrows"},
+					{Text: "the next turn is displayed"},
+					{Text: "the displayed lines include <prompt>"},
+				},
+				Examples: []map[string]string{{"arrows": "5", "prompt": "SHOOT, MOVE OR THROW (S-M-T)?"}},
+			},
+			{
+				Name: "player without grenade cannot throw",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows"},
+					{Text: "the player enters command <command>"},
+					{Text: "the displayed lines include <message>"},
+					{Text: "the player does not carry the Holy Hand Grenade"},
+					{Text: "the game is still in progress"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "20", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "command": "t 2", "message": "CAN'T THROW THERE"}},
+			},
+			{
+				Name: "invalid throw does not consume grenade",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows"},
+					{Text: "the player carries the Holy Hand Grenade"},
+					{Text: "the player enters command <command>"},
+					{Text: "the displayed lines include <message>"},
+					{Text: "the player carries the Holy Hand Grenade"},
+					{Text: "no Holy Hand Grenade detonation is pending"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "20", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "command": "t 20", "message": "CAN'T THROW THERE"}},
+			},
+			{
+				Name: "successful throw starts fuse",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows"},
+					{Text: "the player carries the Holy Hand Grenade"},
+					{Text: "the player enters command <command>"},
+					{Text: "the player does not carry the Holy Hand Grenade"},
+					{Text: "the Holy Hand Grenade is pending detonation in room <target_room>"},
+					{Text: "the displayed lines include <message>"},
+					{Text: "the Wumpus is alive"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "target_room": "2", "wumpus_room": "20", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "command": "t 2", "message": "YOU HEAR TIC...TIC..."}},
+			},
+			{
+				Name: "pending grenade detonates after legal turn",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows"},
+					{Text: "the Holy Hand Grenade is pending detonation in room <target_room>"},
+					{Text: "the player enters command <command>"},
+					{Text: "the remaining bat rooms are <remaining_bat_rooms>"},
+					{Text: "the pit rooms are <pit_rooms>"},
+					{Text: "the displayed lines include <message>"},
+					{Text: "no Holy Hand Grenade detonation is pending"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "target_room": "10", "wumpus_room": "20", "pit_rooms": "9, 14", "bat_rooms": "2, 16", "arrows": "5", "command": "m 5", "remaining_bat_rooms": "16", "message": "YOU HEAR A HORRENDOUS EXPLOSION!"}},
+			},
+			{
+				Name: "same setup replay preserves grenade state",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with seed <seed>"},
+					{Text: "the player carries the Holy Hand Grenade"},
+					{Text: "the Holy Hand Grenade is pending detonation in room <target_room>"},
+					{Text: "the player has lost"},
+					{Text: "the player answers same setup prompt with <answer>"},
+					{Text: "the replay setup has identical player, Wumpus, pit, bat, and Holy Hand Grenade rooms"},
+					{Text: "the replay Holy Hand Grenade pending detonation room is <target_room>"},
+				},
+				Examples: []map[string]string{{"seed": "1973", "target_room": "10", "answer": "y"}},
 			},
 		},
 	}
