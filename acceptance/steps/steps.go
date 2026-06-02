@@ -54,6 +54,7 @@ func NewHandlers() runtime.Handlers {
 		"the player moves to room <pit_room>":                                                        whenPlayerMoves,
 		"the player moves to room <bat_room>":                                                        whenPlayerMoves,
 		"the player moves to room <wumpus_room>":                                                     whenPlayerMoves,
+		"the player moves to room <grenade_room>":                                                    whenPlayerMovesToGrenadeRoom,
 		"the player is in room <to_room>":                                                            thenPlayerInToRoom,
 		"the player is in room <from_room>":                                                          thenPlayerInFromRoom,
 		"the player is in room <player_room>":                                                        thenPlayerInPlayerRoom,
@@ -79,17 +80,35 @@ func NewHandlers() runtime.Handlers {
 		"the shot is rejected with message <message>":                                                thenShotRejectedWithMessage,
 		"an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows": givenInteractiveSetup,
 		"an interactive game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows":   givenInteractiveSetup,
-		"an interactive game setup with seed <seed>":                     givenInteractiveSetupSeed,
-		"a new interactive session":                                      givenNewInteractiveSession,
-		"the next turn is displayed":                                     whenNextTurnDisplayed,
-		"the player enters command <command>":                            whenPlayerEntersCommand,
-		"the displayed lines are <lines>":                                thenDisplayedLinesAre,
-		"the displayed lines include <message>":                          thenDisplayedLinesInclude,
-		"the displayed lines include <messages>":                         thenDisplayedLinesInclude,
-		"the player has lost":                                            givenPlayerHasLost,
-		"the player answers same setup prompt with <answer>":             whenPlayerAnswersSameSetupPrompt,
-		"the next game setup is <setup_relation> to the lost game setup": thenNextGameSetupRelation,
-		"the player answers instructions prompt with <answer>":           whenPlayerAnswersInstructionsPrompt,
+		"an interactive game setup with seed <seed>":                                      givenInteractiveSetupSeed,
+		"a new interactive session":                                                       givenNewInteractiveSession,
+		"the next turn is displayed":                                                      whenNextTurnDisplayed,
+		"the player enters command <command>":                                             whenPlayerEntersCommand,
+		"the displayed lines are <lines>":                                                 thenDisplayedLinesAre,
+		"the displayed lines include <message>":                                           thenDisplayedLinesInclude,
+		"the displayed lines include <messages>":                                          thenDisplayedLinesInclude,
+		"the displayed lines include <prompt>":                                            thenDisplayedLinesInclude,
+		"the player has lost":                                                             givenPlayerHasLost,
+		"the player answers same setup prompt with <answer>":                              whenPlayerAnswersSameSetupPrompt,
+		"the next game setup is <setup_relation> to the lost game setup":                  thenNextGameSetupRelation,
+		"the player answers instructions prompt with <answer>":                            whenPlayerAnswersInstructionsPrompt,
+		"there is 1 Holy Hand Grenade":                                                    thenOneHolyHandGrenade,
+		"the Holy Hand Grenade room is from 1 through 20":                                 thenGrenadeRoomValid,
+		"the Holy Hand Grenade room is not occupied by the player, Wumpus, pits, or bats": thenGrenadeRoomUnoccupied,
+		"both setups have identical Holy Hand Grenade rooms":                              thenBothGrenadeRoomsIdentical,
+		"a game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and the Holy Hand Grenade in room <grenade_room>":   givenConfiguredSetupWithGrenade,
+		"a game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and the Holy Hand Grenade in room <grenade_room>": givenConfiguredSetupWithGrenade,
+		"the player carries the Holy Hand Grenade":                                                         thenOrGivenPlayerCarriesGrenade,
+		"the player does not carry the Holy Hand Grenade":                                                  thenPlayerDoesNotCarryGrenade,
+		"the cave has no unclaimed Holy Hand Grenade":                                                      thenNoUnclaimedGrenade,
+		"an interactive game setup where the player carries the Holy Hand Grenade and has <arrows> arrows": givenInteractiveSetupCarryingGrenade,
+		"no Holy Hand Grenade detonation is pending":                                                       thenNoGrenadePending,
+		"the Holy Hand Grenade is pending detonation in room <target_room>":                                givenOrThenGrenadePending,
+		"the Wumpus is alive":                               thenWumpusAlive,
+		"the remaining bat rooms are <remaining_bat_rooms>": thenRemainingBatRooms,
+		"the pit rooms are <pit_rooms>":                     thenPitRooms,
+		"the replay setup has identical player, Wumpus, pit, bat, and Holy Hand Grenade rooms": thenReplaySetupIncludingGrenadeIdentical,
+		"the replay Holy Hand Grenade pending detonation room is <target_room>":                thenReplayPendingGrenadeRoom,
 	}
 }
 
@@ -220,6 +239,18 @@ func givenConfiguredSetup(world *runtime.World, example map[string]string) error
 	}
 	world.State["setup"] = setup
 	world.State["game"] = &game
+	return nil
+}
+
+func givenConfiguredSetupWithGrenade(world *runtime.World, example map[string]string) error {
+	if err := givenConfiguredSetup(world, example); err != nil {
+		return err
+	}
+	room, err := intExample(example, "grenade_room")
+	if err != nil {
+		return err
+	}
+	gameFrom(world, "game").SetGrenadeRoom(room)
 	return nil
 }
 
@@ -382,6 +413,18 @@ func whenPlayerMoves(world *runtime.World, example map[string]string) error {
 	if err != nil {
 		return err
 	}
+	return movePlayerToRoom(world, room)
+}
+
+func whenPlayerMovesToGrenadeRoom(world *runtime.World, example map[string]string) error {
+	room, err := intExample(example, "grenade_room")
+	if err != nil {
+		return err
+	}
+	return movePlayerToRoom(world, room)
+}
+
+func movePlayerToRoom(world *runtime.World, room int) error {
 	result := gameFrom(world, "game").Move(room)
 	world.State["move_result"] = result
 	world.State["turn_messages"] = result.Messages
@@ -590,6 +633,24 @@ func givenInteractiveSetup(world *runtime.World, example map[string]string) erro
 	return nil
 }
 
+func givenInteractiveSetupCarryingGrenade(world *runtime.World, example map[string]string) error {
+	setup := wumpus.Setup{Player: 1, Wumpus: 20, Pits: []int{13, 14}, Bats: []int{16, 17}}
+	game, err := wumpus.NewGameWithSetup(setup)
+	if err != nil {
+		return err
+	}
+	arrows, err := intExample(example, "arrows")
+	if err != nil {
+		return err
+	}
+	game.SetArrows(arrows)
+	game.GiveGrenade()
+	session := interactive.NewSessionWithGame(game)
+	world.State["session"] = session
+	world.State["game"] = session.Game()
+	return nil
+}
+
 func givenInteractiveSetupSeed(world *runtime.World, example map[string]string) error {
 	seed, err := int64Example(example, "seed")
 	if err != nil {
@@ -630,7 +691,11 @@ func thenDisplayedLinesAre(world *runtime.World, example map[string]string) erro
 
 func thenDisplayedLinesInclude(world *runtime.World, example map[string]string) error {
 	lines := world.State["displayed_lines"].([]string)
-	for _, want := range stringList(firstPresent(example, "message", "messages")) {
+	expected := stringList(firstPresent(example, "message", "messages"))
+	if prompt, ok := example["prompt"]; ok {
+		expected = []string{prompt}
+	}
+	for _, want := range expected {
 		if !containsString(lines, want) {
 			return fmt.Errorf("displayed lines %v do not include %q", lines, want)
 		}
@@ -641,6 +706,12 @@ func thenDisplayedLinesInclude(world *runtime.World, example map[string]string) 
 func givenPlayerHasLost(world *runtime.World, _ map[string]string) error {
 	session := sessionFrom(world)
 	world.State["lost_setup"] = session.Game().Setup()
+	grenadeRoom, grenadeOK := session.Game().GrenadeRoom()
+	pendingRoom, pendingOK := session.Game().PendingGrenadeRoom()
+	world.State["lost_grenade_room"] = grenadeRoom
+	world.State["lost_grenade_ok"] = grenadeOK
+	world.State["lost_pending_room"] = pendingRoom
+	world.State["lost_pending_ok"] = pendingOK
 	session.MarkLostForTest()
 	return nil
 }
@@ -665,6 +736,147 @@ func thenNextGameSetupRelation(world *runtime.World, example map[string]string) 
 
 func whenPlayerAnswersInstructionsPrompt(world *runtime.World, example map[string]string) error {
 	world.State["displayed_lines"] = sessionFrom(world).AnswerInstructions(example["answer"])
+	return nil
+}
+
+func thenOneHolyHandGrenade(world *runtime.World, _ map[string]string) error {
+	if _, ok := gameFrom(world, "game").GrenadeRoom(); !ok {
+		return fmt.Errorf("Holy Hand Grenade not placed")
+	}
+	return nil
+}
+
+func thenGrenadeRoomValid(world *runtime.World, _ map[string]string) error {
+	room, ok := gameFrom(world, "game").GrenadeRoom()
+	if !ok || room < 1 || room > 20 {
+		return fmt.Errorf("grenade room = %d/%v, want valid", room, ok)
+	}
+	return nil
+}
+
+func thenGrenadeRoomUnoccupied(world *runtime.World, _ map[string]string) error {
+	room, _ := gameFrom(world, "game").GrenadeRoom()
+	if contains(gameFrom(world, "game").Setup().OccupiedRooms(), room) {
+		return fmt.Errorf("grenade room %d overlaps occupied rooms", room)
+	}
+	return nil
+}
+
+func thenBothGrenadeRoomsIdentical(world *runtime.World, _ map[string]string) error {
+	leftRoom, leftOK := gameFrom(world, "game").GrenadeRoom()
+	rightRoom, rightOK := gameFrom(world, "another_game").GrenadeRoom()
+	if leftOK != rightOK || leftRoom != rightRoom {
+		return fmt.Errorf("grenade rooms differ: %d/%v and %d/%v", leftRoom, leftOK, rightRoom, rightOK)
+	}
+	return nil
+}
+
+func thenOrGivenPlayerCarriesGrenade(world *runtime.World, _ map[string]string) error {
+	if _, actionTaken := world.State["action_taken"]; !actionTaken {
+		gameFrom(world, "game").GiveGrenade()
+		return nil
+	}
+	if messages, ok := world.State["turn_messages"].([]string); ok {
+		if containsString(messages, "YOU FOUND THE HOLY HAND GRENADE! USE IT WISELY!") {
+			gameFrom(world, "game").GiveGrenade()
+			return nil
+		}
+	}
+	if !gameFrom(world, "game").CarriesGrenade() {
+		return fmt.Errorf("player does not carry grenade")
+	}
+	return nil
+}
+
+func thenPlayerDoesNotCarryGrenade(world *runtime.World, _ map[string]string) error {
+	if gameFrom(world, "game").CarriesGrenade() {
+		return fmt.Errorf("player carries grenade")
+	}
+	return nil
+}
+
+func thenNoUnclaimedGrenade(world *runtime.World, _ map[string]string) error {
+	if room, ok := gameFrom(world, "game").GrenadeRoom(); ok {
+		return fmt.Errorf("unclaimed grenade remains in room %d", room)
+	}
+	return nil
+}
+
+func thenNoGrenadePending(world *runtime.World, _ map[string]string) error {
+	if room, ok := gameFrom(world, "game").PendingGrenadeRoom(); ok {
+		return fmt.Errorf("grenade pending in room %d", room)
+	}
+	return nil
+}
+
+func givenOrThenGrenadePending(world *runtime.World, example map[string]string) error {
+	room, err := intExample(example, "target_room")
+	if err != nil {
+		return err
+	}
+	if _, actionTaken := world.State["action_taken"]; !actionTaken {
+		gameFrom(world, "game").SetPendingGrenade(room)
+		return nil
+	}
+	got, ok := gameFrom(world, "game").PendingGrenadeRoom()
+	if !ok || got != room {
+		return fmt.Errorf("pending grenade room = %d/%v, want %d/true", got, ok, room)
+	}
+	return nil
+}
+
+func thenWumpusAlive(world *runtime.World, _ map[string]string) error {
+	if !gameFrom(world, "game").WumpusAlive() {
+		return fmt.Errorf("Wumpus is not alive")
+	}
+	return nil
+}
+
+func thenRemainingBatRooms(world *runtime.World, example map[string]string) error {
+	want, err := roomList(example["remaining_bat_rooms"])
+	if err != nil {
+		return err
+	}
+	got := gameFrom(world, "game").Setup().Bats
+	if !reflect.DeepEqual(got, want) {
+		return fmt.Errorf("bat rooms = %v, want %v", got, want)
+	}
+	return nil
+}
+
+func thenPitRooms(world *runtime.World, example map[string]string) error {
+	want, err := roomList(example["pit_rooms"])
+	if err != nil {
+		return err
+	}
+	got := gameFrom(world, "game").Setup().Pits
+	if !reflect.DeepEqual(got, want) {
+		return fmt.Errorf("pit rooms = %v, want %v", got, want)
+	}
+	return nil
+}
+
+func thenReplaySetupIncludingGrenadeIdentical(world *runtime.World, _ map[string]string) error {
+	session := sessionFrom(world)
+	if !reflect.DeepEqual(session.Game().Setup(), world.State["lost_setup"].(wumpus.Setup)) {
+		return fmt.Errorf("replay setup differs")
+	}
+	room, ok := session.Game().GrenadeRoom()
+	if ok != world.State["lost_grenade_ok"].(bool) || room != world.State["lost_grenade_room"].(int) {
+		return fmt.Errorf("replay grenade room = %d/%v", room, ok)
+	}
+	return nil
+}
+
+func thenReplayPendingGrenadeRoom(world *runtime.World, example map[string]string) error {
+	want, err := intExample(example, "target_room")
+	if err != nil {
+		return err
+	}
+	got, ok := sessionFrom(world).Game().PendingGrenadeRoom()
+	if !ok || got != want {
+		return fmt.Errorf("replay pending grenade room = %d/%v, want %d/true", got, ok, want)
+	}
 	return nil
 }
 

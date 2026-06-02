@@ -16,6 +16,9 @@ type Game struct {
 	setup              Setup
 	status             Status
 	arrows             int
+	grenadeRoom        *int
+	carriesGrenade     bool
+	pendingGrenadeRoom *int
 	nextBatRelocation  []int
 	nextWumpusWake     []WumpusWakeChoice
 	nextArrowDeviation []int
@@ -29,7 +32,12 @@ func NewGame(seed int64) (Game, error) {
 		Pits:   []int{rooms[2] + 1, rooms[3] + 1},
 		Bats:   []int{rooms[4] + 1, rooms[5] + 1},
 	}
-	return NewGameWithSetup(setup)
+	game, err := NewGameWithSetup(setup)
+	if err != nil {
+		return Game{}, err
+	}
+	game.SetGrenadeRoom(rooms[6] + 1)
+	return game, nil
 }
 
 func NewGameWithSetup(setup Setup) (Game, error) {
@@ -44,7 +52,15 @@ func (g Game) Setup() Setup {
 }
 
 func (g Game) ReplaySameSetup() Game {
-	return Game{setup: copySetup(g.setup), status: StatusInProgress, arrows: g.arrows}
+	replay := Game{
+		setup:              copySetup(g.setup),
+		status:             StatusInProgress,
+		arrows:             g.arrows,
+		carriesGrenade:     g.carriesGrenade,
+		pendingGrenadeRoom: copyRoomPtr(g.pendingGrenadeRoom),
+		grenadeRoom:        copyRoomPtr(g.grenadeRoom),
+	}
+	return replay
 }
 
 func (s Setup) OccupiedRooms() []int {
@@ -81,4 +97,12 @@ func copySetup(setup Setup) Setup {
 		Pits:   append([]int(nil), setup.Pits...),
 		Bats:   append([]int(nil), setup.Bats...),
 	}
+}
+
+func copyRoomPtr(room *int) *int {
+	if room == nil {
+		return nil
+	}
+	copy := *room
+	return &copy
 }

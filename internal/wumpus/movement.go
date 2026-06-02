@@ -95,7 +95,7 @@ func (g *Game) resolveArrival() []string {
 	case g.setup.Wumpus == g.setup.Player:
 		return g.wakeWumpus()
 	default:
-		return nil
+		return g.collectGrenadeIfPresent()
 	}
 }
 
