@@ -354,3 +354,17 @@ Apply your own role rules to this state.
 ```
 
 Summary: reported the refactored holy-grenade state for architect review.
+
+## 2026-06-02 08:32:35 CDT
+
+Queued handoff noted before processing:
+
+```
+Re-read your role and constitution.
+sender role: coder
+specifier handoff name: cave-setup
+branch name: swarmforge-coder
+commit hash: 59ec281c069cea3d9a92e3018f7bcc7e7bc247d9
+```
+
+Reason: queued while the refactorer was completing the holy-grenade handoff; processing after the required architect notification was sent.
