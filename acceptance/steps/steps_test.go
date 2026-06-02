@@ -17,6 +17,7 @@ func TestHandlersSatisfyCurrentAcceptanceFeatures(t *testing.T) {
 		movementAndHazardsFeature(),
 		turnWarningsFeature(),
 		crookedArrowFeature(),
+		interactiveLoopFeature(),
 	} {
 		t.Run(feature.Name, func(t *testing.T) {
 			path := writeFeature(t, feature)
@@ -302,6 +303,90 @@ func crookedArrowFeature() runtime.Feature {
 					{Text: "the game is still in progress"},
 				},
 				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "10", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "path": "none", "message": "CAN'T SHOOT THERE"}},
+			},
+		},
+	}
+}
+
+func interactiveLoopFeature() runtime.Feature {
+	return runtime.Feature{
+		Name: "Interactive game loop",
+		Scenarios: []runtime.Scenario{
+			{
+				Name: "each turn displays room, tunnels, warnings, arrows, and prompt",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows"},
+					{Text: "the next turn is displayed"},
+					{Text: "the displayed lines are <lines>"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "2", "pit_rooms": "13, 14", "bat_rooms": "5, 17", "arrows": "5", "lines": "I SMELL A WUMPUS, BATS NEARBY, YOU ARE IN ROOM 1, TUNNELS LEAD TO 2 5 8, ARROWS LEFT: 5, SHOOT OR MOVE (S-M)?"}},
+			},
+			{
+				Name: "move command is case insensitive",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows"},
+					{Text: "the player enters command <command>"},
+					{Text: "the player is in room <to_room>"},
+					{Text: "the game is still in progress"},
+				},
+				Examples: []map[string]string{{"from_room": "1", "to_room": "2", "wumpus_room": "20", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "command": "M 2"}},
+			},
+			{
+				Name: "shoot command can win",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows"},
+					{Text: "the player enters command <command>"},
+					{Text: "the player wins"},
+					{Text: "the displayed lines include <message>"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "2", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "command": "s 2", "message": "AHA! YOU GOT THE WUMPUS! HEE HEE HEE - THE WUMPUS'LL GETCHA NEXT TIME!!"}},
+			},
+			{
+				Name: "invalid command preserves state",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows"},
+					{Text: "the player enters command <command>"},
+					{Text: "the displayed lines include <message>"},
+					{Text: "the player is in room <player_room>"},
+					{Text: "the player has <arrows> arrows"},
+					{Text: "the game is still in progress"},
+				},
+				Examples: []map[string]string{{"player_room": "1", "wumpus_room": "20", "pit_rooms": "13, 14", "bat_rooms": "16, 17", "arrows": "5", "command": "jump 2", "message": "JUMP IS NOT A COMMAND"}},
+			},
+			{
+				Name: "losing move prompts same setup",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with the player in room <from_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, bats in rooms <bat_rooms>, and <arrows> arrows"},
+					{Text: "the player enters command <command>"},
+					{Text: "the player loses"},
+					{Text: "the displayed lines include <messages>"},
+				},
+				Examples: []map[string]string{{"from_room": "1", "wumpus_room": "20", "pit_rooms": "2, 14", "bat_rooms": "16, 17", "arrows": "5", "command": "m 2", "messages": "YYYIIIIEEEE . . . FELL IN PIT, HA HA HA - YOU LOSE!, SAME SET UP (Y-N)?"}},
+			},
+			{
+				Name: "same setup replay can preserve or replace setup",
+				Steps: []runtime.Step{
+					{Text: "an interactive game setup with seed <seed>"},
+					{Text: "the player has lost"},
+					{Text: "the player answers same setup prompt with <answer>"},
+					{Text: "the next game setup is <setup_relation> to the lost game setup"},
+				},
+				Examples: []map[string]string{
+					{"seed": "1973", "answer": "y", "setup_relation": "identical"},
+					{"seed": "1973", "answer": "n", "setup_relation": "different"},
+				},
+			},
+			{
+				Name: "instruction prompt can show or skip instructions",
+				Steps: []runtime.Step{
+					{Text: "a new interactive session"},
+					{Text: "the player answers instructions prompt with <answer>"},
+					{Text: "the displayed lines are <lines>"},
+				},
+				Examples: []map[string]string{
+					{"answer": "y", "lines": "WELCOME TO 'HUNT THE WUMPUS'"},
+					{"answer": "n", "lines": "none"},
+				},
 			},
 		},
 	}

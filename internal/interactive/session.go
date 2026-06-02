@@ -87,18 +87,30 @@ func (s *Session) shootCommand(fields []string) []string {
 }
 
 func parseShotPath(values []string) ([]int, bool) {
-	if len(values) < 1 || len(values) > 5 {
+	if !validShotPathLength(len(values)) {
 		return nil, false
 	}
 	path := make([]int, 0, len(values))
 	for _, value := range values {
-		room, err := strconv.Atoi(value)
-		if err != nil || room < 1 || room > 20 {
+		room, ok := parseRoom(value)
+		if !ok {
 			return nil, false
 		}
 		path = append(path, room)
 	}
 	return path, true
+}
+
+func validShotPathLength(length int) bool {
+	return length >= 1 && length <= 5
+}
+
+func parseRoom(value string) (int, bool) {
+	room, err := strconv.Atoi(value)
+	if err != nil || room < 1 || room > 20 {
+		return 0, false
+	}
+	return room, true
 }
 
 func (s *Session) finishCommand(messages []string) []string {

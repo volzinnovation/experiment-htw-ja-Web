@@ -3,6 +3,7 @@ package steps
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -283,7 +284,7 @@ func setGame(world *runtime.World, seed int64, key string) error {
 }
 
 func whenSetupInspected(world *runtime.World, _ map[string]string) error {
-	world.State["inspected_setup"] = setupSnapshot(gameFrom(world, "game").Setup())
+	inspectSetup(world, "inspected_setup", "game")
 	return nil
 }
 
@@ -353,8 +354,8 @@ func thenDistinctOccupiedCount(world *runtime.World, example map[string]string) 
 }
 
 func whenBothSetupsInspected(world *runtime.World, _ map[string]string) error {
-	world.State["inspected_setup"] = setupSnapshot(gameFrom(world, "game").Setup())
-	world.State["another_inspected_setup"] = setupSnapshot(gameFrom(world, "another_game").Setup())
+	inspectSetup(world, "inspected_setup", "game")
+	inspectSetup(world, "another_inspected_setup", "another_game")
 	return nil
 }
 
@@ -443,12 +444,7 @@ func assertGameStatus(world *runtime.World, want wumpus.Status) error {
 }
 
 func thenTurnMessagesAre(world *runtime.World, example map[string]string) error {
-	want := stringList(example["messages"])
-	got := world.State["turn_messages"].([]string)
-	if !reflect.DeepEqual(got, want) {
-		return fmt.Errorf("turn messages are %v, want %v", got, want)
-	}
-	return nil
+	return assertStringState(world, "turn_messages", "turn messages", example["messages"])
 }
 
 func thenMoveRejectedWithMessage(world *runtime.World, example map[string]string) error {
@@ -492,12 +488,7 @@ func whenTurnWarningsRequested(world *runtime.World, _ map[string]string) error 
 }
 
 func thenWarningMessagesAre(world *runtime.World, example map[string]string) error {
-	got := world.State["warnings"].([]string)
-	want := stringList(example["warnings"])
-	if !reflect.DeepEqual(got, want) {
-		return fmt.Errorf("warning messages are %v, want %v", got, want)
-	}
-	return nil
+	return assertStringState(world, "warnings", "warning messages", example["warnings"])
 }
 
 func givenOrThenPlayerHasArrows(world *runtime.World, example map[string]string) error {
@@ -590,9 +581,7 @@ func givenInteractiveSetup(world *runtime.World, example map[string]string) erro
 	}
 	game := *gameFrom(world, "game")
 	game.SetArrows(arrows)
-	session := interactive.NewSessionWithGame(game)
-	world.State["session"] = session
-	world.State["game"] = session.Game()
+	storeSession(world, interactive.NewSessionWithGame(game))
 	return nil
 }
 
@@ -601,14 +590,12 @@ func givenInteractiveSetupSeed(world *runtime.World, example map[string]string) 
 	if err != nil {
 		return err
 	}
-	session := interactive.NewSessionWithSeed(seed)
-	world.State["session"] = session
-	world.State["game"] = session.Game()
+	storeSession(world, interactive.NewSessionWithSeed(seed))
 	return nil
 }
 
 func givenNewInteractiveSession(world *runtime.World, _ map[string]string) error {
-	world.State["session"] = interactive.NewSession()
+	storeSession(world, interactive.NewSession())
 	return nil
 }
 
@@ -626,10 +613,17 @@ func whenPlayerEntersCommand(world *runtime.World, example map[string]string) er
 }
 
 func thenDisplayedLinesAre(world *runtime.World, example map[string]string) error {
-	got := world.State["displayed_lines"].([]string)
-	want := stringList(example["lines"])
+	return assertStringState(world, "displayed_lines", "displayed lines", example["lines"])
+}
+
+func assertStringState(world *runtime.World, key, label, wantValue string) error {
+	return assertStringList(label, world.State[key].([]string), wantValue)
+}
+
+func assertStringList(label string, got []string, wantValue string) error {
+	want := stringList(wantValue)
 	if !reflect.DeepEqual(got, want) {
-		return fmt.Errorf("displayed lines are %v, want %v", got, want)
+		return fmt.Errorf("%s are %v, want %v", label, got, want)
 	}
 	return nil
 }
@@ -637,7 +631,7 @@ func thenDisplayedLinesAre(world *runtime.World, example map[string]string) erro
 func thenDisplayedLinesInclude(world *runtime.World, example map[string]string) error {
 	lines := world.State["displayed_lines"].([]string)
 	for _, want := range stringList(firstPresent(example, "message", "messages")) {
-		if !containsString(lines, want) {
+		if !slices.Contains(lines, want) {
 			return fmt.Errorf("displayed lines %v do not include %q", lines, want)
 		}
 	}
@@ -680,6 +674,15 @@ func setupSnapshot(setup wumpus.Setup) inspectedSetup {
 	sort.Ints(pits)
 	sort.Ints(bats)
 	return inspectedSetup{Player: setup.Player, Wumpus: setup.Wumpus, Pits: pits, Bats: bats}
+}
+
+func inspectSetup(world *runtime.World, stateKey, gameKey string) {
+	world.State[stateKey] = setupSnapshot(gameFrom(world, gameKey).Setup())
+}
+
+func storeSession(world *runtime.World, session *interactive.Session) {
+	world.State["session"] = session
+	world.State["game"] = session.Game()
 }
 
 func gameFrom(world *runtime.World, key string) *wumpus.Game {
@@ -786,15 +789,6 @@ func commaSeparatedStrings(value string) []string {
 }
 
 func contains(values []int, target int) bool {
-	for _, value := range values {
-		if value == target {
-			return true
-		}
-	}
-	return false
-}
-
-func containsString(values []string, target string) bool {
 	for _, value := range values {
 		if value == target {
 			return true
