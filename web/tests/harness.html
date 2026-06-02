@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Browser Test Harness</title>
+    <style>
+      body { font-family: Inter, system-ui, sans-serif; margin: 1rem; background: #0f172a; color: #e2e8f0; }
+      h1 { margin-top: 0; }
+      #summary[data-status="pass"] { color: #34d399; }
+      #summary[data-status="fail"] { color: #fb7185; }
+      .pass { color: #34d399; }
+      .fail { color: #fb7185; }
+    </style>
+  </head>
+  <body>
+    <h1>Browser Test Harness</h1>
+    <p id="summary" data-status="running">Running…</p>
+    <ul id="results"></ul>
+    <script type="module" src="./harness.js"></script>
+  </body>
+</html>
