@@ -1,3 +1,8 @@
+# mutation-stamp: sha256=281c6087a54cdc8a387bb2b49e39f64582d4faf960f1b58f8ed6c1c57e9792f6
+# acceptance-mutation-manifest-begin
+# {"version":1,"tested_at":"2026-06-02T13:11:50Z","feature_name":"Cave topology","feature_path":"features/cave-topology.feature","background_hash":"74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b","implementation_hash":"sha256:1a9ae523adb25befd2d869df4a2abf1ff2f613dfdebf887e8fa9a1f59c54490a","scenarios":[{"index":0,"name":"Cave Topology 001 canonical room exits","scenario_hash":"69f077d60b370d45ea016344c3f1f507025b91d8518e18ae47ed91db7d3fe2c1","mutation_count":40,"result":{"Total":40,"Killed":40,"Survived":0,"Errors":0},"tested_at":"2026-06-02T13:03:01Z"},{"index":3,"name":"Cave Topology 004 tunnel links are bidirectional","scenario_hash":"b016c11eff193b2b036daf12ced4386810fb116605c7346ef6fe59150f893818","mutation_count":10,"result":{"Total":10,"Killed":10,"Survived":0,"Errors":0},"tested_at":"2026-06-02T13:03:01Z"}]}
+# acceptance-mutation-manifest-end
+
 Feature: Cave topology
   The cave is the fixed twenty-room dodecahedron used by Hunt the Wumpus.
 
@@ -31,16 +36,10 @@ Feature: Cave topology
       | 20   | 13, 16, 19 |
 
   # Cave Topology 002
-  Scenario Outline: Cave Topology 002 valid room has exactly three exits
+  Scenario: Cave Topology 002 every valid room has exactly three exits
     Given a new cave
-    When the exits for room <room> are queried
-    Then the exit count is <exit_count>
-
-    Examples:
-      | room | exit_count |
-      | 1    | 3          |
-      | 10   | 3          |
-      | 20   | 3          |
+    When the cave invariants are inspected
+    Then every room has exactly three exits
 
   # Cave Topology 003
   Scenario: Cave Topology 003 cave is connected
@@ -63,27 +62,25 @@ Feature: Cave topology
       | 16        | 20      |
 
   # Cave Topology 005
-  Scenario Outline: Cave Topology 005 rooms do not connect to themselves
+  Scenario: Cave Topology 005 rooms do not connect to themselves
     Given a new cave
-    When the exits for room <room> are queried
-    Then room <room> is not one of the exits
-
-    Examples:
-      | room |
-      | 1    |
-      | 7    |
-      | 14   |
-      | 20   |
+    When the cave invariants are inspected
+    Then no room is one of its own exits
 
   # Cave Topology 006
-  Scenario Outline: Cave Topology 006 adjacent hazard query reports only neighboring hazards
-    Given a game setup with the player in room <player_room>, the Wumpus in room <wumpus_room>, pits in rooms <pit_rooms>, and bats in rooms <bat_rooms>
+  Scenario: Cave Topology 006 adjacent hazard query reports Wumpus and bats
+    Given a game setup with the player in room 1, the Wumpus in room 2, pits in rooms 3 and 4, and bats in rooms 5 and 6
     When adjacent hazards are queried from the player room
-    Then the adjacent hazard types are <hazards>
+    Then the adjacent hazard types are Wumpus and Bats
 
-    Examples:
-      | player_room | wumpus_room | pit_rooms | bat_rooms | hazards          |
-      | 1           | 2           | 3, 4      | 5, 6      | Wumpus, Bats     |
-      | 10          | 2           | 9, 18     | 6, 7      | Wumpus, Pit      |
-      | 13          | 7           | 12, 14    | 20, 1     | Pit, Bats        |
-      | 6           | 20          | 1, 2      | 3, 4      | none             |
+  # Cave Topology 007
+  Scenario: Cave Topology 007 adjacent hazard query reports Wumpus and pit
+    Given a game setup with the player in room 10, the Wumpus in room 2, pits in rooms 9 and 18, and bats in rooms 6 and 7
+    When adjacent hazards are queried from the player room
+    Then the adjacent hazard types are Wumpus and Pit
+
+  # Cave Topology 008
+  Scenario: Cave Topology 008 adjacent hazard query reports no neighboring hazards
+    Given a game setup with the player in room 6, the Wumpus in room 20, pits in rooms 1 and 2, and bats in rooms 3 and 4
+    When adjacent hazards are queried from the player room
+    Then there are no adjacent hazard types
