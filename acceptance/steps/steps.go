@@ -3,6 +3,7 @@ package steps
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -710,15 +711,31 @@ func thenWarningMessagesAre(world *runtime.World, example map[string]string) err
 }
 
 func givenOrThenPlayerHasArrows(world *runtime.World, example map[string]string) error {
-	arrows, err := intExample(example, "arrows")
+	return setOrAssertParsedInt(world, example, "arrows", func(arrows int) {
+		gameFrom(world, "game").SetArrows(arrows)
+	}, func(arrows int) error {
+		return assertArrows(world, arrows)
+	})
+}
+
+func setOrAssertParsedInt(world *runtime.World, example map[string]string, key string, set func(int), assert func(int) error) error {
+	value, err := intExample(example, key)
 	if err != nil {
 		return err
 	}
 	if _, actionTaken := world.State["action_taken"]; !actionTaken {
-		gameFrom(world, "game").SetArrows(arrows)
+		set(value)
 		return nil
 	}
-	return assertArrows(world, arrows)
+	return assert(value)
+}
+
+func setStringChoice(value, label string, allowed []string, set func(string)) error {
+	if slices.Contains(allowed, value) {
+		set(value)
+		return nil
+	}
+	return fmt.Errorf("unsupported %s %q", label, value)
 }
 
 func givenPlayerStartsWithInitialArrows(world *runtime.World, example map[string]string) error {
@@ -877,10 +894,7 @@ func thenDisplayedLinesAre(world *runtime.World, example map[string]string) erro
 
 func assertStringList(label string, got []string, wantValue string) error {
 	want := stringList(wantValue)
-	if len(got) == 0 && len(want) == 0 {
-		return nil
-	}
-	if !reflect.DeepEqual(got, want) {
+	if !slices.Equal(got, want) {
 		return fmt.Errorf("%s are %v, want %v", label, got, want)
 	}
 	return nil
@@ -893,7 +907,7 @@ func thenDisplayedLinesInclude(world *runtime.World, example map[string]string) 
 		expected = []string{prompt}
 	}
 	for _, want := range expected {
-		if !containsString(lines, want) {
+		if !slices.Contains(lines, want) {
 			return fmt.Errorf("displayed lines %v do not include %q", lines, want)
 		}
 	}

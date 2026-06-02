@@ -464,6 +464,32 @@ Apply your own role rules to this state.
 
 Action taken: Re-read coder role and constitution, then prepared to merge the specified architect commit into the coder branch and apply coder responsibilities to the resulting state.
 
+## 2026-06-02 11:02:45 CDT - Architect Branch Log Entries
+
+Merged architect branch log history from `aff89c3b53bdc0601822225ea541c87eac3d23c3`.
+
+Recorded entries included architect processing for the combined queued `rest-command` refactorer state. The newer refactorer handoff superseded the earlier one for merge purposes:
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: rest-command
+branch name: swarmforge-refactorer
+commit hash: 3ff0a4fb3ee2a5de462b6b32f705e7b33139f924
+Apply your own role rules to this state.
+```
+
+```text
+Re-read your role and constitution.
+sender role: refactorer
+specifier handoff name: rest-command
+branch name: swarmforge-refactorer
+commit hash: d4f1692918ff5032f471dd82125742d41838cfe9
+Apply your own role rules to this state.
+```
+
+Action taken: Preserved current coder implementation history and retained architect branch handoff context while resolving the merge.
+
 ## 2026-06-02 09:20:53 CDT - Sent Handoff
 
 Re-read your role and constitution.
