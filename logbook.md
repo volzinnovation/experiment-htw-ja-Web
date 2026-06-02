@@ -41,3 +41,44 @@ Apply your own role rules to this state.
 ```
 
 Action taken: re-read role and constitution, then merging the referenced refactorer state into the architect branch for architectural review.
+
+## 2026-06-02 08:12:58 CDT
+
+Sent handoff to coder:
+
+```text
+Re-read your role and constitution.
+sender role: architect
+specifier handoff name: cave-setup
+branch name: swarmforge-architect
+commit hash: 5f63059c3bf5f00f05dc6fc3f3954b4bced4a7f8
+Apply your own role rules to this state.
+```
+
+Summary: cave-setup architectural review and verification state is ready for coder review.
+
+Sent handoff to refactorer:
+
+```text
+Re-read your role and constitution.
+sender role: architect
+specifier handoff name: cave-setup
+branch name: swarmforge-architect
+commit hash: 5f63059c3bf5f00f05dc6fc3f3954b4bced4a7f8
+Apply your own role rules to this state.
+```
+
+Summary: cave-setup architectural review and verification state is ready for refactorer review.
+
+Sent handoff to specifier:
+
+```text
+Re-read your role and constitution.
+sender role: architect
+specifier handoff name: cave-setup
+branch name: swarmforge-architect
+commit hash: 5f63059c3bf5f00f05dc6fc3f3954b4bced4a7f8
+Apply your own role rules to this state.
+```
+
+Summary: cave-setup architectural work is complete.
