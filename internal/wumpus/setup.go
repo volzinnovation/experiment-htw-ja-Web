@@ -17,6 +17,7 @@ type Game struct {
 	status             Status
 	arrows             int
 	inertHazards       bool
+	random             *rand.Rand
 	grenadeRoom        *int
 	carriesGrenade     bool
 	pendingGrenadeRoom *int
@@ -33,7 +34,8 @@ type Game struct {
 }
 
 func NewGame(seed int64) (Game, error) {
-	rooms := rand.New(rand.NewSource(seed)).Perm(20)
+	random := rand.New(rand.NewSource(seed))
+	rooms := random.Perm(20)
 	setup := Setup{
 		Player: rooms[0] + 1,
 		Wumpus: rooms[1] + 1,
@@ -44,6 +46,7 @@ func NewGame(seed int64) (Game, error) {
 	if err != nil {
 		return Game{}, err
 	}
+	game.random = random
 	game.SetGrenadeRoom(rooms[6] + 1)
 	return game, nil
 }
@@ -85,6 +88,7 @@ func (g Game) ReplaySameSetup() Game {
 		status:             StatusInProgress,
 		arrows:             g.arrows,
 		inertHazards:       g.inertHazards,
+		random:             copyRandom(g.random),
 		carriesGrenade:     g.carriesGrenade,
 		pendingGrenadeRoom: copyRoomPtr(g.pendingGrenadeRoom),
 		grenadeRoom:        copyRoomPtr(g.grenadeRoom),
@@ -147,6 +151,21 @@ func copyRoomPtr(room *int) *int {
 	}
 	copy := *room
 	return &copy
+}
+
+func copyRandom(random *rand.Rand) *rand.Rand {
+	if random == nil {
+		return nil
+	}
+	copy := *random
+	return &copy
+}
+
+func (g *Game) randomRoom() int {
+	if g.random == nil {
+		return 1
+	}
+	return g.random.Intn(20) + 1
 }
 
 // mutate4go-manifest-begin

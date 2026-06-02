@@ -106,3 +106,18 @@ func TestRunInertHazardsSuppressesPitLoss(t *testing.T) {
 		t.Fatalf("inert hazard should not lose:\n%s", output)
 	}
 }
+
+func TestRunSeededRestEventuallyPrintsWhump(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	input := strings.NewReader("n\n" + strings.Repeat("r\n", 200))
+
+	code := run([]string{"--qa-seed=1973"}, input, &stdout, &stderr)
+
+	if code != 0 {
+		t.Fatalf("exit code = %d, stderr = %q", code, stderr.String())
+	}
+	output := stdout.String()
+	if !strings.Contains(output, "YOU HEAR WHUMP, WHUMP.") {
+		t.Fatalf("output missing jumping Wumpus event:\n%s", output)
+	}
+}

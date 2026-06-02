@@ -439,7 +439,32 @@ Feature file: `features/rest-command.feature`
 
 8. Case-insensitive rest: `R` and `ReSt` both rest successfully.
 
-## 12. Final Console Regression
+## 12. Random Events
+
+Random events must occur in normal seeded play, not only when queued by acceptance or unit-test hooks.
+
+1. Start:
+
+   ```sh
+   go run ./cmd/htwgo --qa-reveal-state --qa-seed 1973
+   ```
+
+2. Answer `n`.
+3. Type `r` repeatedly for at least 100 turns, answering `n` to any `SAME SET UP (Y-N)?` prompt if a random event ends the game.
+4. Verify the transcript eventually includes:
+
+   ```text
+   YOU HEAR WHUMP, WHUMP.
+   ```
+
+5. During ordinary play with a seeded setup, verify random event outcomes are not fixed to the old deterministic defaults:
+   - Super bats can relocate the player to rooms other than room 1.
+   - Crooked arrow deviation can choose legal exits other than the first listed tunnel.
+   - A waking Wumpus can either stay or move to a legal adjacent room.
+   - Adjacent Wumpus observation can leave the Wumpus awake or mark it asleep with snoring warnings.
+   - Entering a sleeping Wumpus room can wake it or leave it asleep.
+
+## 13. Final Console Regression
 
 1. Start normal play:
 
@@ -465,7 +490,7 @@ Feature file: `features/rest-command.feature`
 11. Finish with either a win or loss.
 12. Verify the final transcript contains the correct win or loss message.
 
-## 13. Signoff Criteria
+## 14. Signoff Criteria
 
 The build is ready for QA signoff only when:
 

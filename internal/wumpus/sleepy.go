@@ -43,6 +43,9 @@ func (g *Game) observeAdjacentWumpus() {
 }
 
 func (g *Game) nextSleepyObservation() bool {
+	if len(g.nextSleepyObserve) == 0 && g.random != nil {
+		return g.random.Intn(2) == 0
+	}
 	return dequeueOr(&g.nextSleepyObserve, false)
 }
 
@@ -56,6 +59,12 @@ func (g *Game) resolveSleepingWumpusEntry() []string {
 }
 
 func (g *Game) nextSleepingEntryOutcome() SleepingWumpusEntryOutcome {
+	if len(g.nextSleepingEntry) == 0 && g.random != nil {
+		if g.random.Intn(2) == 0 {
+			return SleepingWumpusStaysAsleep
+		}
+		return SleepingWumpusWakes
+	}
 	return dequeueOr(&g.nextSleepingEntry, SleepingWumpusWakes)
 }
 

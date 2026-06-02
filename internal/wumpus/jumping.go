@@ -56,13 +56,16 @@ func (g Game) legalJumpDestination(room int) int {
 }
 
 func (g *Game) nextJumpingWumpusEvent() bool {
+	if len(g.nextJumpEvents) == 0 && g.random != nil {
+		return g.random.Intn(20) == 0
+	}
 	return dequeueOr(&g.nextJumpEvents, false)
 }
 
 func (g *Game) nextWumpusJumpPath() []int {
 	if len(g.nextJumpPaths) == 0 {
-		first := firstExit(g.setup.Wumpus)
-		return []int{first, firstExit(first)}
+		first := g.randomExit(g.setup.Wumpus)
+		return []int{first, g.randomExit(first)}
 	}
 	path := g.nextJumpPaths[0]
 	g.nextJumpPaths = g.nextJumpPaths[1:]
@@ -80,6 +83,12 @@ func (g *Game) resolveJumpLandingOnPlayer(jumpIndex int) []string {
 }
 
 func (g *Game) nextFirstJumpLandingOutcome() FirstJumpLandingOutcome {
+	if len(g.nextFirstJumpLand) == 0 && g.random != nil {
+		if g.random.Intn(2) == 0 {
+			return FirstJumpTramples
+		}
+		return FirstJumpSlams
+	}
 	return dequeueOr(&g.nextFirstJumpLand, FirstJumpTramples)
 }
 
@@ -93,6 +102,17 @@ func firstExit(room int) int {
 		return room
 	}
 	return exits[0]
+}
+
+func (g *Game) randomExit(room int) int {
+	exits, err := NewCave().Exits(room)
+	if err != nil {
+		return room
+	}
+	if g.random == nil {
+		return exits[0]
+	}
+	return exits[g.random.Intn(len(exits))]
 }
 
 // mutate4go-manifest-begin

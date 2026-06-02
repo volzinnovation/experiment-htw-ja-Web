@@ -59,11 +59,7 @@ func (g *Game) nextArrowDeviationRoom(from int) int {
 		g.nextArrowDeviation = g.nextArrowDeviation[1:]
 		return room
 	}
-	exits, err := NewCave().Exits(from)
-	if err != nil {
-		return from
-	}
-	return exits[0]
+	return g.randomExit(from)
 }
 
 func (g *Game) missedArrowResult(traversed []int) ShootResult {

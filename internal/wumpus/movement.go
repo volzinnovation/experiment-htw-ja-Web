@@ -112,12 +112,10 @@ func (g *Game) resolveBatArrival() []string {
 }
 
 func (g *Game) nextBatRoom() int {
-	if len(g.nextBatRelocation) == 0 {
-		return 1
+	if len(g.nextBatRelocation) == 0 && g.random != nil {
+		return g.randomRoom()
 	}
-	room := g.nextBatRelocation[0]
-	g.nextBatRelocation = g.nextBatRelocation[1:]
-	return room
+	return dequeueOr(&g.nextBatRelocation, 1)
 }
 
 func (g *Game) wakeWumpus() []string {
@@ -133,6 +131,12 @@ func (g *Game) wakeWumpus() []string {
 }
 
 func (g *Game) nextWumpusChoice() WumpusWakeChoice {
+	if len(g.nextWumpusWake) == 0 && g.random != nil {
+		if g.random.Intn(4) == 0 {
+			return WumpusWakeChoice{Stay: true}
+		}
+		return WumpusWakeChoice{Destination: g.randomExit(g.setup.Wumpus)}
+	}
 	if len(g.nextWumpusWake) == 0 {
 		return WumpusWakeChoice{Stay: true}
 	}
