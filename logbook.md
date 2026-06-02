@@ -47,6 +47,23 @@ Apply your own role rules to this state.
 
 Summary: Task 2 movement validation, warnings, hazard resolution, bat relocation, and Wumpus wake specifications are ready for coder review.
 
+## 2026-06-02 07:33:01 CDT
+
+Sent handoff to coder.
+
+Complete handoff message:
+
+```text
+Re-read your role and constitution.
+sender role: specifier
+specifier handoff name: crooked-arrow
+branch name: master
+commit hash: 9aa042085072577f85d2e0b4c586d83735e7cbda
+Apply your own role rules to this state.
+```
+
+Summary: Task 3 crooked arrow traversal, deviation, hit, self-hit, miss, Wumpus wake, and arrow exhaustion specifications are ready for coder review.
+
 ## 2026-06-02 07:33:07 CDT - Sent Handoff
 
 Re-read your role and constitution.
