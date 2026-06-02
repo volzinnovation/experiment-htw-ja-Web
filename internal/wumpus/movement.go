@@ -7,6 +7,7 @@ type Status string
 const (
 	StatusInProgress Status = "in progress"
 	StatusLost       Status = "lost"
+	StatusWon        Status = "won"
 )
 
 type MoveResult struct {
