@@ -13,7 +13,10 @@ type Setup struct {
 }
 
 type Game struct {
-	setup Setup
+	setup             Setup
+	status            Status
+	nextBatRelocation []int
+	nextWumpusWake    []WumpusWakeChoice
 }
 
 func NewGame(seed int64) (Game, error) {
@@ -31,7 +34,7 @@ func NewGameWithSetup(setup Setup) (Game, error) {
 	if err := validateSetup(setup); err != nil {
 		return Game{}, err
 	}
-	return Game{setup: copySetup(setup)}, nil
+	return Game{setup: copySetup(setup), status: StatusInProgress}, nil
 }
 
 func (g Game) Setup() Setup {
@@ -39,7 +42,7 @@ func (g Game) Setup() Setup {
 }
 
 func (g Game) ReplaySameSetup() Game {
-	return Game{setup: copySetup(g.setup)}
+	return Game{setup: copySetup(g.setup), status: StatusInProgress}
 }
 
 func (s Setup) OccupiedRooms() []int {
