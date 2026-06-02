@@ -152,6 +152,16 @@ func TestTemplateMatchRejectsPrefixMismatch(t *testing.T) {
 	}
 }
 
+func TestPlaceholderHelpersRejectMalformedTemplates(t *testing.T) {
+	start, end, ok := placeholderBounds("room <room")
+	if ok || start != 5 || end != -1 {
+		t.Fatalf("placeholder bounds = %d/%d/%v, want 5/-1/false", start, end, ok)
+	}
+	if literal, ok := nextLiteral("<second>"); ok || literal != "" {
+		t.Fatalf("next literal = %q/%v, want empty/false", literal, ok)
+	}
+}
+
 func TestSplitPlaceholderValueRejectsInvalidText(t *testing.T) {
 	tests := []struct {
 		name        string
