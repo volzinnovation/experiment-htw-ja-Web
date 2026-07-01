@@ -1,5 +1,11 @@
 import { WumpusGame } from '../game.js';
-import { WumpusApp, createAppMarkup } from '../app.js';
+import {
+  WumpusApp,
+  buildChallengeUrl,
+  createAppMarkup,
+  normalizeSeed,
+  seedFromLocation,
+} from '../app.js';
 
 const tests = [];
 
@@ -93,6 +99,50 @@ test('frontend updates status and log after command', () => {
 
   assert(app.statusNode.textContent.includes('WON'), 'status panel should show win');
   assert(app.logNode.textContent.includes('AHA! YOU GOT THE WUMPUS'), 'log should include win message');
+});
+
+test('seeded games produce deterministic setups', () => {
+  const first = new WumpusGame({ seed: 1973 }).snapshot();
+  const second = new WumpusGame({ seed: 1973 }).snapshot();
+  const different = new WumpusGame({ seed: 1974 }).snapshot();
+
+  assertEquals(first.player, second.player, 'same seed should preserve player room');
+  assertEquals(first.wumpus, second.wumpus, 'same seed should preserve wumpus room');
+  assert(first.player !== different.player || first.wumpus !== different.wumpus, 'different seed should usually change setup');
+});
+
+test('challenge URL helpers normalize and preserve seed params', () => {
+  assertEquals(normalizeSeed('001973'), 1973, 'numeric seeds should normalize');
+  assertEquals(normalizeSeed('nope'), null, 'non-numeric seeds should be rejected');
+  assertEquals(seedFromLocation({ search: '?seed=4242' }), 4242, 'seed should be read from URL search params');
+  assertEquals(
+    buildChallengeUrl(1973, 'https://example.test/play?mode=quiet#rooms'),
+    'https://example.test/play?mode=quiet&seed=1973',
+    'challenge URL should preserve existing params and clear hash',
+  );
+});
+
+test('frontend renders seeded challenge and replay trail', () => {
+  const host = document.createElement('div');
+  host.innerHTML = createAppMarkup();
+  document.body.append(host);
+
+  const app = new WumpusApp(host, {
+    challengeSeed: 1973,
+    gameOptions: {
+      setup: { player: 1, wumpus: 2, pits: [3, 4], bats: [6, 7], grenadeRoom: 8 },
+      rng: makeFixedRandom([0]),
+    },
+  });
+
+  assertEquals(app.challengeSeedInput.value, '1973', 'challenge seed should be visible');
+  assert(app.challengeSummaryNode.textContent.includes('Seed 1973'), 'challenge summary should mention seed');
+  app.commandInput.value = 's 2';
+  app.commandForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+  assert(app.routeSummaryNode.textContent.includes('Commands: 1'), 'route summary should count commands');
+  assert(app.replayLogNode.textContent.includes('s 2'), 'replay log should include command');
+  assert(app.challengeLinkNode.textContent.includes('seed=1973'), 'challenge link should include seed');
 });
 
 async function run() {

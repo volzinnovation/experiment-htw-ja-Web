@@ -27,6 +27,13 @@ t <room>                 throw the Holy Hand Grenade when carrying it
 r                        rest for one turn
 ```
 
+### Shareable Challenges
+
+The browser frontend supports deterministic challenge links with `?seed=<number>`.
+Use the **Seeded Challenge** controls to start a known cave, generate a lucky
+cave, copy a permalink, and review the replay trail for the last commands. A
+seeded link recreates the same initial cave setup in any browser.
+
 ### Artwork and Animations
 
 The frontend includes handcrafted SVG artwork for each room type (safe room, player room, Wumpus lair, pit room, bat room, grenade room) and event animations for movement, misses, bat snatches, explosions, wins, and losses.

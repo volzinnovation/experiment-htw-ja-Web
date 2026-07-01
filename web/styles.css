@@ -82,6 +82,87 @@ p {
   color: #93c5fd;
 }
 
+.challenge-box {
+  border-top: 1px solid #334155;
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.challenge-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.challenge-heading h2 {
+  font-size: 1.05rem;
+}
+
+.difficulty-chip {
+  border: 1px solid #475569;
+  border-radius: 999px;
+  color: #dbeafe;
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  padding: 0.28rem 0.58rem;
+  text-transform: uppercase;
+}
+
+.difficulty-chip[data-level="tense"] {
+  border-color: #facc15;
+  color: #fde68a;
+}
+
+.difficulty-chip[data-level="brutal"] {
+  border-color: #fb7185;
+  color: #fecdd3;
+}
+
+.challenge-form {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.challenge-form label {
+  align-self: center;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.challenge-form input,
+.challenge-form button,
+.challenge-actions button {
+  border-radius: 0.5rem;
+  border: 1px solid #475569;
+  background: #0b1222;
+  color: var(--text);
+  padding: 0.5rem 0.75rem;
+}
+
+.challenge-form button,
+.challenge-actions button {
+  cursor: pointer;
+  background: color-mix(in oklab, var(--accent) 26%, #0b1222 74%);
+}
+
+.challenge-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.challenge-link {
+  color: #93c5fd;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
 .warnings {
   display: flex;
   flex-wrap: wrap;
@@ -104,6 +185,30 @@ p {
   gap: 0.35rem;
   max-height: 20rem;
   overflow: auto;
+}
+
+#replay-log {
+  display: grid;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0.8rem 0 0;
+  padding: 0;
+}
+
+#replay-log li {
+  border-left: 3px solid #38bdf8;
+  padding-left: 0.65rem;
+}
+
+#replay-log span,
+#replay-log small {
+  display: block;
+}
+
+#replay-log small {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-top: 0.15rem;
 }
 
 .rooms,
@@ -214,4 +319,20 @@ p {
 
 .type-grenade {
   border-color: #fb923c;
+}
+
+@media (max-width: 560px) {
+  main {
+    grid-template-columns: 1fr;
+  }
+
+  .challenge-heading,
+  .challenge-form {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .difficulty-chip {
+    justify-self: start;
+  }
 }
